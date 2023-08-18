@@ -126,6 +126,7 @@ class MainWindow(QMainWindow):
         self._table_view.setModel(self._model)
         self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
+        self._table_view.horizontalHeader().setSectionsMovable(True)
         v_layout.addLayout(h_layout)
         v_layout.addWidget(self._table_view)
 
