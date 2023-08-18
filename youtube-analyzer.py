@@ -99,6 +99,9 @@ class MainWindow(QMainWindow):
         export_xlsx_action.triggered.connect(self._on_export_xlsx)
         export_csv_action = file_menu.addAction( "Export to CSV..." )
         export_csv_action.triggered.connect(self._on_export_csv)
+        file_menu.addSeparator()
+        exit_action = file_menu.addAction( "Exit" )
+        exit_action.triggered.connect(self.close)
 
         h_layout = QHBoxLayout()
         self._search_line_edit = QLineEdit()
