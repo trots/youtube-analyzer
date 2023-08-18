@@ -21,7 +21,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QTableView,
-    QFileDialog
+    QFileDialog,
+    QSpinBox
 )
 import xlsxwriter
 
@@ -109,9 +110,18 @@ class MainWindow(QMainWindow):
 
         h_layout = QHBoxLayout()
         self._search_line_edit = QLineEdit()
+        self._search_line_edit.setPlaceholderText("Enter request and press 'Search'...")
+        self._search_line_edit.setToolTip(self._search_line_edit.placeholderText())
         self._search_line_edit.returnPressed.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_line_edit)
+        self._search_limit_spin_box = QSpinBox()
+        self._search_limit_spin_box.setToolTip("Set the search result limit")
+        self._search_limit_spin_box.setMinimumWidth(50)
+        self._search_limit_spin_box.setRange(2, 30)
+        self._search_limit_spin_box.setValue(10)
+        h_layout.addWidget(self._search_limit_spin_box)
         self._search_button = QPushButton("Search")
+        self._search_button.setToolTip("Click to start searching")
         self._search_button.clicked.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_button)
 
@@ -136,7 +146,7 @@ class MainWindow(QMainWindow):
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()
-        request_limit = 30
+        request_limit = self._search_limit_spin_box.value()
 
         if self._request_text == "":
             return
