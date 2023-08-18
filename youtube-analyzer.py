@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         export_csv_action = file_menu.addAction( "Export to CSV..." )
         export_csv_action.triggered.connect(self._on_export_csv)
         file_menu.addSeparator()
-        exit_action = file_menu.addAction( "Exit" )
+        exit_action = file_menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
 
         h_layout = QHBoxLayout()
@@ -115,7 +115,8 @@ class MainWindow(QMainWindow):
         header = ["Title", "Published Time", "Duration", 
                   "View Count", "Link", 
                   "Channel Name", "Channel Link", "Channel Subscribers",
-                  "Channel Views", "Channel Joined Date"]
+                  "Channel Views", "Channel Joined Date",
+                  "Views/Subscribers"]
         self._model = ResultTableModel(self, header)
         self._table_view = QTableView(self)
         self._table_view.setModel(self._model)
@@ -155,7 +156,8 @@ class MainWindow(QMainWindow):
                 result.append((video["title"], video["publishedTime"], video["duration"], 
                                views, video["link"],
                                channel["title"], channel["url"], channel_subscribers,
-                               channel_views, channel["joinedDate"]))
+                               channel_views, channel["joinedDate"],
+                               (str(round(views / channel_subscribers * 100, 2)) + "%")))
                 counter = counter + 1
                 if counter == request_limit:
                     break
