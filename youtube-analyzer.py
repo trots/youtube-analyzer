@@ -26,6 +26,10 @@ from PySide6.QtWidgets import (
 import xlsxwriter
 
 
+app_name = "YouTube Analyzer"
+version = "1.0"
+
+
 def view_count_to_int(count_str):
     processed_count = count_str.split()[0].replace(",", "")
     return int(processed_count) if processed_count.isdigit() else 0
@@ -92,12 +96,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._request_text = ""
 
-        self.setWindowTitle("YouTube Analyzer")
+        self.setWindowTitle(app_name + " " + version)
 
         file_menu = self.menuBar().addMenu("File")
-        export_xlsx_action = file_menu.addAction( "Export to XLSX..." )
+        export_xlsx_action = file_menu.addAction("Export to XLSX...")
         export_xlsx_action.triggered.connect(self._on_export_xlsx)
-        export_csv_action = file_menu.addAction( "Export to CSV..." )
+        export_csv_action = file_menu.addAction("Export to CSV...")
         export_csv_action.triggered.connect(self._on_export_csv)
         file_menu.addSeparator()
         exit_action = file_menu.addAction("Exit")
