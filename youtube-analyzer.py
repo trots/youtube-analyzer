@@ -1,5 +1,6 @@
 import sys
 import operator
+import csv
 from youtubesearchpython import (
     VideosSearch, 
     Channel
@@ -96,6 +97,8 @@ class MainWindow(QMainWindow):
         file_menu = self.menuBar().addMenu("File")
         export_xlsx_action = file_menu.addAction( "Export to XLSX..." )
         export_xlsx_action.triggered.connect(self._on_export_xlsx)
+        export_csv_action = file_menu.addAction( "Export to CSV..." )
+        export_csv_action.triggered.connect(self._on_export_csv)
 
         h_layout = QHBoxLayout()
         self._search_line_edit = QLineEdit()
@@ -181,6 +184,19 @@ class MainWindow(QMainWindow):
 
         worksheet.autofit()
         workbook.close()
+
+    def _on_export_csv(self):
+        if self._request_text == "" or len(self._model.result) == 0:
+            return
+
+        file_name = QFileDialog.getSaveFileName(self, caption="Save CSV", filter="Csv File (*.csv)",
+                                                dir=(self._request_text + ".csv"))
+
+        with open(file_name[0], 'w', newline='', encoding='utf-8') as csvfile:
+            csv_writer = csv.writer(csvfile, delimiter=';')
+            csv_writer.writerow(self._model.header)
+            for result_item in self._model.result:
+                csv_writer.writerow(result_item)
 
 
 app = QApplication(sys.argv)
