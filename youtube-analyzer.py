@@ -8,6 +8,9 @@ from PySide6.QtCore import (
     Qt,
     QAbstractTableModel
 )
+from PySide6.QtGui import (
+    QAction
+)
 from PySide6.QtWidgets import (
     QApplication,
     QLineEdit,
@@ -16,23 +19,25 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QWidget,
-    QTableView
+    QTableView,
+    QFileDialog
 )
+import xlsxwriter
 
 
 def view_count_to_int(count_str):
-    processed_count = count_str.split()[0].replace(',', '')
+    processed_count = count_str.split()[0].replace(",", "")
     return int(processed_count) if processed_count.isdigit() else 0
 
 
 def subcriber_count_to_int(count_str):
     number_letter = count_str.split()[0]
     match number_letter[-1]:
-        case 'K':
+        case "K":
             multiplier = 1000
-        case 'M':
+        case "M":
             multiplier = 1000000
-        case 'B':
+        case "B":
             multiplier = 1000000000
         case _:
             multiplier = 1
@@ -84,8 +89,13 @@ class ResultTableModel(QAbstractTableModel):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self._request_text = ""
 
-        self.setWindowTitle('YouTube Analyzer')
+        self.setWindowTitle("YouTube Analyzer")
+
+        file_menu = self.menuBar().addMenu("File")
+        export_xlsx_action = file_menu.addAction( "Export to XLSX..." )
+        export_xlsx_action.triggered.connect(self._on_export_xlsx)
 
         h_layout = QHBoxLayout()
         self._search_line_edit = QLineEdit()
@@ -96,10 +106,10 @@ class MainWindow(QMainWindow):
         h_layout.addWidget(self._search_button)
 
         v_layout = QVBoxLayout()
-        header = ['Title', 'Published Time', 'Duration', 
-                  'View Count', 'Link', 
-                  'Channel Name', 'Channel Link', 'Channel Subscribers',
-                  'Channel Views', 'Channel Joined Date']
+        header = ["Title", "Published Time", "Duration", 
+                  "View Count", "Link", 
+                  "Channel Name", "Channel Link", "Channel Subscribers",
+                  "Channel Views", "Channel Joined Date"]
         self._model = ResultTableModel(self, header)
         self._table_view = QTableView(self)
         self._table_view.setModel(self._model)
@@ -113,10 +123,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
 
     def _on_search_clicked(self):
-        request_text = self._search_line_edit.text()
+        self._request_text = self._search_line_edit.text()
         request_limit = 30
 
-        if request_text == "":
+        if self._request_text == "":
             return
 
         self._search_line_edit.setDisabled(True)
@@ -125,21 +135,21 @@ class MainWindow(QMainWindow):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         self._model.clear()
         QApplication.instance().processEvents()
-        videos_search = VideosSearch(request_text, limit = request_limit)
+        videos_search = VideosSearch(self._request_text, limit = request_limit)
         result = []
         has_next_page = True
         counter = 0
         while has_next_page:
             result_array = videos_search.result()["result"]
             for video in result_array:
-                views = view_count_to_int(video['viewCount']['text'])
-                channel = Channel.get(video['channel']['id'])
-                channel_views = view_count_to_int(channel['views'])
-                channel_subscribers = subcriber_count_to_int(channel['subscribers']['simpleText'])
-                result.append((video['title'], video['publishedTime'], video['duration'], 
-                               views, video['link'],
-                               channel['title'], channel['url'], channel_subscribers,
-                               channel_views, channel['joinedDate']))
+                views = view_count_to_int(video["viewCount"]["text"])
+                channel = Channel.get(video["channel"]["id"])
+                channel_views = view_count_to_int(channel["views"])
+                channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
+                result.append((video["title"], video["publishedTime"], video["duration"], 
+                               views, video["link"],
+                               channel["title"], channel["url"], channel_subscribers,
+                               channel_views, channel["joinedDate"]))
                 counter = counter + 1
                 if counter == request_limit:
                     break
@@ -152,6 +162,25 @@ class MainWindow(QMainWindow):
         self._search_line_edit.setDisabled(False)
         self._search_button.setDisabled(False)
         self._table_view.setDisabled(False)
+
+    def _on_export_xlsx(self):
+        if self._request_text == "" or len(self._model.result) == 0:
+            return
+
+        file_name = QFileDialog.getSaveFileName(self, caption="Save XLSX", filter='Xlsx File (*.xlsx)',
+                                                dir=(self._request_text + ".xlsx"))
+        workbook = xlsxwriter.Workbook(file_name[0])
+        worksheet = workbook.add_worksheet()
+
+        for column in range(len(self._model.header)):
+            worksheet.write(0, column, self._model.header[column])
+
+        for row in range(len(self._model.result)):
+            for column in range(len(self._model.header)):
+                worksheet.write(row + 1, column, self._model.result[row][column])
+
+        worksheet.autofit()
+        workbook.close()
 
 
 app = QApplication(sys.argv)
