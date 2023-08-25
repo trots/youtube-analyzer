@@ -22,7 +22,12 @@ from PySide6.QtWidgets import (
     QWidget,
     QTableView,
     QFileDialog,
-    QSpinBox
+    QSpinBox,
+    QDialog,
+    QGridLayout,
+    QLabel,
+    QSizePolicy,
+    QSpacerItem
 )
 import xlsxwriter
 
@@ -92,6 +97,54 @@ class ResultTableModel(QAbstractTableModel):
         self.layoutChanged.emit()
 
 
+class AboutDialog(QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.setWindowTitle("About")
+        layout = QGridLayout()
+        layout.setSizeConstraint( QGridLayout.SizeConstraint.SetFixedSize )
+        
+        row = 0
+        title = QLabel(app_name)
+        title.setStyleSheet("font-size: 14px")
+        layout.addWidget(title, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        row += 1
+        layout.addWidget(QLabel("Software for analyzing of YouTube search output."), row, 0, 1, 2,
+                         Qt.AlignmentFlag.AlignCenter)
+        row += 1
+        layout.addWidget(QLabel("Version: " + version), 
+                         row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        row += 1
+        layout.addWidget(QLabel("Based on youtubesearchpython and PySide."), 
+                         row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        row += 1
+        vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+
+        row += 1
+        layout.addWidget(QLabel("Web site:"), row, 0, Qt.AlignmentFlag.AlignRight)
+        site = QLabel("<a href=\"https://github.com/trots/youtube-analyzer\">https://github.com/trots/youtube-analyzer</a>")
+        site.setOpenExternalLinks(True)
+        layout.addWidget(site, row, 1)
+        row += 1
+        layout.addWidget(QLabel("License:"), row, 0, Qt.AlignmentFlag.AlignRight)
+        lic = QLabel("<a href=\"https://github.com/trots/youtube-analyzer/blob/master/LICENSE\">MIT License</a>")
+        lic.setOpenExternalLinks(True)
+        layout.addWidget(lic, row, 1)
+
+        row += 1
+        vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+
+        row += 1
+        layout.addWidget(QLabel("Copyright 2023 Alexander Trotsenko."), row, 0, 1, 2,
+                         Qt.AlignmentFlag.AlignCenter)
+        row += 1
+        layout.addWidget(QLabel("All rights reserved."), row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+
+        self.setLayout(layout)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -107,6 +160,10 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         exit_action = file_menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
+
+        help_menu = self.menuBar().addMenu("Help")
+        about_action = help_menu.addAction("About...")
+        about_action.triggered.connect(self._on_about)
 
         h_layout = QHBoxLayout()
         self._search_line_edit = QLineEdit()
@@ -217,6 +274,10 @@ class MainWindow(QMainWindow):
             csv_writer.writerow(self._model.header)
             for result_item in self._model.result:
                 csv_writer.writerow(result_item)
+
+    def _on_about(self):
+        dialog = AboutDialog(self)
+        dialog.exec()
 
 
 app = QApplication(sys.argv)
