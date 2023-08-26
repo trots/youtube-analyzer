@@ -1,6 +1,7 @@
 import sys
 import operator
 import csv
+import traceback
 from youtubesearchpython import (
     VideosSearch, 
     Channel
@@ -28,7 +29,8 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QSizePolicy,
-    QSpacerItem
+    QSpacerItem,
+    QMessageBox
 )
 import xlsxwriter
 
@@ -215,30 +217,40 @@ class MainWindow(QMainWindow):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         self._model.clear()
         QApplication.instance().processEvents()
-        videos_search = VideosSearch(self._request_text, limit = request_limit)
-        result = []
-        has_next_page = True
-        counter = 0
-        while has_next_page:
-            result_array = videos_search.result()["result"]
-            for video in result_array:
-                views = view_count_to_int(video["viewCount"]["text"])
-                channel = Channel.get(video["channel"]["id"])
-                channel_views = view_count_to_int(channel["views"])
-                channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
-                result.append((video["title"], video["publishedTime"], video["duration"], 
-                               views, video["link"],
-                               channel["title"], channel["url"], channel_subscribers,
-                               channel_views, channel["joinedDate"],
-                               (str(round(views / channel_subscribers * 100, 2)) + "%")))
-                counter = counter + 1
+
+        try:
+            videos_search = VideosSearch(self._request_text, limit = request_limit)
+            result = []
+            has_next_page = True
+            counter = 0
+            while has_next_page:
+                result_array = videos_search.result()["result"]
+                for video in result_array:
+                    views = view_count_to_int(video["viewCount"]["text"])
+                    channel = Channel.get(video["channel"]["id"])
+                    channel_views = view_count_to_int(channel["views"])
+                    channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
+                    result.append((video["title"], video["publishedTime"], video["duration"], 
+                                views, video["link"],
+                                channel["title"], channel["url"], channel_subscribers,
+                                channel_views, channel["joinedDate"],
+                                (str(round(views / channel_subscribers * 100, 2)) + "%")))
+                    counter = counter + 1
+                    if counter == request_limit:
+                        break
                 if counter == request_limit:
                     break
-            if counter == request_limit:
-                break
-            has_next_page = videos_search.next()
-        self._model.setData(result)
-        self._table_view.resizeColumnsToContents()
+                has_next_page = videos_search.next()
+            self._model.setData(result)
+            self._table_view.resizeColumnsToContents()
+        except Exception as e:
+            dialog = QMessageBox()
+            dialog.setWindowTitle(app_name)
+            dialog.setText("Error in the searching process")
+            dialog.setIcon(QMessageBox.Critical)
+            dialog.setDetailedText(traceback.format_exc())
+            dialog.exec()
+        
         QApplication.restoreOverrideCursor()
         self._search_line_edit.setDisabled(False)
         self._search_button.setDisabled(False)
