@@ -204,6 +204,12 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(v_layout)
         self.setCentralWidget(central_widget)
 
+    def closeEvent(self, event):
+        if QMessageBox.question(self, app_name, "Exit?") == QMessageBox.StandardButton.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()
         request_limit = self._search_limit_spin_box.value()
