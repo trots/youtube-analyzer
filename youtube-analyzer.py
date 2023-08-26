@@ -10,7 +10,8 @@ from PySide6.QtCore import (
     QAbstractTableModel
 )
 from PySide6.QtGui import (
-    QAction
+    QAction,
+    QIcon
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -115,7 +116,7 @@ class AboutDialog(QDialog):
         layout.addWidget(QLabel("Version: " + version), 
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel("Based on youtubesearchpython and PySide."), 
+        layout.addWidget(QLabel("Based on youtubesearchpython and PySide6."), 
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
         vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -281,6 +282,7 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication(sys.argv)
+app.setWindowIcon(QIcon("logo.png"))
 window = MainWindow()
 window.resize(app.screens()[0].size() * 0.7)
 window.show()
