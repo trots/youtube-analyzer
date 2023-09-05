@@ -1,4 +1,4 @@
-# Youtube Analyzer
+# YouTube Analyzer
 
 Software for analyzing of YouTube search output.
 
