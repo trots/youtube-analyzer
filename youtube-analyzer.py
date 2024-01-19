@@ -36,16 +36,26 @@ import xlsxwriter
 
 
 app_name = "YouTube Analyzer"
-version = "1.0"
+version = "1.1"
 
 
 def view_count_to_int(count_str):
-    processed_count = count_str.split()[0].replace(",", "")
+    if not count_str:
+        return 0
+    parts = count_str.split()
+    if len(parts) == 0:
+        return 0
+    processed_count = parts[0].replace(",", "")
     return int(processed_count) if processed_count.isdigit() else 0
 
 
 def subcriber_count_to_int(count_str):
-    number_letter = count_str.split()[0]
+    if not count_str:
+        return 0
+    parts = count_str.split()
+    if len(parts) == 0:
+        return 0
+    number_letter = parts[0]
     match number_letter[-1]:
         case "K":
             multiplier = 1000
@@ -197,6 +207,8 @@ class MainWindow(QMainWindow):
         self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
+        self._table_view.setColumnHidden(8, True) # Hide channel views column because it's not supported in yotubesearchpython
+        self._table_view.setColumnHidden(9, True) # Hide channel join date column because it's not supported in yotubesearchpython
         v_layout.addLayout(h_layout)
         v_layout.addWidget(self._table_view)
 
