@@ -8,9 +8,9 @@ from PySide6.QtCore import (
 def make_result_row(video_title: str, video_published_time: str, video_duration: str, 
                     views: int, video_link: str, channel_title: str, channel_url: str, 
                     channel_subscribers: int, channel_views: int, channel_joined_date: str):
+    view_rate = (str(round(views / channel_subscribers * 100, 2)) + "%") if channel_subscribers > 0 else "-"
     return (video_title, video_published_time, video_duration, views, video_link, channel_title, 
-            channel_url, channel_subscribers, channel_views, channel_joined_date,
-            (str(round(views / channel_subscribers * 100, 2)) + "%"))
+            channel_url, channel_subscribers, channel_views, channel_joined_date, view_rate)
 
 
 class ResultTableModel(QAbstractTableModel):
