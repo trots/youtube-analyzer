@@ -1,11 +1,13 @@
 import sys
 import csv
 from PySide6.QtCore import (
-    Qt
+    Qt,
+    QFileInfo
 )
 from PySide6.QtGui import (
     QAction,
-    QIcon
+    QIcon,
+    QShowEvent
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -23,9 +25,13 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
     QSpacerItem,
-    QMessageBox
+    QMessageBox,
+    QCheckBox
 )
 import xlsxwriter
+from settings import (
+    Settings
+)
 from model import (
     ResultTableModel
 )
@@ -36,6 +42,22 @@ from engine import (
 
 app_name = "YouTube Analyzer"
 version = "2.0dev"
+
+
+class DontAskAgainQuestionDialog(QMessageBox):
+    def __init__(self, title: str, text: str, parent = None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setText(text)
+        self.setIcon(QMessageBox.Icon.Question)
+        self.addButton(QMessageBox.StandardButton.Yes)
+        self.addButton(QMessageBox.StandardButton.No)
+        self.setDefaultButton(QMessageBox.StandardButton.No)
+        self._check_box = QCheckBox("Don't ask again")
+        self.setCheckBox(self._check_box)
+
+    def is_dont_ask_again(self):
+        return 1 if self._check_box.isChecked() else 0
 
 
 class AboutDialog(QDialog):
@@ -90,6 +112,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self._request_text = ""
+        self._settings = Settings(app_name)
+        self._restore_geometry_on_show = True
 
         self.setWindowTitle(app_name + " " + version)
 
@@ -116,7 +140,8 @@ class MainWindow(QMainWindow):
         self._search_limit_spin_box.setToolTip("Set the search result limit")
         self._search_limit_spin_box.setMinimumWidth(50)
         self._search_limit_spin_box.setRange(2, 30)
-        self._search_limit_spin_box.setValue(10)
+        request_limit = int(self._settings.get(Settings.RequestLimit))
+        self._search_limit_spin_box.setValue(request_limit)
         h_layout.addWidget(self._search_limit_spin_box)
         self._search_button = QPushButton("Search")
         self._search_button.setToolTip("Click to start searching")
@@ -139,11 +164,21 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(v_layout)
         self.setCentralWidget(central_widget)
 
+    def showEvent(self, event: QShowEvent):
+        if self._restore_geometry_on_show:
+            self.restoreGeometry(self._settings.get(Settings.MainWindowGeometry))
+            self._restore_geometry_on_show = False
+
     def closeEvent(self, event):
-        if QMessageBox.question(self, app_name, "Exit?") == QMessageBox.StandardButton.Yes:
-            event.accept()
-        else:
-            event.ignore()
+        if not int(self._settings.get(Settings.DontAskAgainExit)):
+            question = DontAskAgainQuestionDialog(app_name, "Exit?")
+            if question.exec() == QMessageBox.StandardButton.No:
+                event.ignore()
+                return
+            self._settings.set(Settings.DontAskAgainExit, question.is_dont_ask_again())
+
+        event.accept()
+        self._settings.set(Settings.MainWindowGeometry, self.saveGeometry())
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()
@@ -151,6 +186,8 @@ class MainWindow(QMainWindow):
 
         if self._request_text == "":
             return
+
+        self._settings.set(Settings.RequestLimit, request_limit)
 
         self._search_line_edit.setDisabled(True)
         self._search_button.setDisabled(True)
@@ -179,8 +216,13 @@ class MainWindow(QMainWindow):
         if self._request_text == "" or len(self._model.result) == 0:
             return
 
+        last_save_dir = self._settings.get(Settings.LastSaveDir)
         file_name = QFileDialog.getSaveFileName(self, caption="Save XLSX", filter='Xlsx File (*.xlsx)',
-                                                dir=(self._request_text + ".xlsx"))
+                                                dir=(last_save_dir + "/" + self._request_text + ".xlsx"))
+        if not file_name[0]:
+            return
+        self._settings.set(Settings.LastSaveDir, QFileInfo(file_name[0]).dir().absolutePath())
+        
         workbook = xlsxwriter.Workbook(file_name[0])
         worksheet = workbook.add_worksheet()
 
@@ -198,8 +240,12 @@ class MainWindow(QMainWindow):
         if self._request_text == "" or len(self._model.result) == 0:
             return
 
+        last_save_dir = self._settings.get(Settings.LastSaveDir)
         file_name = QFileDialog.getSaveFileName(self, caption="Save CSV", filter="Csv File (*.csv)",
-                                                dir=(self._request_text + ".csv"))
+                                                dir=(last_save_dir + "/" + self._request_text + ".csv"))
+        if not file_name[0]:
+            return
+        self._settings.set(Settings.LastSaveDir, QFileInfo(file_name[0]).dir().absolutePath())
 
         with open(file_name[0], 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile, delimiter=';')
