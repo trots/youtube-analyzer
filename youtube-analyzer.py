@@ -30,13 +30,15 @@ from PySide6.QtWidgets import (
 )
 import xlsxwriter
 from settings import (
-    Settings
+    Settings,
+    SettingsDialog
 )
 from model import (
     ResultTableModel
 )
 from engine import (
-    YoutubeGrepEngine
+    YoutubeGrepEngine,
+    YoutubeApiEngine
 )
 
 
@@ -126,6 +128,10 @@ class MainWindow(QMainWindow):
         exit_action = file_menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
 
+        edit_menu = self.menuBar().addMenu("Edit")
+        preferences_action = edit_menu.addAction("Preferences...")
+        preferences_action.triggered.connect(self._on_preferences)
+
         help_menu = self.menuBar().addMenu("Help")
         about_action = help_menu.addAction("About...")
         about_action.triggered.connect(self._on_about)
@@ -196,7 +202,7 @@ class MainWindow(QMainWindow):
         self._model.clear()
         QApplication.instance().processEvents()
 
-        engine = YoutubeGrepEngine(self._model, request_limit)
+        engine = self._create_engine()
         if engine.search(self._request_text):
             self._table_view.resizeColumnsToContents()
         else:
@@ -253,9 +259,21 @@ class MainWindow(QMainWindow):
             for result_item in self._model.result:
                 csv_writer.writerow(result_item)
 
+    def _on_preferences(self):
+        dialog = SettingsDialog(self._settings)
+        dialog.exec()
+
     def _on_about(self):
         dialog = AboutDialog(self)
         dialog.exec()
+
+    def _create_engine(self):
+        request_limit = self._search_limit_spin_box.value()
+        api_key = self._settings.get(Settings.YouTubeApiKey)
+        if not api_key:
+            return YoutubeGrepEngine(self._model, request_limit)
+        else:
+            return YoutubeApiEngine(self._model, request_limit, api_key)
 
 
 app = QApplication(sys.argv)

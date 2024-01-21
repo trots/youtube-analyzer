@@ -85,15 +85,15 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
 
 
 class YoutubeApiEngine(AbstractYoutubeEngine):
-    def __init__(self, model: ResultTableModel, request_limit: int):
+    def __init__(self, model: ResultTableModel, request_limit: int, api_key: str):
         super().__init__(model, request_limit)
+        self._api_key = api_key
 
     def search(self, request_text: str):
         api_service_name = "youtube"
         api_version = "v3"
-        DEVELOPER_KEY = ""
 
-        youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = DEVELOPER_KEY)
+        youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = self._api_key)
 
         request = youtube.search().list(
             part = "snippet",
