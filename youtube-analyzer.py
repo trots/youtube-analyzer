@@ -5,7 +5,7 @@ from PySide6.QtCore import (
     QFileInfo
 )
 from PySide6.QtGui import (
-    QAction,
+    QKeySequence,
     QIcon,
     QShowEvent
 )
@@ -126,6 +126,7 @@ class MainWindow(QMainWindow):
         export_csv_action.triggered.connect(self._on_export_csv)
         file_menu.addSeparator()
         exit_action = file_menu.addAction("Exit")
+        exit_action.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Q))
         exit_action.triggered.connect(self.close)
 
         edit_menu = self.menuBar().addMenu("Edit")
