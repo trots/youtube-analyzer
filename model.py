@@ -14,6 +14,8 @@ def make_result_row(video_title: str, video_published_time: str, video_duration:
 
 
 class ResultTableModel(QAbstractTableModel):
+    SortRole: int = Qt.ItemDataRole.UserRole + 1
+
     def __init__(self, parent, *args):
         QAbstractTableModel.__init__(self, parent, *args)
         self.result = []
@@ -40,9 +42,15 @@ class ResultTableModel(QAbstractTableModel):
     def data(self, index, role):
         if not index.isValid():
             return None
-        elif role != Qt.ItemDataRole.DisplayRole:
-            return None
-        return self.result[index.row()][index.column()]
+        column = index.column()
+        if role == ResultTableModel.SortRole:
+            return self.result[index.row()][column]
+        elif role == Qt.ItemDataRole.DisplayRole:
+            if column == 0 or column == 5:
+                return None
+            return self.result[index.row()][column]
+
+        return None
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:

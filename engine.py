@@ -142,7 +142,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 video_published_time = snippet["publishTime"]
                 video_duration = content_details["duration"]
                 views = int(statistics["viewCount"])
-                video_link = ""
+                video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
                 channel_title = snippet["channelTitle"]
                 channel_url = ""
                 channel_subscribers = int(channel_item["statistics"]["subscriberCount"])

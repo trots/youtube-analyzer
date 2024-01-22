@@ -2,7 +2,8 @@ import sys
 import csv
 from PySide6.QtCore import (
     Qt,
-    QFileInfo
+    QFileInfo,
+    QSortFilterProxyModel
 )
 from PySide6.QtGui import (
     QKeySequence,
@@ -157,11 +158,16 @@ class MainWindow(QMainWindow):
 
         v_layout = QVBoxLayout()
         self._model = ResultTableModel(self)
+        self._sort_model = QSortFilterProxyModel(self)
+        self._sort_model.setSortRole(ResultTableModel.SortRole)
+        self._sort_model.setSourceModel(self._model)
         self._table_view = QTableView(self)
-        self._table_view.setModel(self._model)
+        self._table_view.setModel(self._sort_model)
         self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
+        self._table_view.setColumnHidden(4, True) # Hide video link column because the link is on video title
+        self._table_view.setColumnHidden(6, True) # Hide channel link column because the link is on channel title
         self._table_view.setColumnHidden(8, True) # Hide channel views column because it's not supported in yotubesearchpython
         self._table_view.setColumnHidden(9, True) # Hide channel join date column because it's not supported in yotubesearchpython
         v_layout.addLayout(h_layout)
@@ -201,10 +207,21 @@ class MainWindow(QMainWindow):
         self._table_view.setDisabled(True)
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         self._model.clear()
+        self._sort_model.sort(-1)
         QApplication.instance().processEvents()
 
         engine = self._create_engine()
         if engine.search(self._request_text):
+            for i in range(len(self._model.result)):
+                video_idx = self._sort_model.index(i, 0)
+                video_item = self._model.result[i]
+                video_label = self._create_link_label(video_item[4], video_item[0])
+                self._table_view.setIndexWidget(video_idx, video_label);
+                
+                channel_idx = self._sort_model.index(i, 5)
+                channel_label = self._create_link_label(video_item[6], video_item[5])
+                self._table_view.setIndexWidget(channel_idx, channel_label);
+            
             self._table_view.resizeColumnsToContents()
         else:
             dialog = QMessageBox()
@@ -275,6 +292,15 @@ class MainWindow(QMainWindow):
             return YoutubeGrepEngine(self._model, request_limit)
         else:
             return YoutubeApiEngine(self._model, request_limit, api_key)
+        
+    def _create_link_label(self, link: str, text: str):
+        label = QLabel("<a style=\"color: #0e007a\" href=\"" + link + "\">" + text + "</a>")
+        label_size_policy = label.sizePolicy()
+        label_size_policy.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+        label.setSizePolicy(label_size_policy)
+        label.setTextFormat(Qt.TextFormat.RichText)
+        label.setOpenExternalLinks(True)
+        return label
 
 
 app = QApplication(sys.argv)
