@@ -44,6 +44,8 @@ class ResultTableModel(QAbstractTableModel):
             return None
         column = index.column()
         if role == ResultTableModel.SortRole:
+            if column == 10:
+                return float(self.result[index.row()][column][:-1])
             return self.result[index.row()][column]
         elif role == Qt.ItemDataRole.DisplayRole:
             if column == 0 or column == 5:
