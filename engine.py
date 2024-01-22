@@ -1,4 +1,6 @@
+from datetime import datetime, timedelta
 import traceback
+import isodate
 from youtubesearchpython import (
     VideosSearch, 
     Channel
@@ -139,8 +141,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 content_details = video_item["contentDetails"]
                 statistics = video_item["statistics"]
                 video_title = snippet["title"]
-                video_published_time = snippet["publishTime"]
-                video_duration = content_details["duration"]
+                video_published_time = str(datetime.strptime(snippet["publishTime"], "%Y-%m-%dT%H:%M:%SZ"))
+                video_duration = str(timedelta(seconds = isodate.parse_duration(content_details["duration"]).total_seconds()))
                 views = int(statistics["viewCount"])
                 video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
                 channel_title = snippet["channelTitle"]
