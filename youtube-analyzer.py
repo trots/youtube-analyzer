@@ -3,7 +3,9 @@ import csv
 from PySide6.QtCore import (
     Qt,
     QFileInfo,
-    QSortFilterProxyModel
+    QSortFilterProxyModel,
+    QTranslator,
+    QLibraryInfo
 )
 from PySide6.QtGui import (
     QKeySequence,
@@ -46,6 +48,7 @@ from engine import (
 app_name = "YouTube Analyzer"
 version = "2.0dev"
 
+app_need_restart = False
 
 class DontAskAgainQuestionDialog(QMessageBox):
     def __init__(self, title: str, text: str, parent = None):
@@ -56,7 +59,7 @@ class DontAskAgainQuestionDialog(QMessageBox):
         self.addButton(QMessageBox.StandardButton.Yes)
         self.addButton(QMessageBox.StandardButton.No)
         self.setDefaultButton(QMessageBox.StandardButton.No)
-        self._check_box = QCheckBox("Don't ask again")
+        self._check_box = QCheckBox(self.tr("Don't ask again"))
         self.setCheckBox(self._check_box)
 
     def is_dont_ask_again(self):
@@ -66,7 +69,7 @@ class DontAskAgainQuestionDialog(QMessageBox):
 class AboutDialog(QDialog):
     def __init__(self, parent = None):
         super().__init__(parent)
-        self.setWindowTitle("About")
+        self.setWindowTitle(self.tr("About"))
         layout = QGridLayout()
         layout.setSizeConstraint( QGridLayout.SizeConstraint.SetFixedSize )
         
@@ -75,25 +78,25 @@ class AboutDialog(QDialog):
         title.setStyleSheet("font-size: 14px")
         layout.addWidget(title, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel("Software for analyzing of YouTube search output."), row, 0, 1, 2,
+        layout.addWidget(QLabel(self.tr("Software for analyzing of YouTube search output")), row, 0, 1, 2,
                          Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel("Version: " + version), 
+        layout.addWidget(QLabel(self.tr("Version: ") + version), 
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel("Based on youtubesearchpython and PySide6."), 
+        layout.addWidget(QLabel(self.tr("Based on youtubesearchpython and PySide6")), 
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
         vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         row += 1
-        layout.addWidget(QLabel("Web site:"), row, 0, Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(QLabel(self.tr("Web site:")), row, 0, Qt.AlignmentFlag.AlignRight)
         site = QLabel("<a href=\"https://github.com/trots/youtube-analyzer\">https://github.com/trots/youtube-analyzer</a>")
         site.setOpenExternalLinks(True)
         layout.addWidget(site, row, 1)
         row += 1
-        layout.addWidget(QLabel("License:"), row, 0, Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(QLabel(self.tr("License:")), row, 0, Qt.AlignmentFlag.AlignRight)
         lic = QLabel("<a href=\"https://github.com/trots/youtube-analyzer/blob/master/LICENSE\">MIT License</a>")
         lic.setOpenExternalLinks(True)
         layout.addWidget(lic, row, 1)
@@ -103,56 +106,56 @@ class AboutDialog(QDialog):
         layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         row += 1
-        layout.addWidget(QLabel("Copyright 2023 Alexander Trotsenko."), row, 0, 1, 2,
+        layout.addWidget(QLabel("Copyright 2023 Alexander Trotsenko"), row, 0, 1, 2,
                          Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel("All rights reserved."), row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(QLabel(self.tr("All rights reserved")), row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         self.setLayout(layout)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, settings: Settings):
         super().__init__()
         self._request_text = ""
-        self._settings = Settings(app_name)
+        self._settings = settings
         self._restore_geometry_on_show = True
 
         self.setWindowTitle(app_name + " " + version)
 
-        file_menu = self.menuBar().addMenu("File")
-        export_xlsx_action = file_menu.addAction("Export to XLSX...")
+        file_menu = self.menuBar().addMenu(self.tr("File"))
+        export_xlsx_action = file_menu.addAction(self.tr("Export to XLSX..."))
         export_xlsx_action.triggered.connect(self._on_export_xlsx)
-        export_csv_action = file_menu.addAction("Export to CSV...")
+        export_csv_action = file_menu.addAction(self.tr("Export to CSV..."))
         export_csv_action.triggered.connect(self._on_export_csv)
         file_menu.addSeparator()
-        exit_action = file_menu.addAction("Exit")
+        exit_action = file_menu.addAction(self.tr("Exit"))
         exit_action.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Q))
         exit_action.triggered.connect(self.close)
 
-        edit_menu = self.menuBar().addMenu("Edit")
-        preferences_action = edit_menu.addAction("Preferences...")
+        edit_menu = self.menuBar().addMenu(self.tr("Edit"))
+        preferences_action = edit_menu.addAction(self.tr("Preferences..."))
         preferences_action.triggered.connect(self._on_preferences)
 
-        help_menu = self.menuBar().addMenu("Help")
-        about_action = help_menu.addAction("About...")
+        help_menu = self.menuBar().addMenu(self.tr("Help"))
+        about_action = help_menu.addAction(self.tr("About..."))
         about_action.triggered.connect(self._on_about)
 
         h_layout = QHBoxLayout()
         self._search_line_edit = QLineEdit()
-        self._search_line_edit.setPlaceholderText("Enter request and press 'Search'...")
+        self._search_line_edit.setPlaceholderText(self.tr("Enter request and press 'Search'..."))
         self._search_line_edit.setToolTip(self._search_line_edit.placeholderText())
         self._search_line_edit.returnPressed.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_line_edit)
         self._search_limit_spin_box = QSpinBox()
-        self._search_limit_spin_box.setToolTip("Set the search result limit")
+        self._search_limit_spin_box.setToolTip(self.tr("Set the search result limit"))
         self._search_limit_spin_box.setMinimumWidth(50)
         self._search_limit_spin_box.setRange(2, 30)
         request_limit = int(self._settings.get(Settings.RequestLimit))
         self._search_limit_spin_box.setValue(request_limit)
         h_layout.addWidget(self._search_limit_spin_box)
-        self._search_button = QPushButton("Search")
-        self._search_button.setToolTip("Click to start searching")
+        self._search_button = QPushButton(self.tr("Search"))
+        self._search_button.setToolTip(self.tr("Click to start searching"))
         self._search_button.clicked.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_button)
 
@@ -183,8 +186,9 @@ class MainWindow(QMainWindow):
             self._restore_geometry_on_show = False
 
     def closeEvent(self, event):
-        if not int(self._settings.get(Settings.DontAskAgainExit)):
-            question = DontAskAgainQuestionDialog(app_name, "Exit?")
+        global app_need_restart
+        if not app_need_restart and not int(self._settings.get(Settings.DontAskAgainExit)):
+            question = DontAskAgainQuestionDialog(app_name, self.tr("Exit?"))
             if question.exec() == QMessageBox.StandardButton.No:
                 event.ignore()
                 return
@@ -226,7 +230,7 @@ class MainWindow(QMainWindow):
         else:
             dialog = QMessageBox()
             dialog.setWindowTitle(app_name)
-            dialog.setText("Error in the searching process")
+            dialog.setText(self.tr("Error in the searching process"))
             dialog.setIcon(QMessageBox.Critical)
             dialog.setDetailedText(engine.error)
             dialog.exec()
@@ -241,7 +245,7 @@ class MainWindow(QMainWindow):
             return
 
         last_save_dir = self._settings.get(Settings.LastSaveDir)
-        file_name = QFileDialog.getSaveFileName(self, caption="Save XLSX", filter='Xlsx File (*.xlsx)',
+        file_name = QFileDialog.getSaveFileName(self, caption=self.tr("Save XLSX"), filter='Xlsx File (*.xlsx)',
                                                 dir=(last_save_dir + "/" + self._request_text + ".xlsx"))
         if not file_name[0]:
             return
@@ -265,7 +269,7 @@ class MainWindow(QMainWindow):
             return
 
         last_save_dir = self._settings.get(Settings.LastSaveDir)
-        file_name = QFileDialog.getSaveFileName(self, caption="Save CSV", filter="Csv File (*.csv)",
+        file_name = QFileDialog.getSaveFileName(self, caption=self.tr("Save CSV"), filter="Csv File (*.csv)",
                                                 dir=(last_save_dir + "/" + self._request_text + ".csv"))
         if not file_name[0]:
             return
@@ -278,8 +282,12 @@ class MainWindow(QMainWindow):
                 csv_writer.writerow(result_item)
 
     def _on_preferences(self):
+        global app_need_restart
         dialog = SettingsDialog(self._settings)
         dialog.exec()
+        if dialog.is_need_restart():
+            app_need_restart = True
+            self.close()
 
     def _on_about(self):
         dialog = AboutDialog(self)
@@ -305,7 +313,28 @@ class MainWindow(QMainWindow):
 
 app = QApplication(sys.argv)
 app.setWindowIcon(QIcon("logo.png"))
-window = MainWindow()
-window.resize(app.screens()[0].size() * 0.7)
-window.show()
-app.exec()
+settings = Settings(app_name)
+
+while True:
+    my_translator = QTranslator()
+    qt_translator = QTranslator()
+    if settings.get(Settings.Language) == "Ru":
+        my_lang = "translations/ru.qm"
+        qt_lang = "qtbase_ru.qm"
+    else:
+        my_lang = "translations/en.qm"
+        qt_lang = "qtbase_en.qm"
+    if my_translator.load(my_lang):
+        app.installTranslator(my_translator)
+    if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+        app.installTranslator(qt_translator)
+
+    window = MainWindow(settings)
+    window.resize(app.screens()[0].size() * 0.7)
+    window.show()
+    app.exec()
+
+    if app_need_restart:
+        app_need_restart = False
+    else:
+        break

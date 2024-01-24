@@ -4,3 +4,4 @@ dist
 .venv
 youtube-analyzer.spec
 __pycache__
+translations/*.qm

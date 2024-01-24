@@ -19,9 +19,9 @@ class ResultTableModel(QAbstractTableModel):
     def __init__(self, parent, *args):
         QAbstractTableModel.__init__(self, parent, *args)
         self.result = []
-        self.header = ["Title", "Published Time", "Duration", "View Count", "Link", 
-                       "Channel Name", "Channel Link", "Channel Subscribers",
-                       "Channel Views", "Channel Joined Date", "Views/Subscribers"]
+        self.header = [self.tr("Title"), self.tr("Published Time"), self.tr("Duration"), self.tr("View Count"), self.tr("Link"), 
+                       self.tr("Channel Name"), self.tr("Channel Link"), self.tr("Channel Subscribers"),
+                       self.tr("Channel Views"), self.tr("Channel Joined Date"), self.tr("Views/Subscribers")]
 
     def setData(self, result):
         self.beginResetModel()
