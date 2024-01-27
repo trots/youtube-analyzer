@@ -82,7 +82,9 @@ class Theme:
             palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53));
             app.setPalette(palette)
         else:
-            app.setPalette(QPalette())
+            palette = QPalette()
+            palette.setColor(QPalette.Link, QColor(19, 60, 110))
+            app.setPalette(palette)
 
 
 class DontAskAgainQuestionDialog(QMessageBox):
