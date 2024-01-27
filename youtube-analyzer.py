@@ -10,7 +10,9 @@ from PySide6.QtCore import (
 from PySide6.QtGui import (
     QKeySequence,
     QIcon,
-    QShowEvent
+    QShowEvent,
+    QPalette,
+    QColor
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -49,6 +51,38 @@ app_name = "YouTube Analyzer"
 version = "2.0dev"
 
 app_need_restart = False
+
+
+class Theme:
+    System: int = 0
+    Dark: int = 1
+
+    @staticmethod
+    def apply(app: QApplication, theme_index: int):
+        if theme_index == Theme.Dark:
+            palette = QPalette()
+            palette.setColor(QPalette.Window, QColor(53, 53, 53))
+            palette.setColor(QPalette.WindowText, Qt.white)
+            palette.setColor(QPalette.Base, QColor(25, 25, 25))
+            palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+            palette.setColor(QPalette.ToolTipBase, Qt.black)
+            palette.setColor(QPalette.ToolTipText, Qt.white)
+            palette.setColor(QPalette.Text, Qt.white)
+            palette.setColor(QPalette.Button, QColor(53, 53, 53))
+            palette.setColor(QPalette.ButtonText, Qt.white)
+            palette.setColor(QPalette.BrightText, Qt.red)
+            palette.setColor(QPalette.Link, QColor(148, 192, 236))
+            palette.setColor(QPalette.Highlight, QColor(19, 60, 110))
+            palette.setColor(QPalette.HighlightedText, Qt.white)
+            palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
+            palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(53, 53, 53).lighter());
+            palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(53, 53, 53).lighter());
+            palette.setColor(QPalette.Disabled, QPalette.Text, QColor(53, 53, 53).lighter());
+            palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53));
+            app.setPalette(palette)
+        else:
+            app.setPalette(QPalette())
+
 
 class DontAskAgainQuestionDialog(QMessageBox):
     def __init__(self, title: str, text: str, parent = None):
@@ -284,10 +318,11 @@ class MainWindow(QMainWindow):
     def _on_preferences(self):
         global app_need_restart
         dialog = SettingsDialog(self._settings)
-        dialog.exec()
-        if dialog.is_need_restart():
-            app_need_restart = True
-            self.close()
+        if dialog.exec() == SettingsDialog.DialogCode.Accepted:
+            Theme.apply(QApplication.instance(), int(self._settings.get(Settings.Theme)))
+            if dialog.is_need_restart():
+                app_need_restart = True
+                self.close()
 
     def _on_about(self):
         dialog = AboutDialog(self)
@@ -302,7 +337,7 @@ class MainWindow(QMainWindow):
             return YoutubeApiEngine(self._model, request_limit, api_key)
         
     def _create_link_label(self, link: str, text: str):
-        label = QLabel("<a style=\"color: #0e007a\" href=\"" + link + "\">" + text + "</a>")
+        label = QLabel("<a href=\"" + link + "\">" + text + "</a>")
         label_size_policy = label.sizePolicy()
         label_size_policy.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
         label.setSizePolicy(label_size_policy)
@@ -313,7 +348,9 @@ class MainWindow(QMainWindow):
 
 app = QApplication(sys.argv)
 app.setWindowIcon(QIcon("logo.png"))
+app.setStyle("Fusion")
 settings = Settings(app_name)
+Theme.apply(app, int(settings.get(Settings.Theme)))
 
 while True:
     my_translator = QTranslator()

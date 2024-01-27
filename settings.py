@@ -25,6 +25,7 @@ class Settings:
     DontAskAgainExit = SettingsKey("dont_ask_again_exit", 0)
     YouTubeApiKey = SettingsKey("youtube_api_key", "")
     Language = SettingsKey("language", "")
+    Theme = SettingsKey("theme", 0)
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
@@ -63,6 +64,15 @@ class SettingsDialog(QDialog):
         self._language_combo.currentIndexChanged.connect(self._on_language_changed)
         layout.addWidget(self._language_combo)
 
+        theme_label = QLabel(self.tr("Theme:"))
+        layout.addWidget(theme_label)
+        self._theme_combo = QComboBox()
+        self._theme_combo.setToolTip(self.tr("Set the interface color theme"))
+        self._theme_combo.addItem(self.tr("System"))
+        self._theme_combo.addItem(self.tr("Dark"))
+        self._theme_combo.setCurrentIndex(int(self._settings.get(Settings.Theme)))
+        layout.addWidget(self._theme_combo)
+
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accepted)
         button_box.rejected.connect(self._on_rejected)
@@ -79,6 +89,7 @@ class SettingsDialog(QDialog):
             self._settings.set(Settings.Language, "Ru")
         else:
             self._settings.set(Settings.Language, "En")
+        self._settings.set(Settings.Theme, self._theme_combo.currentIndex())
 
         if self._need_restart:
             text = self.tr("Restart the application now to apply the selected language?")

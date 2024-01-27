@@ -4,37 +4,37 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="73"/>
+        <location filename="../youtube-analyzer.py" line="106"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="85"/>
+        <location filename="../youtube-analyzer.py" line="118"/>
         <source>Version: </source>
         <translation>Version:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="82"/>
+        <location filename="../youtube-analyzer.py" line="115"/>
         <source>Software for analyzing of YouTube search output</source>
         <translation>Software for analyzing of YouTube search output</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="88"/>
+        <location filename="../youtube-analyzer.py" line="121"/>
         <source>Based on youtubesearchpython and PySide6</source>
         <translation>Based on youtubesearchpython and PySide6</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="95"/>
+        <location filename="../youtube-analyzer.py" line="128"/>
         <source>Web site:</source>
         <translation>Web site:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="100"/>
+        <location filename="../youtube-analyzer.py" line="133"/>
         <source>License:</source>
         <translation>License:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="113"/>
+        <location filename="../youtube-analyzer.py" line="146"/>
         <source>All rights reserved</source>
         <translation>All rights reserved</translation>
     </message>
@@ -42,7 +42,7 @@
 <context>
     <name>DontAskAgainQuestionDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="63"/>
+        <location filename="../youtube-analyzer.py" line="96"/>
         <source>Don&apos;t ask again</source>
         <translation>Don&apos;t ask again</translation>
     </message>
@@ -50,82 +50,82 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="127"/>
+        <location filename="../youtube-analyzer.py" line="160"/>
         <source>File</source>
         <translation>File</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="128"/>
+        <location filename="../youtube-analyzer.py" line="161"/>
         <source>Export to XLSX...</source>
         <translation>Export to XLSX...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="130"/>
+        <location filename="../youtube-analyzer.py" line="163"/>
         <source>Export to CSV...</source>
         <translation>Export to CSV...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="133"/>
+        <location filename="../youtube-analyzer.py" line="166"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="137"/>
+        <location filename="../youtube-analyzer.py" line="170"/>
         <source>Edit</source>
         <translation>Edit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="138"/>
+        <location filename="../youtube-analyzer.py" line="171"/>
         <source>Preferences...</source>
         <translation>Preferences...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="141"/>
+        <location filename="../youtube-analyzer.py" line="174"/>
         <source>Help</source>
         <translation>Help</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="142"/>
+        <location filename="../youtube-analyzer.py" line="175"/>
         <source>About...</source>
         <translation>About...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="147"/>
+        <location filename="../youtube-analyzer.py" line="180"/>
         <source>Enter request and press &apos;Search&apos;...</source>
         <translation>Enter request and press &apos;Search&apos;...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="152"/>
+        <location filename="../youtube-analyzer.py" line="185"/>
         <source>Set the search result limit</source>
         <translation>Set the search result limit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="158"/>
+        <location filename="../youtube-analyzer.py" line="191"/>
         <source>Search</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="159"/>
+        <location filename="../youtube-analyzer.py" line="192"/>
         <source>Click to start searching</source>
         <translation>Click to start searching</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="192"/>
+        <location filename="../youtube-analyzer.py" line="225"/>
         <source>Exit?</source>
         <translation>Exit?</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="234"/>
+        <location filename="../youtube-analyzer.py" line="267"/>
         <source>Error in the searching process</source>
         <translation>Error in the searching process</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="249"/>
+        <location filename="../youtube-analyzer.py" line="282"/>
         <source>Save XLSX</source>
         <translation>Save XLSX</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="273"/>
+        <location filename="../youtube-analyzer.py" line="306"/>
         <source>Save CSV</source>
         <translation>Save CSV</translation>
     </message>
@@ -191,32 +191,52 @@
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../settings.py" line="44"/>
+        <location filename="../settings.py" line="45"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="47"/>
+        <location filename="../settings.py" line="48"/>
         <source>YouTube API Key:</source>
         <translation>YouTube API Key:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="50"/>
+        <location filename="../settings.py" line="51"/>
         <source>Set the key to use the YouTube API for YouTube search</source>
         <translation>Set the key to use the YouTube API for YouTube search</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="53"/>
+        <location filename="../settings.py" line="54"/>
         <source>Language:</source>
         <translation>Language:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="56"/>
+        <location filename="../settings.py" line="57"/>
         <source>Set the interface language</source>
         <translation>Set the interface language</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="85"/>
+        <location filename="../settings.py" line="67"/>
+        <source>Theme:</source>
+        <translation>Theme:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="70"/>
+        <source>Set the interface color theme</source>
+        <translation>Set the interface color theme</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="71"/>
+        <source>System</source>
+        <translation>System</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="72"/>
+        <source>Dark</source>
+        <translation>Dark</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="96"/>
         <source>Restart the application now to apply the selected language?</source>
         <translation>Restart the application now to apply the selected language?</translation>
     </message>
