@@ -143,7 +143,7 @@ class AboutDialog(QDialog):
         layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         row += 1
-        layout.addWidget(QLabel("Copyright 2023 Alexander Trotsenko"), row, 0, 1, 2,
+        layout.addWidget(QLabel("Copyright 2024 Alexander Trotsenko"), row, 0, 1, 2,
                          Qt.AlignmentFlag.AlignCenter)
         row += 1
         layout.addWidget(QLabel(self.tr("All rights reserved")), row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
