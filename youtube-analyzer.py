@@ -39,6 +39,7 @@ from settings import (
     SettingsDialog
 )
 from model import (
+    ResultFields,
     ResultTableModel
 )
 from engine import (
@@ -203,10 +204,10 @@ class MainWindow(QMainWindow):
         self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
-        self._table_view.setColumnHidden(4, True) # Hide video link column because the link is on video title
-        self._table_view.setColumnHidden(6, True) # Hide channel link column because the link is on channel title
-        self._table_view.setColumnHidden(8, True) # Hide channel views column because it's not supported in yotubesearchpython
-        self._table_view.setColumnHidden(9, True) # Hide channel join date column because it's not supported in yotubesearchpython
+        self._table_view.setColumnHidden(ResultFields.VideoLink, True) # Hide column because the link is on video title
+        self._table_view.setColumnHidden(ResultFields.ChannelLink, True) # Hide column because the link is on channel title
+        self._table_view.setColumnHidden(ResultFields.ChannelViews, True) # It's not supported in yotubesearchpython
+        self._table_view.setColumnHidden(ResultFields.ChannelJoinedDate, True) # It's not supported in yotubesearchpython
         v_layout.addLayout(h_layout)
         v_layout.addWidget(self._table_view)
 
@@ -251,13 +252,13 @@ class MainWindow(QMainWindow):
         engine = self._create_engine()
         if engine.search(self._request_text):
             for i in range(len(self._model.result)):
-                video_idx = self._sort_model.index(i, 0)
+                video_idx = self._sort_model.index(i, ResultFields.VideoTitle)
                 video_item = self._model.result[i]
-                video_label = self._create_link_label(video_item[4], video_item[0])
+                video_label = self._create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
                 self._table_view.setIndexWidget(video_idx, video_label);
                 
-                channel_idx = self._sort_model.index(i, 5)
-                channel_label = self._create_link_label(video_item[6], video_item[5])
+                channel_idx = self._sort_model.index(i, ResultFields.ChannelTitle)
+                channel_label = self._create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
                 self._table_view.setIndexWidget(channel_idx, channel_label);
             
             self._table_view.resizeColumnsToContents()

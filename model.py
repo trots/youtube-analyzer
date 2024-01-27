@@ -6,11 +6,25 @@ from PySide6.QtCore import (
 
 
 def make_result_row(video_title: str, video_published_time: str, video_duration: str, 
-                    views: int, video_link: str, channel_title: str, channel_url: str, 
+                    views: int, video_link: str, channel_title: str, channel_link: str, 
                     channel_subscribers: int, channel_views: int, channel_joined_date: str):
     view_rate = (str(round(views / channel_subscribers * 100, 2)) + "%") if channel_subscribers > 0 else "-"
     return (video_title, video_published_time, video_duration, views, video_link, channel_title, 
-            channel_url, channel_subscribers, channel_views, channel_joined_date, view_rate)
+            channel_link, channel_subscribers, channel_views, channel_joined_date, view_rate)
+
+
+class ResultFields:
+    VideoTitle: int = 0
+    VideoPublishedTime: int = 1
+    VideoDuration: int = 2
+    VideoViews: int = 3
+    VideoLink: int = 4
+    ChannelTitle: int = 5
+    ChannelLink: int = 6
+    ChannelSubscribers: int = 7
+    ChannelViews: int = 8
+    ChannelJoinedDate: int = 9
+    ViewRate: int = 10
 
 
 class ResultTableModel(QAbstractTableModel):
@@ -44,11 +58,11 @@ class ResultTableModel(QAbstractTableModel):
             return None
         column = index.column()
         if role == ResultTableModel.SortRole:
-            if column == 10:
+            if column == ResultFields.ViewRate:
                 return float(self.result[index.row()][column][:-1])
             return self.result[index.row()][column]
         elif role == Qt.ItemDataRole.DisplayRole:
-            if column == 0 or column == 5:
+            if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
                 return None
             return self.result[index.row()][column]
 
