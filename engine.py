@@ -95,15 +95,16 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         api_service_name = "youtube"
         api_version = "v3"
 
-        youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = self._api_key)
-
-        request = youtube.search().list(
-            part = "snippet",
-            maxResults = self._request_limit,
-            q = request_text,
-            type="video"
-        )
         try:
+            youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = self._api_key)
+
+            request = youtube.search().list(
+                part = "snippet",
+                maxResults = self._request_limit,
+                q = request_text,
+                type="video"
+            )
+
             search_response = request.execute()
 
             video_ids = ""
