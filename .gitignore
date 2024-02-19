@@ -5,3 +5,5 @@ dist
 youtube-analyzer.spec
 __pycache__
 translations/*.qm
+youtube-analyzer.build
+youtube-analyzer.dist
