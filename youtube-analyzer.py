@@ -49,7 +49,7 @@ from engine import (
 
 
 app_name = "YouTube Analyzer"
-version = "2.0dev"
+version = "2.0"
 
 app_need_restart = False
 
