@@ -1,20 +1,20 @@
 import sys
 import csv
-from PySide6.QtCore import (
+from PySide2.QtCore import (
     Qt,
     QFileInfo,
     QSortFilterProxyModel,
     QTranslator,
     QLibraryInfo
 )
-from PySide6.QtGui import (
+from PySide2.QtGui import (
     QKeySequence,
     QIcon,
     QShowEvent,
     QPalette,
     QColor
 )
-from PySide6.QtWidgets import (
+from PySide2.QtWidgets import (
     QApplication,
     QLineEdit,
     QMainWindow,
@@ -49,7 +49,7 @@ from engine import (
 
 
 app_name = "YouTube Analyzer"
-version = "2.0"
+version = "2.0 (Windows 7 port)"
 
 app_need_restart = False
 
@@ -366,13 +366,13 @@ while True:
         qt_lang = "qtbase_en.qm"
     if my_translator.load(my_lang):
         app.installTranslator(my_translator)
-    if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+    if qt_translator.load(qt_lang, QLibraryInfo.location(QLibraryInfo.LibraryLocation.TranslationsPath)):
         app.installTranslator(qt_translator)
 
     window = MainWindow(settings)
     window.resize(app.screens()[0].size() * 0.7)
     window.show()
-    app.exec()
+    app.exec_()
 
     if app_need_restart:
         app_need_restart = False

@@ -1,5 +1,5 @@
 import operator
-from PySide6.QtCore import (
+from PySide2.QtCore import (
     Qt,
     QAbstractTableModel
 )
