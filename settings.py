@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from PySide6.QtCore import (
+from PySide2.QtCore import (
     QByteArray,
     QSettings
 )
-from PySide6.QtWidgets import (
+from PySide2.QtWidgets import (
     QLineEdit,
     QVBoxLayout,
     QDialog,

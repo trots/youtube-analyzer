@@ -1,16 +1,16 @@
-from PySide6.QtCore import (
+from PySide2.QtCore import (
     QSize,
     Qt,
     QModelIndex,
     QUrl,
     QTimer
 )
-from PySide6.QtGui import (
+from PySide2.QtGui import (
     QImage,
     QPixmap,
     QResizeEvent
 )
-from PySide6.QtWidgets import (
+from PySide2.QtWidgets import (
     QWidget,
     QScrollArea,
     QVBoxLayout,
@@ -36,7 +36,7 @@ class PixmapLabel(QLabel):
         self.setScaledContents(False)
         self._pixmap = None
 
-    def setPixmap(self, pixmap: QPixmap | QImage | str):
+    def setPixmap(self, pixmap):
         self._pixmap = pixmap
         scaled_pixmap = self._scaled_pixmap()
         if scaled_pixmap is not None:

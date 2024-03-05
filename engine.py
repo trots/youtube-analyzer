@@ -1,15 +1,15 @@
 from datetime import datetime, timedelta
 import traceback
 import isodate
-from PySide6.QtCore import (
+from PySide2.QtCore import (
     QObject,
     Signal,
     QUrl
 )
-from PySide6.QtGui import (
+from PySide2.QtGui import (
     QImage
 )
-from PySide6.QtNetwork import (
+from PySide2.QtNetwork import (
     QNetworkAccessManager,
     QNetworkRequest,
     QNetworkReply
@@ -45,15 +45,14 @@ def subcriber_count_to_int(count_str):
     if len(parts) == 0:
         return 0
     number_letter = parts[0]
-    match number_letter[-1]:
-        case "K":
-            multiplier = 1000
-        case "M":
-            multiplier = 1000000
-        case "B":
-            multiplier = 1000000000
-        case _:
-            multiplier = 1
+    if number_letter[-1] == "K":
+        multiplier = 1000
+    elif number_letter[-1] == "M":
+        multiplier = 1000000
+    elif number_letter[-1] == "B":
+        multiplier = 1000000000
+    else:
+        multiplier = 1
     if multiplier == 1:
         return int(number_letter)
     return int(float(number_letter[:-1]) * multiplier)
