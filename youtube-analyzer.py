@@ -5,7 +5,8 @@ from PySide6.QtCore import (
     QFileInfo,
     QSortFilterProxyModel,
     QTranslator,
-    QLibraryInfo
+    QLibraryInfo,
+    QItemSelection
 )
 from PySide6.QtGui import (
     QKeySequence,
@@ -31,7 +32,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QSpacerItem,
     QMessageBox,
-    QCheckBox
+    QCheckBox,
+    QSplitter
 )
 import xlsxwriter
 from settings import (
@@ -45,6 +47,9 @@ from model import (
 from engine import (
     YoutubeGrepEngine,
     YoutubeApiEngine
+)
+from widgets import (
+    VideoDetailsWidget
 )
 
 
@@ -196,7 +201,6 @@ class MainWindow(QMainWindow):
         self._search_button.clicked.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_button)
 
-        v_layout = QVBoxLayout()
         self._model = ResultTableModel(self)
         self._sort_model = QSortFilterProxyModel(self)
         self._sort_model.setSortRole(ResultTableModel.SortRole)
@@ -210,8 +214,17 @@ class MainWindow(QMainWindow):
         self._table_view.setColumnHidden(ResultFields.ChannelLink, True) # Hide column because the link is on channel title
         self._table_view.setColumnHidden(ResultFields.ChannelViews, True) # It's not supported in yotubesearchpython
         self._table_view.setColumnHidden(ResultFields.ChannelJoinedDate, True) # It's not supported in yotubesearchpython
+        self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
+
+        self._details_widget = VideoDetailsWidget(self._model, self)
+
+        main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_splitter.addWidget(self._table_view)
+        main_splitter.addWidget(self._details_widget)
+        
+        v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
-        v_layout.addWidget(self._table_view)
+        v_layout.addWidget(main_splitter)
 
         central_widget = QWidget()
         central_widget.setLayout(v_layout)
@@ -276,6 +289,13 @@ class MainWindow(QMainWindow):
         self._search_line_edit.setDisabled(False)
         self._search_button.setDisabled(False)
         self._table_view.setDisabled(False)
+
+    def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
+        indexes = current.indexes()
+        if len(indexes) > 0:
+            self._details_widget.set_current_index(indexes[0])
+        else:
+            self._details_widget.set_current_index(None)
 
     def _on_export_xlsx(self):
         if self._request_text == "" or len(self._model.result) == 0:
