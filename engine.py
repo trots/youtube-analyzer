@@ -147,7 +147,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 views = int(statistics["viewCount"])
                 video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
                 channel_title = snippet["channelTitle"]
-                channel_url = ""
+                channel_url = "https://www.youtube.com/channel/" + snippet["channelId"]
                 channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
                 channel_views = int(channel_item["statistics"]["viewCount"])
                 channel_joined_date = ""
