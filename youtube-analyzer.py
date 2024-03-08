@@ -54,7 +54,7 @@ from widgets import (
 
 
 app_name = "YouTube Analyzer"
-version = "2.0"
+version = "3.0"
 
 app_need_restart = False
 
