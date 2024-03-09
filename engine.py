@@ -1,6 +1,18 @@
 from datetime import datetime, timedelta
 import traceback
 import isodate
+from PySide6.QtCore import (
+    QObject,
+    Signal
+)
+from PySide6.QtGui import (
+    QImage
+)
+from PySide6.QtNetwork import (
+    QNetworkAccessManager,
+    QNetworkRequest,
+    QNetworkReply
+)
 from youtubesearchpython import (
     VideosSearch, 
     Channel
@@ -38,7 +50,36 @@ def subcriber_count_to_int(count_str):
             multiplier = 1000000000
         case _:
             multiplier = 1
+    if multiplier == 1:
+        return int(number_letter)
     return int(float(number_letter[:-1]) * multiplier)
+
+
+class ImageDownloader(QObject):
+    finished = Signal(QImage)
+    error = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._try_again = True
+        self._manager = QNetworkAccessManager()
+        self._manager.finished.connect(self._handle_finished)
+
+    def start_download(self, url):
+        self._manager.clearConnectionCache()
+        self._manager.get(QNetworkRequest(url))
+
+    def _handle_finished(self, reply: QNetworkReply):
+        if reply.error() != QNetworkReply.NoError:
+            self.error.emit(reply.errorString())
+            return
+        image = QImage()
+        image.loadFromData(reply.readAll())
+        if image.isNull() and self._try_again:
+            self._manager.get(QNetworkRequest(reply.url()))
+            self._try_again = False
+        self._try_again = True
+        self.finished.emit(image)
 
 
 class AbstractYoutubeEngine:
@@ -69,10 +110,11 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     channel = Channel.get(video["channel"]["id"])
                     channel_views = view_count_to_int(channel["views"])
                     channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
+                    preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
                     result.append(
                         make_result_row(video["title"], video["publishedTime"], video["duration"], 
                             views, video["link"], channel["title"], channel["url"], channel_subscribers,
-                            channel_views, channel["joinedDate"]))
+                            channel_views, channel["joinedDate"], preview_link))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -151,11 +193,12 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
                 channel_views = int(channel_item["statistics"]["viewCount"])
                 channel_joined_date = ""
+                video_preview_link = snippet["thumbnails"]["high"]["url"]
                 count = count + 1
                 result.append(
                     make_result_row(video_title, video_published_time, video_duration, views, 
                                     video_link, channel_title, channel_url, channel_subscribers,
-                                    channel_views, channel_joined_date))
+                                    channel_views, channel_joined_date, video_preview_link))
 
             self._model.setData(result)
             return True

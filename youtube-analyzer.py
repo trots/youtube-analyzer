@@ -36,6 +36,10 @@ from PySide6.QtWidgets import (
     QSplitter
 )
 import xlsxwriter
+from defines import (
+    app_name,
+    version
+)
 from settings import (
     Settings,
     SettingsDialog
@@ -52,9 +56,6 @@ from widgets import (
     VideoDetailsWidget
 )
 
-
-app_name = "YouTube Analyzer"
-version = "3.0"
 
 app_need_restart = False
 
@@ -262,6 +263,7 @@ class MainWindow(QMainWindow):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         self._model.clear()
         self._sort_model.sort(-1)
+        self._details_widget.set_current_index(None)
         QApplication.instance().processEvents()
 
         engine = self._create_engine()
