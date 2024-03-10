@@ -208,6 +208,8 @@ class MainWindow(QMainWindow):
         self._sort_model.setSourceModel(self._model)
         self._table_view = QTableView(self)
         self._table_view.setModel(self._sort_model)
+        self._table_view.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+        self._table_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
