@@ -180,6 +180,11 @@ class MainWindow(QMainWindow):
         preferences_action = edit_menu.addAction(self.tr("Preferences..."))
         preferences_action.triggered.connect(self._on_preferences)
 
+        view_menu = self.menuBar().addMenu(self.tr("View"))
+        show_details_action = view_menu.addAction(self.tr("Show video details"))
+        show_details_action.setCheckable(True)
+        show_details_action.setChecked(True)
+
         help_menu = self.menuBar().addMenu(self.tr("Help"))
         about_action = help_menu.addAction(self.tr("About..."))
         about_action.triggered.connect(self._on_about)
@@ -220,8 +225,11 @@ class MainWindow(QMainWindow):
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
         self._details_widget = VideoDetailsWidget(self._model, self)
+        self._details_widget.setVisible(show_details_action.isChecked())
+        show_details_action.toggled.connect(self._details_widget.setVisible)
 
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_splitter.setChildrenCollapsible(False)
         main_splitter.addWidget(self._table_view)
         main_splitter.addWidget(self._details_widget)
         
