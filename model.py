@@ -81,3 +81,17 @@ class ResultTableModel(QAbstractTableModel):
         if order == Qt.SortOrder.DescendingOrder:
             self.result.reverse()
         self.layoutChanged.emit()
+
+
+class DataCache:
+    def __init__(self):
+        self._images = {}
+
+    def cache_image(self, url, image):
+        self._images[url] = image
+
+    def get_image(self, url):
+        return self._images[url] if url in self._images else None
+
+    def clear(self):
+        self._images.clear()

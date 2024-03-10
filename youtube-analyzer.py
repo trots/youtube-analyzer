@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         self._model.clear()
         self._sort_model.sort(-1)
-        self._details_widget.set_current_index(None)
+        self._details_widget.clear()
         QApplication.instance().processEvents()
 
         engine = self._create_engine()
