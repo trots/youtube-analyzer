@@ -295,7 +295,7 @@ class MainWindow(QMainWindow):
     def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
         indexes = current.indexes()
         if len(indexes) > 0:
-            self._details_widget.set_current_index(indexes[0])
+            self._details_widget.set_current_index(self._sort_model.mapToSource(indexes[0]))
         else:
             self._details_widget.set_current_index(None)
 
