@@ -181,9 +181,9 @@ class MainWindow(QMainWindow):
         preferences_action.triggered.connect(self._on_preferences)
 
         view_menu = self.menuBar().addMenu(self.tr("View"))
-        show_details_action = view_menu.addAction(self.tr("Show video details"))
-        show_details_action.setCheckable(True)
-        show_details_action.setChecked(True)
+        self._show_details_action = view_menu.addAction(self.tr("Show video details"))
+        self._show_details_action.setCheckable(True)
+        self._show_details_action.setChecked(True)
 
         help_menu = self.menuBar().addMenu(self.tr("Help"))
         about_action = help_menu.addAction(self.tr("About..."))
@@ -225,25 +225,28 @@ class MainWindow(QMainWindow):
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
         self._details_widget = VideoDetailsWidget(self._model, self)
-        self._details_widget.setVisible(show_details_action.isChecked())
-        show_details_action.toggled.connect(self._details_widget.setVisible)
+        self._details_widget.setVisible(self._show_details_action.isChecked())
+        self._show_details_action.toggled.connect(self._details_widget.setVisible)
 
-        main_splitter = QSplitter(Qt.Orientation.Horizontal)
-        main_splitter.setChildrenCollapsible(False)
-        main_splitter.addWidget(self._table_view)
-        main_splitter.addWidget(self._details_widget)
+        self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._main_splitter.setChildrenCollapsible(False)
+        self._main_splitter.addWidget(self._table_view)
+        self._main_splitter.addWidget(self._details_widget)
         
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
-        v_layout.addWidget(main_splitter)
+        v_layout.addWidget(self._main_splitter)
 
         central_widget = QWidget()
         central_widget.setLayout(v_layout)
         self.setCentralWidget(central_widget)
 
-    def showEvent(self, event: QShowEvent):
+    def showEvent(self, _event: QShowEvent):
         if self._restore_geometry_on_show:
             self.restoreGeometry(self._settings.get(Settings.MainWindowGeometry))
+            self._main_splitter.setSizes(list(map(int, self._settings.get(Settings.MainSplitterState))))
+            show_details = True if self._settings.get(Settings.DetailsVisible) == "true" else False
+            self._show_details_action.setChecked(show_details)
             self._restore_geometry_on_show = False
 
     def closeEvent(self, event):
@@ -257,6 +260,8 @@ class MainWindow(QMainWindow):
 
         event.accept()
         self._settings.set(Settings.MainWindowGeometry, self.saveGeometry())
+        self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
+        self._settings.set(Settings.DetailsVisible, self._show_details_action.isChecked())
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()

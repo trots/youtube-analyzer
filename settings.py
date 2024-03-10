@@ -26,6 +26,8 @@ class Settings:
     YouTubeApiKey = SettingsKey("youtube_api_key", "")
     Language = SettingsKey("language", "")
     Theme = SettingsKey("theme", 0)
+    MainSplitterState = SettingsKey("main_splitter_state", [0, 0])
+    DetailsVisible = SettingsKey("details", True)
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
