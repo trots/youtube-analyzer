@@ -123,10 +123,11 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     channel_views = view_count_to_int(channel["views"])
                     channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
+                    channel_logo_link = channel["thumbnails"][0]["url"] if len(channel["thumbnails"]) > 0 else ""
                     result.append(
                         make_result_row(video["title"], video["publishedTime"], video["duration"], 
                             views, video["link"], channel["title"], channel["url"], channel_subscribers,
-                            channel_views, channel["joinedDate"], preview_link))
+                            channel_views, channel["joinedDate"], preview_link, channel_logo_link))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -179,11 +180,11 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             video_response = video_request.execute()
 
             channel_request = youtube.channels().list(
-                part="statistics",
+                part="snippet,statistics",
                 id=channel_ids
             )
-            channels = {}
             channel_response = channel_request.execute()
+            channels = {}
             for channel_item in channel_response["items"]:
                 channels[channel_item["id"]] = channel_item
 
@@ -192,7 +193,6 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             for search_item in search_response["items"]:
                 video_item = video_response["items"][count]
                 snippet = search_item["snippet"]
-                channel_item = channels[snippet["channelId"]]
                 content_details = video_item["contentDetails"]
                 statistics = video_item["statistics"]
                 video_title = snippet["title"]
@@ -202,15 +202,19 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
                 channel_title = snippet["channelTitle"]
                 channel_url = "https://www.youtube.com/channel/" + snippet["channelId"]
+                channel_item = channels[snippet["channelId"]]
                 channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
                 channel_views = int(channel_item["statistics"]["viewCount"])
                 channel_joined_date = ""
                 video_preview_link = snippet["thumbnails"]["high"]["url"]
+                channel_snippet = channel_item["snippet"]
+                channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
+                channel_logo_link = channel_logo_link.replace("https", "http") # https not working. I don't know why (2024.03.10)
                 count = count + 1
                 result.append(
                     make_result_row(video_title, video_published_time, video_duration, views, 
                                     video_link, channel_title, channel_url, channel_subscribers,
-                                    channel_views, channel_joined_date, video_preview_link))
+                                    channel_views, channel_joined_date, video_preview_link, channel_logo_link))
 
             self._model.setData(result)
             return True

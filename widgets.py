@@ -15,11 +15,8 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
-    QMessageBox
-)
-from defines import (
-    app_name
+    QGridLayout,
+    QLabel
 )
 from engine import (
     ImageDownloader
@@ -71,10 +68,12 @@ class VideoDetailsWidget(QWidget):
     def __init__(self, model: ResultTableModel, parent: QWidget = None):
         super().__init__(parent)
         self._model = model
-        self._downloader = ImageDownloader()
-        self._downloader.finished.connect(self._on_download_finished)
-        self._downloader.error.connect(self._on_download_error)
-        self._preview_pixmap = None
+        self._preview_downloader = ImageDownloader()
+        self._preview_downloader.finished.connect(self._on_preview_download_finished)
+        self._preview_downloader.error.connect(self._on_download_error)
+        self._logo_downloader = ImageDownloader()
+        self._logo_downloader.finished.connect(self._on_logo_download_finished)
+        self._logo_downloader.error.connect(self._on_download_error)
 
         spacing = 10
         main_widget = QWidget(self)
@@ -98,16 +97,22 @@ class VideoDetailsWidget(QWidget):
         main_layout.addWidget(self._duration_label)
         main_layout.addSpacing(spacing)
 
+        channel_layout = QGridLayout()
+        self._channel_logo_label = PixmapLabel(main_widget)
+        self._channel_logo_label.setFixedSize(QSize(40, 40))
+        channel_layout.addWidget(self._channel_logo_label, 0, 0, 0, 1)
+
         self._channel_title_label = QLabel(main_widget)
         self._channel_title_label.setToolTip(self._model.header[ResultFields.ChannelTitle])
         self._channel_title_label.setTextFormat(Qt.TextFormat.RichText)
         self._channel_title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self._channel_title_label.setOpenExternalLinks(True)
-        main_layout.addWidget(self._channel_title_label)
+        channel_layout.addWidget(self._channel_title_label, 0, 1)
 
         self._subscribers_label = QLabel(main_widget)
         self._subscribers_label.setToolTip(self._model.header[ResultFields.ChannelSubscribers])
-        main_layout.addWidget(self._subscribers_label)
+        channel_layout.addWidget(self._subscribers_label, 1, 1)
+        main_layout.addLayout(channel_layout)
         main_layout.addSpacing(spacing)
 
         views_layout = QHBoxLayout()
@@ -150,12 +155,16 @@ class VideoDetailsWidget(QWidget):
         self._published_time_label.setText(row_data[ResultFields.VideoPublishedTime])
         self._views_rate_label.setText(self._model.header[ResultFields.ViewRate] + ": " + row_data[ResultFields.ViewRate])
         self._preview_label.clear()
+        self._channel_logo_label.clear()
 
         preview_url = QUrl.fromUserInput(row_data[ResultFields.VideoPreviewLink])
-        self._downloader.start_download(preview_url)
+        self._preview_downloader.start_download(preview_url)
+        logo_url = QUrl.fromUserInput(row_data[ResultFields.ChannelLogoLink])
+        self._logo_downloader.start_download(logo_url)
 
     def clear(self):
-        self._downloader.clear_cache()
+        self._preview_downloader.clear_cache()
+        self._logo_downloader.clear_cache()
         self._title_label.clear()
         self._duration_label.clear()
         self._channel_title_label.clear()
@@ -165,11 +174,18 @@ class VideoDetailsWidget(QWidget):
         self._views_rate_label.clear()
         self._preview_label.setPixmap(None)
         self._preview_label.clear()
+        self._channel_logo_label.setPixmap(None)
+        self._channel_logo_label.clear()
 
-    def _on_download_finished(self, image):
+    def _on_preview_download_finished(self, image):
         preview_pixmap = QPixmap.fromImage(image)
         if not preview_pixmap.isNull():
             self._preview_label.setPixmap(preview_pixmap)
 
+    def _on_logo_download_finished(self, image):
+        logo_pixmap = QPixmap.fromImage(image)
+        if not logo_pixmap.isNull():
+            self._channel_logo_label.setPixmap(logo_pixmap)
+
     def _on_download_error(self, error):
-        QMessageBox.warning(self, app_name, self.tr("Download preview error: ") + error)
+        print(self.tr("Download error: ") + error)
