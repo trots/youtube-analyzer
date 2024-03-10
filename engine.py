@@ -3,7 +3,8 @@ import traceback
 import isodate
 from PySide6.QtCore import (
     QObject,
-    Signal
+    Signal,
+    QUrl
 )
 from PySide6.QtGui import (
     QImage
@@ -20,7 +21,8 @@ from youtubesearchpython import (
 import googleapiclient.discovery
 from model import (
     make_result_row,
-    ResultTableModel
+    ResultTableModel,
+    DataCache
 )
 
 
@@ -64,10 +66,19 @@ class ImageDownloader(QObject):
         self._try_again = True
         self._manager = QNetworkAccessManager()
         self._manager.finished.connect(self._handle_finished)
+        self._data_cache = DataCache()
 
-    def start_download(self, url):
-        self._manager.clearConnectionCache()
-        self._manager.get(QNetworkRequest(url))
+    def start_download(self, url: QUrl):
+        image = self._data_cache.get_image(url.toString())
+        if image is not None:
+            self.finished.emit(image)
+        else:
+            self._manager.clearConnectionCache()
+            self._manager.get(QNetworkRequest(url))
+
+    def clear_cache(self):
+        self._manager.clearAccessCache()
+        self._data_cache.clear()
 
     def _handle_finished(self, reply: QNetworkReply):
         if reply.error() != QNetworkReply.NoError:
@@ -79,6 +90,7 @@ class ImageDownloader(QObject):
             self._manager.get(QNetworkRequest(reply.url()))
             self._try_again = False
         self._try_again = True
+        self._data_cache.cache_image(reply.url().toString(), image)
         self.finished.emit(image)
 
 

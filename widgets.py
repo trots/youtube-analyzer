@@ -137,20 +137,11 @@ class VideoDetailsWidget(QWidget):
         self.layout().addWidget(scroll_area)
 
     def set_current_index(self, index: QModelIndex):
-        if index is None:
-            self._title_label.clear()
-            self._duration_label.clear()
-            self._channel_title_label.clear()
-            self._subscribers_label.clear()
-            self._views_label.clear()
-            self._published_time_label.clear()
-            self._views_rate_label.clear()
-            self._preview_label.setPixmap(None)
-            self._preview_label.clear()
+        if index is None or index.row() < 0 or index.row() >= len(self._model.result):
+            self.clear()
             return
 
-        row = index.row()
-        row_data = self._model.result[row]
+        row_data = self._model.result[index.row()]
         self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\">" + row_data[ResultFields.VideoTitle] + "</a>")
         self._duration_label.setText(row_data[ResultFields.VideoDuration])
         self._channel_title_label.setText("<a href=\"" + row_data[ResultFields.ChannelLink] + "\">" + row_data[ResultFields.ChannelTitle] + "</a>")
@@ -160,12 +151,25 @@ class VideoDetailsWidget(QWidget):
         self._views_rate_label.setText(self._model.header[ResultFields.ViewRate] + ": " + row_data[ResultFields.ViewRate])
         self._preview_label.clear()
 
-        url = QUrl.fromUserInput(row_data[ResultFields.VideoPreviewLink])
-        self._downloader.start_download(url)
+        preview_url = QUrl.fromUserInput(row_data[ResultFields.VideoPreviewLink])
+        self._downloader.start_download(preview_url)
+
+    def clear(self):
+        self._downloader.clear_cache()
+        self._title_label.clear()
+        self._duration_label.clear()
+        self._channel_title_label.clear()
+        self._subscribers_label.clear()
+        self._views_label.clear()
+        self._published_time_label.clear()
+        self._views_rate_label.clear()
+        self._preview_label.setPixmap(None)
+        self._preview_label.clear()
 
     def _on_download_finished(self, image):
         preview_pixmap = QPixmap.fromImage(image)
-        self._preview_label.setPixmap(preview_pixmap)
+        if not preview_pixmap.isNull():
+            self._preview_label.setPixmap(preview_pixmap)
 
     def _on_download_error(self, error):
         QMessageBox.warning(self, app_name, self.tr("Download preview error: ") + error)
