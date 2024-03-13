@@ -1,5 +1,6 @@
 import sys
 import csv
+
 from PySide6.QtCore import (
     Qt,
     QFileInfo,
@@ -171,6 +172,9 @@ class MainWindow(QMainWindow):
         export_xlsx_action.triggered.connect(self._on_export_xlsx)
         export_csv_action = file_menu.addAction(self.tr("Export to CSV..."))
         export_csv_action.triggered.connect(self._on_export_csv)
+        export_html_action = file_menu.addAction(self.tr("Export to HTML..."))
+        export_html_action.triggered.connect(self._on_export_html)
+
         file_menu.addSeparator()
         exit_action = file_menu.addAction(self.tr("Exit"))
         exit_action.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Q))
@@ -354,6 +358,45 @@ class MainWindow(QMainWindow):
             csv_writer.writerow(self._model.header)
             for result_item in self._model.result:
                 csv_writer.writerow(result_item)
+
+    def _on_export_html(self):
+        if self._request_text == "" or len(self._model.result) == 0:
+            return
+        last_save_dir = self._settings.get(Settings.LastSaveDir)
+        file_name = QFileDialog.getSaveFileName(self, caption=self.tr("Save HTML"), filter="Html File (*.html)",
+                                                dir=(last_save_dir + "/" + self._request_text + ".html"))
+        if not file_name[0]:
+            return
+        self._settings.set(Settings.LastSaveDir, QFileInfo(file_name[0]).dir().absolutePath())
+        
+        html_o = "<html>"
+        html_c = "</html>"
+        body_o = "<body>"
+        body_c = "</body>"
+        table_o = "<table border=""1"">"
+        table_c = "</table>"
+        tr_o = "<tr>"
+        tr_c = "</tr>"
+        th_o = "<th>"
+        th_c = "</th>"
+        td_o = "<td>"
+        td_c = "</td>"
+
+        result_doc = html_o + body_o + table_o
+        result_doc += tr_o
+        for column in range(len(self._model.header)):
+            result_doc += th_o + str(self._model.header[column]) + th_c
+        result_doc += tr_c
+        for row in range(len(self._model.result)):
+            result_doc += tr_o
+            for column in range(len(self._model.header)):
+                result_doc += td_o + str(self._model.result[row][column]) + td_c
+            result_doc += tr_c
+        result_doc += table_c + body_c + html_c 
+        with open(file_name[0], 'w') as htmlfile:
+            htmlfile.write(result_doc)
+            htmlfile.close()
+
 
     def _on_preferences(self):
         global app_need_restart
