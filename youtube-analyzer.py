@@ -210,10 +210,6 @@ class MainWindow(QMainWindow):
         self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
-
-        WidthCol = self._table_view.columnWidth(ResultFields.VideoTitle)
-        self._table_view.setColumnWidth(ResultFields.VideoTitle, WidthCol + 20)
-
         self._table_view.setColumnHidden(ResultFields.VideoLink, True) # Hide column because the link is on video title
         self._table_view.setColumnHidden(ResultFields.ChannelLink, True) # Hide column because the link is on channel title
         self._table_view.setColumnHidden(ResultFields.ChannelViews, True) # It's not supported in yotubesearchpython
@@ -360,9 +356,9 @@ class MainWindow(QMainWindow):
                 result_doc += td_o + str(self._model.result[row][column]) + td_c
             result_doc += tr_c
         result_doc += table_c + body_c + html_c 
-        htmlfile = open(file_name[0], 'w')
-        htmlfile.write(result_doc)
-        htmlfile.close()
+        with open(file_name[0], 'w') as htmlfile:
+            htmlfile.write(result_doc)
+            htmlfile.close()
 
 
     def _on_preferences(self):
