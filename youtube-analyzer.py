@@ -398,7 +398,7 @@ class MainWindow(QMainWindow):
                 result_doc += td_o + str(self._model.result[row][column]) + td_c
             result_doc += tr_c
         result_doc += table_c + body_c + html_c 
-        with open(file_name[0], 'w') as htmlfile:
+        with open(file_name[0], 'w', encoding='utf-8') as htmlfile:
             htmlfile.write(result_doc)
             htmlfile.close()
 
