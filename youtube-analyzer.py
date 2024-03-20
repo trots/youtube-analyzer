@@ -219,7 +219,6 @@ class MainWindow(QMainWindow):
         self._table_view.setModel(self._sort_model)
         self._table_view.setSelectionMode(QTableView.SelectionMode.SingleSelection)
         self._table_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
-        #self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
         self._table_view.setColumnHidden(ResultFields.VideoLink, True) # Hide column because the link is on video title
@@ -236,11 +235,6 @@ class MainWindow(QMainWindow):
         self._main_splitter.setChildrenCollapsible(False)
         self._main_splitter.addWidget(self._table_view)
         self._main_splitter.addWidget(self._details_widget)
-
-        widthwindow = list(map(int, self._settings.get(Settings.MainSplitterState)))
-        widthcolumn = widthwindow[0]/7
-        for i in range(len(self._model.header)):
-            self._table_view.setColumnWidth(i, widthcolumn)
         
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
@@ -257,6 +251,7 @@ class MainWindow(QMainWindow):
             show_details = True if self._settings.get(Settings.DetailsVisible) == "true" else False
             self._show_details_action.setChecked(show_details)
             self._restore_geometry_on_show = False
+        self._table_view.resizeColumnsToContents()
 
     def closeEvent(self, event):
         global app_need_restart
