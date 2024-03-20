@@ -79,9 +79,8 @@ class ResultTableModel(QAbstractTableModel):
 
     def sort(self, col, order):
         self.layoutAboutToBeChanged.emit()
-        self.result = sorted(self.result, key=operator.itemgetter(col))
-        if order == Qt.SortOrder.DescendingOrder:
-            self.result.reverse()
+        reverse = order == Qt.SortOrder.DescendingOrder
+        self.result = sorted(self.result, key=operator.itemgetter(col), reverse=reverse)
         self.layoutChanged.emit()
 
 
