@@ -57,6 +57,19 @@ def subcriber_count_to_int(count_str):
     return int(float(number_letter[:-1]) * multiplier)
 
 
+def timedelta_to_str(td: timedelta):
+        if td is None:
+            return ""
+        mm, ss = divmod(td.seconds, 60)
+        hh, mm = divmod(mm, 60)
+        s = "%02d:%02d:%02d" % (hh, mm, ss)
+        if td.days:
+            s = ("%d:" % td.days) + s
+        if td.microseconds:
+            s = s + ".%06d" % td.microseconds
+        return s
+
+
 class ImageDownloader(QObject):
     finished = Signal(QImage)
     error = Signal(str)
@@ -124,8 +137,10 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
                     channel_logo_link = channel["thumbnails"][0]["url"] if len(channel["thumbnails"]) > 0 else ""
+                    video_duration_delta = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
+                    video_duration = timedelta_to_str(video_duration_delta) if video_duration_delta is not None else video["duration"]
                     result.append(
-                        make_result_row(video["title"], video["publishedTime"], video["duration"], 
+                        make_result_row(video["title"], video["publishedTime"], video_duration, 
                             views, video["link"], channel["title"], channel["url"], channel_subscribers,
                             channel_views, channel["joinedDate"], preview_link, channel_logo_link))
                     counter = counter + 1
@@ -139,6 +154,21 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
         except Exception as _:
             self.error = traceback.format_exc() 
             return False
+        
+    @staticmethod
+    def duration_to_timedelta(duration: str):
+        if not duration:
+            return None
+        parts = duration.split(":")
+        if len(parts) <= 1 or len(parts) > 3:
+            return None
+        parts.reverse()
+        if len(parts) >= 2:
+            seconds = int(parts[0])
+            seconds = seconds + int(parts[1]) * 60
+        if len(parts) >= 3:
+            seconds = seconds + int(parts[2]) * 3600
+        return timedelta(seconds=seconds)
 
 
 class YoutubeApiEngine(AbstractYoutubeEngine):
@@ -197,7 +227,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 statistics = video_item["statistics"]
                 video_title = snippet["title"]
                 video_published_time = str(datetime.strptime(snippet["publishTime"], "%Y-%m-%dT%H:%M:%SZ"))
-                video_duration = str(timedelta(seconds = isodate.parse_duration(content_details["duration"]).total_seconds()))
+                video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
+                video_duration = timedelta_to_str(video_duration_td)
                 views = int(statistics["viewCount"])
                 video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
                 channel_title = snippet["channelTitle"]
