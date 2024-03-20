@@ -219,7 +219,6 @@ class MainWindow(QMainWindow):
         self._table_view.setModel(self._sort_model)
         self._table_view.setSelectionMode(QTableView.SelectionMode.SingleSelection)
         self._table_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
-        self._table_view.resizeColumnsToContents()
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
         self._table_view.setColumnHidden(ResultFields.VideoLink, True) # Hide column because the link is on video title
@@ -252,6 +251,7 @@ class MainWindow(QMainWindow):
             show_details = True if self._settings.get(Settings.DetailsVisible) == "true" else False
             self._show_details_action.setChecked(show_details)
             self._restore_geometry_on_show = False
+        self._table_view.resizeColumnsToContents()
 
     def closeEvent(self, event):
         global app_need_restart
@@ -393,7 +393,7 @@ class MainWindow(QMainWindow):
                 result_doc += td_o + str(self._model.result[row][column]) + td_c
             result_doc += tr_c
         result_doc += table_c + body_c + html_c 
-        with open(file_name[0], 'w') as htmlfile:
+        with open(file_name[0], 'w', encoding='utf-8') as htmlfile:
             htmlfile.write(result_doc)
             htmlfile.close()
 
