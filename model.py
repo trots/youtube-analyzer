@@ -40,16 +40,21 @@ class ResultTableModel(QAbstractTableModel):
         self.header = [self.tr("Title"), self.tr("Published Time"), self.tr("Duration"), self.tr("View Count"), self.tr("Link"), 
                        self.tr("Channel Name"), self.tr("Channel Link"), self.tr("Channel Subscribers"),
                        self.tr("Channel Views"), self.tr("Channel Joined Date"), self.tr("Views/Subscribers")]
+        self._sort_cast = {}
 
     def setData(self, result):
         self.beginResetModel()
         self.result = result
+        self._sort_cast.clear()
         self.endResetModel()
 
     def clear(self):
         self.beginResetModel()
         self.result.clear()
         self.endResetModel()
+
+    def set_sort_cast(self, column: int, cast_func):
+        self._sort_cast[column] = cast_func
 
     def rowCount(self, parent):
         return len(self.result)
@@ -62,6 +67,8 @@ class ResultTableModel(QAbstractTableModel):
             return None
         column = index.column()
         if role == ResultTableModel.SortRole:
+            if column in self._sort_cast:
+                return self._sort_cast[column](self.result[index.row()][column])
             if column == ResultFields.ViewRate:
                 return float(self.result[index.row()][column][:-1])
             return self.result[index.row()][column]
@@ -77,10 +84,10 @@ class ResultTableModel(QAbstractTableModel):
             return self.header[col]
         return None
 
-    def sort(self, col, order):
+    def sort(self, column, order):
         self.layoutAboutToBeChanged.emit()
         reverse = order == Qt.SortOrder.DescendingOrder
-        self.result = sorted(self.result, key=operator.itemgetter(col), reverse=reverse)
+        self.result = sorted(self.result, key=operator.itemgetter(column), reverse=reverse)
         self.layoutChanged.emit()
 
 

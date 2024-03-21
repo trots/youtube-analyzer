@@ -21,6 +21,7 @@ from youtubesearchpython import (
 import googleapiclient.discovery
 from model import (
     make_result_row,
+    ResultFields,
     ResultTableModel,
     DataCache
 )
@@ -150,6 +151,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     break
                 has_next_page = videos_search.next()
             self._model.setData(result)
+            self._model.set_sort_cast(ResultFields.VideoPublishedTime, YoutubeGrepEngine.published_time_sort_cast)
             return True
         except Exception as _:
             self.error = traceback.format_exc() 
@@ -169,6 +171,35 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
         if len(parts) >= 3:
             seconds = seconds + int(parts[2]) * 3600
         return timedelta(seconds=seconds)
+
+    @staticmethod
+    def published_time_to_timedelta(published_time: str):
+        if not published_time:
+            return None
+        published_time = published_time.replace("Streamed ", "")
+        number = int(published_time.split(" ")[0])
+        if "day" in published_time:
+            return timedelta(days=number)
+        elif "week" in published_time:
+            return timedelta(days=(number * 7))
+        elif "month" in published_time:
+            return timedelta(days=(number * 30))
+        elif "year" in published_time:
+            return timedelta(days=(number * 360))
+        elif "hour" in published_time:
+            return timedelta(hours=number)
+        elif "min" in published_time:
+            return timedelta(minutes=number)
+        elif "sec" in published_time:
+            return timedelta(seconds=number)
+        return None
+
+    @staticmethod
+    def published_time_sort_cast(published_time: str):
+        pb_timedelta = timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta(published_time))
+        if pb_timedelta == "":
+            return None
+        return float(pb_timedelta.replace(":", ""))
 
 
 class YoutubeApiEngine(AbstractYoutubeEngine):
