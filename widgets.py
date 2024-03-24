@@ -16,7 +16,9 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QGridLayout,
-    QLabel
+    QLabel,
+    QTextEdit,
+    QStackedLayout
 )
 from engine import (
     ImageDownloader
@@ -130,6 +132,13 @@ class VideoDetailsWidget(QWidget):
         self._views_rate_label.setToolTip(self._model.header[ResultFields.ViewRate])
         main_layout.addWidget(self._views_rate_label)
 
+        main_layout.addWidget(QLabel(self.tr("Tags:")))
+        self._tags_edit = QTextEdit(main_widget)
+        self._tags_edit.setToolTip(self.tr("The video tags"))
+        self._tags_edit.setReadOnly(True)
+        self._tags_edit.setPlaceholderText(self.tr("No tags"))
+        main_layout.addWidget(self._tags_edit)
+
         main_layout.addStretch(2)
         main_widget.setLayout(main_layout)
         
@@ -137,9 +146,14 @@ class VideoDetailsWidget(QWidget):
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(main_widget)
 
-        self.setLayout(QVBoxLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(scroll_area)
+        self._stacked_layout = QStackedLayout()
+        self._stacked_layout.setContentsMargins(0, 0, 0, 0)
+        no_video_selected_label = QLabel(self.tr("Select a video to see its details"))
+        no_video_selected_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._stacked_layout.addWidget(no_video_selected_label)
+        self._stacked_layout.addWidget(scroll_area)
+        self._stacked_layout.setCurrentIndex(0)
+        self.setLayout(self._stacked_layout)
 
     def set_current_index(self, index: QModelIndex):
         if index is None or index.row() < 0 or index.row() >= len(self._model.result):
@@ -162,6 +176,14 @@ class VideoDetailsWidget(QWidget):
         logo_url = QUrl.fromUserInput(row_data[ResultFields.ChannelLogoLink])
         self._logo_downloader.start_download(logo_url)
 
+        tags = row_data[ResultFields.VideoTags]
+        if tags:
+            self._tags_edit.setText(", ".join(tags))
+        else:
+            self._tags_edit.clear()
+
+        self._stacked_layout.setCurrentIndex(1)
+
     def clear(self):
         self._preview_downloader.clear_cache()
         self._logo_downloader.clear_cache()
@@ -176,6 +198,8 @@ class VideoDetailsWidget(QWidget):
         self._preview_label.clear()
         self._channel_logo_label.setPixmap(None)
         self._channel_logo_label.clear()
+        self._tags_edit.clear()
+        self._stacked_layout.setCurrentIndex(0)
 
     def _on_preview_download_finished(self, image):
         preview_pixmap = QPixmap.fromImage(image)

@@ -16,7 +16,8 @@ from PySide6.QtNetwork import (
 )
 from youtubesearchpython import (
     VideosSearch, 
-    Channel
+    Channel,
+    Video
 )
 import googleapiclient.discovery
 from model import (
@@ -133,17 +134,18 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                 result_array = videos_search.result()["result"]
                 for video in result_array:
                     views = view_count_to_int(video["viewCount"]["text"])
-                    channel = Channel.get(video["channel"]["id"])
-                    channel_views = view_count_to_int(channel["views"])
-                    channel_subscribers = subcriber_count_to_int(channel["subscribers"]["simpleText"])
+                    video_info = Video.getInfo(video["id"])
+                    channel_info = Channel.get(video["channel"]["id"])
+                    channel_views = view_count_to_int(channel_info["views"])
+                    channel_subscribers = subcriber_count_to_int(channel_info["subscribers"]["simpleText"])
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
-                    channel_logo_link = channel["thumbnails"][0]["url"] if len(channel["thumbnails"]) > 0 else ""
+                    channel_logo_link = channel_info["thumbnails"][0]["url"] if len(channel_info["thumbnails"]) > 0 else ""
                     video_duration_delta = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
                     video_duration = timedelta_to_str(video_duration_delta) if video_duration_delta is not None else video["duration"]
                     result.append(
                         make_result_row(video["title"], video["publishedTime"], video_duration, 
-                            views, video["link"], channel["title"], channel["url"], channel_subscribers,
-                            channel_views, channel["joinedDate"], preview_link, channel_logo_link))
+                            views, video["link"], channel_info["title"], channel_info["url"], channel_subscribers,
+                            channel_views, channel_info["joinedDate"], preview_link, channel_logo_link, video_info["keywords"]))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -235,7 +237,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             channel_ids = channel_ids[1:] # Remove first comma
 
             video_request = youtube.videos().list(
-                part = "contentDetails,statistics",
+                part = "contentDetails,statistics,snippet",
                 id = video_ids
             )
             video_response = video_request.execute()
@@ -253,30 +255,32 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             count = 0
             for search_item in search_response["items"]:
                 video_item = video_response["items"][count]
-                snippet = search_item["snippet"]
+                search_snippet = search_item["snippet"]
                 content_details = video_item["contentDetails"]
                 statistics = video_item["statistics"]
-                video_title = snippet["title"]
-                video_published_time = str(datetime.strptime(snippet["publishTime"], "%Y-%m-%dT%H:%M:%SZ"))
+                video_title = search_snippet["title"]
+                video_published_time = str(datetime.strptime(search_snippet["publishTime"], "%Y-%m-%dT%H:%M:%SZ"))
                 video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
                 video_duration = timedelta_to_str(video_duration_td)
                 views = int(statistics["viewCount"])
                 video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
-                channel_title = snippet["channelTitle"]
-                channel_url = "https://www.youtube.com/channel/" + snippet["channelId"]
-                channel_item = channels[snippet["channelId"]]
+                channel_title = search_snippet["channelTitle"]
+                channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
+                channel_item = channels[search_snippet["channelId"]]
                 channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
                 channel_views = int(channel_item["statistics"]["viewCount"])
                 channel_joined_date = ""
-                video_preview_link = snippet["thumbnails"]["high"]["url"]
+                video_preview_link = search_snippet["thumbnails"]["high"]["url"]
                 channel_snippet = channel_item["snippet"]
                 channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
                 channel_logo_link = channel_logo_link.replace("https", "http") # https not working. I don't know why (2024.03.10)
+                video_snippet = video_item["snippet"]
+                tags = video_snippet["tags"] if "tags" in video_snippet else None
                 count = count + 1
                 result.append(
                     make_result_row(video_title, video_published_time, video_duration, views, 
                                     video_link, channel_title, channel_url, channel_subscribers,
-                                    channel_views, channel_joined_date, video_preview_link, channel_logo_link))
+                                    channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags))
 
             self._model.setData(result)
             return True
