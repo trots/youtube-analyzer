@@ -20,8 +20,10 @@
     </message>
     <message>
         <location filename="../youtube-analyzer.py" line="131"/>
-        <source>Based on youtubesearchpython and PySide6</source>
-        <translation>Основано на youtubesearchpython и PySide6</translation>
+        <source>Based on: PySide6, youtube-search-python,
+ google-api-python-client, XlsxWriter, isodate.</source>
+        <translation>Основан на: PySide6, youtube-search-python,
+ google-api-python-client, XlsxWriter, isodate.</translation>
     </message>
     <message>
         <location filename="../youtube-analyzer.py" line="138"/>
@@ -270,8 +272,8 @@
     </message>
     <message>
         <location filename="../widgets.py" line="137"/>
-        <source>Теги видео</source>
-        <translation></translation>
+        <source>The video tags</source>
+        <translation>Теги видео</translation>
     </message>
     <message>
         <location filename="../widgets.py" line="139"/>

@@ -20,8 +20,10 @@
     </message>
     <message>
         <location filename="../youtube-analyzer.py" line="131"/>
-        <source>Based on youtubesearchpython and PySide6</source>
-        <translation>Based on youtubesearchpython and PySide6</translation>
+        <source>Based on: PySide6, youtube-search-python,
+ google-api-python-client, XlsxWriter, isodate.</source>
+        <translation>Based on: PySide6, youtube-search-python,
+ google-api-python-client, XlsxWriter, isodate.</translation>
     </message>
     <message>
         <location filename="../youtube-analyzer.py" line="138"/>
