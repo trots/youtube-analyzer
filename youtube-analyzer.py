@@ -128,7 +128,7 @@ class AboutDialog(QDialog):
         layout.addWidget(QLabel(self.tr("Version: ") + version), 
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel(self.tr("Based on youtubesearchpython and PySide6")), 
+        layout.addWidget(QLabel(self.tr("Based on: PySide6, youtube-search-python,\n google-api-python-client, XlsxWriter, isodate.")), 
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
         vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -150,7 +150,7 @@ class AboutDialog(QDialog):
         layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
 
         row += 1
-        layout.addWidget(QLabel("Copyright 2024 Alexander Trotsenko"), row, 0, 1, 2,
+        layout.addWidget(QLabel("Copyright 2023-2024 YouTube Analyzer team"), row, 0, 1, 2,
                          Qt.AlignmentFlag.AlignCenter)
         row += 1
         layout.addWidget(QLabel(self.tr("All rights reserved")), row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
