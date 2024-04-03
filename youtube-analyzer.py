@@ -34,7 +34,8 @@ from PySide6.QtWidgets import (
     QSpacerItem,
     QMessageBox,
     QCheckBox,
-    QSplitter
+    QSplitter,
+    QTextEdit
 )
 import xlsxwriter
 from defines import (
@@ -157,6 +158,24 @@ class AboutDialog(QDialog):
 
         self.setLayout(layout)
 
+class AuthorsDialog(QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.setWindowTitle(self.tr("Authors"))
+        layout = QGridLayout()
+        layout.setSizeConstraint( QGridLayout.SizeConstraint.SetFixedSize )
+        
+        self.edit_text = QTextEdit()
+        self.edit_text.setReadOnly(True)
+        self.edit_text.append("The YouTube Analyzer team, in alphabetical order:\n")
+        self.edit_text.append("Alexander Trotsenko")
+        self.edit_text.append("Igor Trofimov")
+        self.edit_text.append("Nataliia Trotsenko")
+
+        layout.addWidget(self.edit_text, 0, 0, 1, 2,
+                         Qt.AlignmentFlag.AlignLeft)
+        self.setLayout(layout)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, settings: Settings):
@@ -190,6 +209,8 @@ class MainWindow(QMainWindow):
         self._show_details_action.setChecked(True)
 
         help_menu = self.menuBar().addMenu(self.tr("Help"))
+        authors_action = help_menu.addAction(self.tr("Authors..."))
+        authors_action.triggered.connect(self._on_authors)
         about_action = help_menu.addAction(self.tr("About..."))
         about_action.triggered.connect(self._on_about)
 
@@ -409,6 +430,10 @@ class MainWindow(QMainWindow):
 
     def _on_about(self):
         dialog = AboutDialog(self)
+        dialog.exec()
+
+    def _on_authors(self):
+        dialog = AuthorsDialog(self)
         dialog.exec()
 
     def _create_engine(self):
