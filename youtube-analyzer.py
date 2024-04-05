@@ -165,14 +165,14 @@ class AuthorsDialog(QDialog):
         layout = QGridLayout()
         layout.setSizeConstraint( QGridLayout.SizeConstraint.SetFixedSize )
         
-        self.edit_text = QTextEdit()
-        self.edit_text.setReadOnly(True)
-        self.edit_text.append("The YouTube Analyzer team, in alphabetical order:\n")
-        self.edit_text.append("Alexander Trotsenko")
-        self.edit_text.append("Igor Trofimov")
-        self.edit_text.append("Nataliia Trotsenko")
+        self._edit_text = QTextEdit()
+        self._edit_text.setReadOnly(True)
+        self._edit_text.append(self.tr("The YouTube Analyzer team, in alphabetical order:\n"))
+        self._edit_text.append("Alexander Trotsenko")
+        self._edit_text.append("Igor Trofimov")
+        self._edit_text.append("Nataliia Trotsenko")
 
-        layout.addWidget(self.edit_text, 0, 0, 1, 2,
+        layout.addWidget(self._edit_text, 0, 0, 1, 2,
                          Qt.AlignmentFlag.AlignLeft)
         self.setLayout(layout)
 
