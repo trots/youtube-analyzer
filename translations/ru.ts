@@ -4,47 +4,62 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="116"/>
+        <location filename="../youtube-analyzer.py" line="117"/>
         <source>About</source>
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="128"/>
+        <location filename="../youtube-analyzer.py" line="129"/>
         <source>Version: </source>
         <translation>Версия: </translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="125"/>
+        <location filename="../youtube-analyzer.py" line="126"/>
         <source>Software for analyzing of YouTube search output</source>
         <translation>Программа для анализа поисковой выдачи YouTube</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="131"/>
+        <location filename="../youtube-analyzer.py" line="132"/>
         <source>Based on: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</source>
         <translation>Основан на: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="138"/>
+        <location filename="../youtube-analyzer.py" line="139"/>
         <source>Web site:</source>
         <translation>Веб-сайт:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="143"/>
+        <location filename="../youtube-analyzer.py" line="144"/>
         <source>License:</source>
         <translation>Лицензия:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="156"/>
+        <location filename="../youtube-analyzer.py" line="157"/>
         <source>All rights reserved</source>
         <translation>Все права защищены</translation>
     </message>
 </context>
 <context>
+    <name>AuthorsDialog</name>
+    <message>
+        <location filename="../youtube-analyzer.py" line="164"/>
+        <source>Authors</source>
+        <translation>Авторы</translation>
+    </message>
+    <message>
+        <location filename="../youtube-analyzer.py" line="170"/>
+        <source>The YouTube Analyzer team, in alphabetical order:
+</source>
+        <translation>YouTube Analyzer team, в алфавитном порядке:
+</translation>
+    </message>
+</context>
+<context>
     <name>DontAskAgainQuestionDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="106"/>
+        <location filename="../youtube-analyzer.py" line="107"/>
         <source>Don&apos;t ask again</source>
         <translation>Не спрашивать снова</translation>
     </message>
@@ -52,102 +67,107 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="170"/>
+        <location filename="../youtube-analyzer.py" line="189"/>
         <source>File</source>
         <translation>Файл</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="171"/>
+        <location filename="../youtube-analyzer.py" line="190"/>
         <source>Export to XLSX...</source>
         <translation>Экспорт в XLSX...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="173"/>
+        <location filename="../youtube-analyzer.py" line="192"/>
         <source>Export to CSV...</source>
         <translation>Экспорт в CSV...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="175"/>
+        <location filename="../youtube-analyzer.py" line="194"/>
         <source>Export to HTML...</source>
         <translation>Экспорт в HTML...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="179"/>
+        <location filename="../youtube-analyzer.py" line="198"/>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="183"/>
+        <location filename="../youtube-analyzer.py" line="202"/>
         <source>Edit</source>
         <translation>Правка</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="184"/>
+        <location filename="../youtube-analyzer.py" line="203"/>
         <source>Preferences...</source>
         <translation>Настройки...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="187"/>
+        <location filename="../youtube-analyzer.py" line="206"/>
         <source>View</source>
         <translation>Вид</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="188"/>
+        <location filename="../youtube-analyzer.py" line="207"/>
         <source>Show video details</source>
         <translation>Показать информацию о видео</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="192"/>
+        <location filename="../youtube-analyzer.py" line="211"/>
         <source>Help</source>
         <translation>Справка</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="193"/>
+        <location filename="../youtube-analyzer.py" line="212"/>
+        <source>Authors...</source>
+        <translation>Авторы...</translation>
+    </message>
+    <message>
+        <location filename="../youtube-analyzer.py" line="214"/>
         <source>About...</source>
         <translation>О программе...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="198"/>
+        <location filename="../youtube-analyzer.py" line="219"/>
         <source>Enter request and press &apos;Search&apos;...</source>
         <translation>Введите запрос и нажмите &apos;Поиск&apos;...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="203"/>
+        <location filename="../youtube-analyzer.py" line="224"/>
         <source>Set the search result limit</source>
         <translation>Установка максимального количества результатов поиска</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="209"/>
+        <location filename="../youtube-analyzer.py" line="230"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="210"/>
+        <location filename="../youtube-analyzer.py" line="231"/>
         <source>Click to start searching</source>
         <translation>Начать поиск</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="259"/>
+        <location filename="../youtube-analyzer.py" line="280"/>
         <source>Exit?</source>
         <translation>Выйти?</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="304"/>
+        <location filename="../youtube-analyzer.py" line="325"/>
         <source>Error in the searching process</source>
         <translation>Поиск завершился с ошибкой</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="326"/>
+        <location filename="../youtube-analyzer.py" line="347"/>
         <source>Save XLSX</source>
         <translation>Сохранить XLSX</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="350"/>
+        <location filename="../youtube-analyzer.py" line="371"/>
         <source>Save CSV</source>
         <translation>Сохранить CSV</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="366"/>
+        <location filename="../youtube-analyzer.py" line="387"/>
         <source>Save HTML</source>
         <translation>Сохранить HTML</translation>
     </message>

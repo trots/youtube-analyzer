@@ -4,47 +4,62 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="116"/>
+        <location filename="../youtube-analyzer.py" line="117"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="128"/>
+        <location filename="../youtube-analyzer.py" line="129"/>
         <source>Version: </source>
         <translation>Version:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="125"/>
+        <location filename="../youtube-analyzer.py" line="126"/>
         <source>Software for analyzing of YouTube search output</source>
         <translation>Software for analyzing of YouTube search output</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="131"/>
+        <location filename="../youtube-analyzer.py" line="132"/>
         <source>Based on: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</source>
         <translation>Based on: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="138"/>
+        <location filename="../youtube-analyzer.py" line="139"/>
         <source>Web site:</source>
         <translation>Web site:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="143"/>
+        <location filename="../youtube-analyzer.py" line="144"/>
         <source>License:</source>
         <translation>License:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="156"/>
+        <location filename="../youtube-analyzer.py" line="157"/>
         <source>All rights reserved</source>
         <translation>All rights reserved</translation>
     </message>
 </context>
 <context>
+    <name>AuthorsDialog</name>
+    <message>
+        <location filename="../youtube-analyzer.py" line="164"/>
+        <source>Authors</source>
+        <translation>Authors</translation>
+    </message>
+    <message>
+        <location filename="../youtube-analyzer.py" line="170"/>
+        <source>The YouTube Analyzer team, in alphabetical order:
+</source>
+        <translation >The YouTube Analyzer team, in alphabetical order:
+</translation>
+    </message>
+</context>
+<context>
     <name>DontAskAgainQuestionDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="106"/>
+        <location filename="../youtube-analyzer.py" line="107"/>
         <source>Don&apos;t ask again</source>
         <translation>Don&apos;t ask again</translation>
     </message>
@@ -52,102 +67,107 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="170"/>
+        <location filename="../youtube-analyzer.py" line="189"/>
         <source>File</source>
         <translation>File</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="171"/>
+        <location filename="../youtube-analyzer.py" line="190"/>
         <source>Export to XLSX...</source>
         <translation>Export to XLSX...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="173"/>
+        <location filename="../youtube-analyzer.py" line="192"/>
         <source>Export to CSV...</source>
         <translation>Export to CSV...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="175"/>
+        <location filename="../youtube-analyzer.py" line="194"/>
         <source>Export to HTML...</source>
         <translation>Export to HTML...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="179"/>
+        <location filename="../youtube-analyzer.py" line="198"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="183"/>
+        <location filename="../youtube-analyzer.py" line="202"/>
         <source>Edit</source>
         <translation>Edit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="184"/>
+        <location filename="../youtube-analyzer.py" line="203"/>
         <source>Preferences...</source>
         <translation>Preferences...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="187"/>
+        <location filename="../youtube-analyzer.py" line="206"/>
         <source>View</source>
         <translation>View</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="188"/>
+        <location filename="../youtube-analyzer.py" line="207"/>
         <source>Show video details</source>
         <translation>Show video details</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="192"/>
+        <location filename="../youtube-analyzer.py" line="211"/>
         <source>Help</source>
         <translation>Help</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="193"/>
+        <location filename="../youtube-analyzer.py" line="212"/>
+        <source>Authors...</source>
+        <translation>Authors...</translation>
+    </message>
+    <message>
+        <location filename="../youtube-analyzer.py" line="214"/>
         <source>About...</source>
         <translation>About...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="198"/>
+        <location filename="../youtube-analyzer.py" line="219"/>
         <source>Enter request and press &apos;Search&apos;...</source>
         <translation>Enter request and press &apos;Search&apos;...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="203"/>
+        <location filename="../youtube-analyzer.py" line="224"/>
         <source>Set the search result limit</source>
         <translation>Set the search result limit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="209"/>
+        <location filename="../youtube-analyzer.py" line="230"/>
         <source>Search</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="210"/>
+        <location filename="../youtube-analyzer.py" line="231"/>
         <source>Click to start searching</source>
         <translation>Click to start searching</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="259"/>
+        <location filename="../youtube-analyzer.py" line="280"/>
         <source>Exit?</source>
         <translation>Exit?</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="304"/>
+        <location filename="../youtube-analyzer.py" line="325"/>
         <source>Error in the searching process</source>
         <translation>Error in the searching process</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="326"/>
+        <location filename="../youtube-analyzer.py" line="347"/>
         <source>Save XLSX</source>
         <translation>Save XLSX</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="350"/>
+        <location filename="../youtube-analyzer.py" line="371"/>
         <source>Save CSV</source>
         <translation>Save CSV</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="366"/>
+        <location filename="../youtube-analyzer.py" line="387"/>
         <source>Save HTML</source>
         <translation>Save HTML</translation>
     </message>
