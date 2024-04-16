@@ -78,7 +78,7 @@ class ResultTableModel(QAbstractTableModel):
                 return None
             if column == ResultFields.VideoViews or column == ResultFields.ChannelSubscribers:
                 update_data = '{0:,}'.format(self.result[index.row()][column]).replace(',', ' ')
-                return str(update_data)
+                return update_data
             return self.result[index.row()][column]
 
         return None
