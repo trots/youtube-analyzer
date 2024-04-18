@@ -1,2 +1,2 @@
 app_name = "YouTube Analyzer"
-version = "3.0"
+version = "4.0"
