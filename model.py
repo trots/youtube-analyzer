@@ -76,6 +76,9 @@ class ResultTableModel(QAbstractTableModel):
         elif role == Qt.ItemDataRole.DisplayRole:
             if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
                 return None
+            if column == ResultFields.VideoViews or column == ResultFields.ChannelSubscribers:
+                update_data = '{0:,}'.format(self.result[index.row()][column]).replace(',', ' ')
+                return update_data
             return self.result[index.row()][column]
 
         return None
