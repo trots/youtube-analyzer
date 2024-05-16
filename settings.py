@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QLabel,
     QComboBox,
-    QMessageBox
+    QMessageBox,
+    QCheckBox
 )
 
 @dataclass
@@ -28,11 +29,15 @@ class Settings:
     Theme = SettingsKey("theme", 0)
     MainSplitterState = SettingsKey("main_splitter_state", [0, 0])
     DetailsVisible = SettingsKey("details", True)
+    LastActiveDetailsTab = SettingsKey("last_active_details_tab", 0)
+    AnalyticsFollowTableSelect = SettingsKey("analytics_follow_table_select", True)
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
 
     def get(self, key: SettingsKey):
+        if type(key.default_value) is bool:
+            return self._impl.value(key.key, key.default_value, type=bool)
         return self._impl.value(key.key, key.default_value)
 
     def set(self, key: SettingsKey, value: any):
@@ -75,6 +80,13 @@ class SettingsDialog(QDialog):
         self._theme_combo.setCurrentIndex(int(self._settings.get(Settings.Theme)))
         layout.addWidget(self._theme_combo)
 
+        analytics_label = QLabel(self.tr("Analytics:"))
+        layout.addWidget(analytics_label)
+        self._follow_for_analytics_checkbox = QCheckBox(self.tr("Follow table selections in analytics charts"))
+        self._follow_for_analytics_checkbox.setToolTip(self.tr("Highlight the selected item on the analytics charts"))
+        self._follow_for_analytics_checkbox.setChecked(self._settings.get(Settings.AnalyticsFollowTableSelect))
+        layout.addWidget(self._follow_for_analytics_checkbox)
+
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accepted)
         button_box.rejected.connect(self._on_rejected)
@@ -98,6 +110,7 @@ class SettingsDialog(QDialog):
             if QMessageBox.question(self, self.windowTitle(), text) == QMessageBox.StandardButton.No:
                 self._need_restart = False
 
+        self._settings.set(Settings.AnalyticsFollowTableSelect, self._follow_for_analytics_checkbox.isChecked())
         self.accept()
 
     def _on_rejected(self):
