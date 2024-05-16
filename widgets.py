@@ -229,6 +229,7 @@ class AnalyticsWidget(QWidget):
     def __init__(self, model: ResultTableModel, parent: QWidget = None):
         super().__init__(parent)
         self._model = model
+        self._current_index_following = True
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
@@ -245,9 +246,14 @@ class AnalyticsWidget(QWidget):
         self._channels_pie_chart_view.setChart(channels_pie_chart)
 
     def set_current_index(self, index: QModelIndex):
-        if index is None or index.row() < 0 or index.row() >= len(self._model.result):
+        if not self._current_index_following or index is None or index.row() < 0 or index.row() >= len(self._model.result):
             self._channels_pie_series.set_current_channel(None)
             return
 
         row_data = self._model.result[index.row()]
         self._channels_pie_series.set_current_channel(row_data[ResultFields.ChannelTitle])
+
+    def set_current_index_following(self, follow):
+        self._current_index_following = follow
+        if not follow:
+            self.set_current_index(None)

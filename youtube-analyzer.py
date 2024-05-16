@@ -250,20 +250,23 @@ class MainWindow(QMainWindow):
         self._table_view.setColumnHidden(ResultFields.ChannelJoinedDate, True) # It's not supported in yotubesearchpython
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
-        side_tab_widget = QTabWidget()
-        side_tab_widget.setVisible(self._show_details_action.isChecked())
-        self._show_details_action.toggled.connect(side_tab_widget.setVisible)
+        self._side_tab_widget = QTabWidget()
+        self._side_tab_widget.setVisible(self._show_details_action.isChecked())
+        self._show_details_action.toggled.connect(self._side_tab_widget.setVisible)
 
         self._details_widget = VideoDetailsWidget(self._model, self)
-        side_tab_widget.addTab(self._details_widget, self.tr("Details"))
+        self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
 
         self._analytics_widget = AnalyticsWidget(self._model, self)
-        side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
+        self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
+        self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
+
+        self._side_tab_widget.setCurrentIndex(int(self._settings.get(Settings.LastActiveDetailsTab)))
 
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._main_splitter.setChildrenCollapsible(False)
         self._main_splitter.addWidget(self._table_view)
-        self._main_splitter.addWidget(side_tab_widget)
+        self._main_splitter.addWidget(self._side_tab_widget)
         
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
@@ -277,8 +280,7 @@ class MainWindow(QMainWindow):
         if self._restore_geometry_on_show:
             self.restoreGeometry(self._settings.get(Settings.MainWindowGeometry))
             self._main_splitter.setSizes(list(map(int, self._settings.get(Settings.MainSplitterState))))
-            show_details = True if self._settings.get(Settings.DetailsVisible) == "true" else False
-            self._show_details_action.setChecked(show_details)
+            self._show_details_action.setChecked(self._settings.get(Settings.DetailsVisible))
             self._restore_geometry_on_show = False
         self._table_view.resizeColumnsToContents()
 
@@ -295,6 +297,7 @@ class MainWindow(QMainWindow):
         self._settings.set(Settings.MainWindowGeometry, self.saveGeometry())
         self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
         self._settings.set(Settings.DetailsVisible, self._show_details_action.isChecked())
+        self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()
@@ -433,11 +436,17 @@ class MainWindow(QMainWindow):
     def _on_preferences(self):
         global app_need_restart
         dialog = SettingsDialog(self._settings)
-        if dialog.exec() == SettingsDialog.DialogCode.Accepted:
-            Theme.apply(QApplication.instance(), int(self._settings.get(Settings.Theme)))
-            if dialog.is_need_restart():
-                app_need_restart = True
-                self.close()
+        if dialog.exec() != SettingsDialog.DialogCode.Accepted:
+            return
+
+        Theme.apply(QApplication.instance(), int(self._settings.get(Settings.Theme)))
+        self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
+        if self._settings.get(Settings.AnalyticsFollowTableSelect):
+            self._analytics_widget.set_current_index(self._table_view.currentIndex())
+
+        if dialog.is_need_restart():
+            app_need_restart = True
+            self.close()
 
     def _on_about(self):
         dialog = AboutDialog(self)
