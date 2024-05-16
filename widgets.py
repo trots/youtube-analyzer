@@ -8,7 +8,8 @@ from PySide6.QtCore import (
 from PySide6.QtGui import (
     QImage,
     QPixmap,
-    QResizeEvent
+    QResizeEvent,
+    QPainter
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -20,12 +21,19 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QStackedLayout
 )
+from PySide6.QtCharts import (
+    QChartView,
+    QChart
+)
 from engine import (
     ImageDownloader
 )
 from model import (
     ResultFields,
     ResultTableModel
+)
+from chart import (
+    ChannelsPieSeries
 )
 
 
@@ -215,3 +223,31 @@ class VideoDetailsWidget(QWidget):
 
     def _on_download_error(self, error):
         print(self.tr("Download error: ") + error)
+
+
+class AnalyticsWidget(QWidget):
+    def __init__(self, model: ResultTableModel, parent: QWidget = None):
+        super().__init__(parent)
+        self._model = model
+
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(main_layout)
+
+        self._channels_pie_chart_view = QChartView()
+        self._channels_pie_chart_view.setRenderHint(QPainter.Antialiasing)
+        main_layout.addWidget(self._channels_pie_chart_view)
+        self._channels_pie_series = ChannelsPieSeries(model)
+        channels_pie_chart = QChart()
+        channels_pie_chart.addSeries(self._channels_pie_series)
+        channels_pie_chart.setTitle(self.tr("Channels distribution map"))
+        # channels_pie_chart.setTheme(QChart.ChartTheme.ChartThemeDark)
+        self._channels_pie_chart_view.setChart(channels_pie_chart)
+
+    def set_current_index(self, index: QModelIndex):
+        if index is None or index.row() < 0 or index.row() >= len(self._model.result):
+            self._channels_pie_series.set_current_channel(None)
+            return
+
+        row_data = self._model.result[index.row()]
+        self._channels_pie_series.set_current_channel(row_data[ResultFields.ChannelTitle])
