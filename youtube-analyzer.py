@@ -56,7 +56,8 @@ from engine import (
     YoutubeApiEngine
 )
 from widgets import (
-    VideoDetailsWidget
+    VideoDetailsWidget,
+    AnalyticsWidget
 )
 
 
@@ -249,12 +250,15 @@ class MainWindow(QMainWindow):
         self._table_view.setColumnHidden(ResultFields.ChannelJoinedDate, True) # It's not supported in yotubesearchpython
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
-        self._details_widget = VideoDetailsWidget(self._model, self)
-
         side_tab_widget = QTabWidget()
         side_tab_widget.setVisible(self._show_details_action.isChecked())
         self._show_details_action.toggled.connect(side_tab_widget.setVisible)
+
+        self._details_widget = VideoDetailsWidget(self._model, self)
         side_tab_widget.addTab(self._details_widget, self.tr("Details"))
+
+        self._analytics_widget = AnalyticsWidget(self._model, self)
+        side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
 
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._main_splitter.setChildrenCollapsible(False)
@@ -339,9 +343,12 @@ class MainWindow(QMainWindow):
     def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
         indexes = current.indexes()
         if len(indexes) > 0:
-            self._details_widget.set_current_index(self._sort_model.mapToSource(indexes[0]))
+            index = self._sort_model.mapToSource(indexes[0])
+            self._details_widget.set_current_index(index)
+            self._analytics_widget.set_current_index(index)
         else:
             self._details_widget.set_current_index(None)
+            self._analytics_widget.set_current_index(None)
 
     def _on_export_xlsx(self):
         if self._request_text == "" or len(self._model.result) == 0:
