@@ -48,6 +48,9 @@ class ChannelsPieSeries(QPieSeries):
                 slice.setLabelVisible(False)
                 slice.setPen(self._last_pen)
                 slice.setBrush(self._last_brush)
+                break
+        
+        for slice in self.slices():
             if slice.label() == channel_name:
                 slice.setExploded()
                 slice.setLabelVisible()
@@ -55,6 +58,7 @@ class ChannelsPieSeries(QPieSeries):
                 self._last_brush = slice.brush()
                 slice.setPen(QPen(Qt.darkGreen, 2))
                 slice.setBrush(Qt.green)
+                break
 
         self._current_channel = channel_name
 
