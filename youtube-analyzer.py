@@ -35,7 +35,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QCheckBox,
     QSplitter,
-    QTextEdit
+    QTextEdit,
+    QTabWidget
 )
 import xlsxwriter
 from defines import (
@@ -204,7 +205,7 @@ class MainWindow(QMainWindow):
         preferences_action.triggered.connect(self._on_preferences)
 
         view_menu = self.menuBar().addMenu(self.tr("View"))
-        self._show_details_action = view_menu.addAction(self.tr("Show video details"))
+        self._show_details_action = view_menu.addAction(self.tr("Show details"))
         self._show_details_action.setCheckable(True)
         self._show_details_action.setChecked(True)
 
@@ -249,13 +250,16 @@ class MainWindow(QMainWindow):
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
         self._details_widget = VideoDetailsWidget(self._model, self)
-        self._details_widget.setVisible(self._show_details_action.isChecked())
-        self._show_details_action.toggled.connect(self._details_widget.setVisible)
+
+        side_tab_widget = QTabWidget()
+        side_tab_widget.setVisible(self._show_details_action.isChecked())
+        self._show_details_action.toggled.connect(side_tab_widget.setVisible)
+        side_tab_widget.addTab(self._details_widget, self.tr("Details"))
 
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._main_splitter.setChildrenCollapsible(False)
         self._main_splitter.addWidget(self._table_view)
-        self._main_splitter.addWidget(self._details_widget)
+        self._main_splitter.addWidget(side_tab_widget)
         
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
