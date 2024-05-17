@@ -239,11 +239,10 @@ class AnalyticsWidget(QWidget):
         self._channels_pie_chart_view.setRenderHint(QPainter.Antialiasing)
         main_layout.addWidget(self._channels_pie_chart_view)
         self._channels_pie_series = ChannelsPieSeries(model)
-        channels_pie_chart = QChart()
-        channels_pie_chart.addSeries(self._channels_pie_series)
-        channels_pie_chart.setTitle(self.tr("Channels distribution map"))
-        # channels_pie_chart.setTheme(QChart.ChartTheme.ChartThemeDark)
-        self._channels_pie_chart_view.setChart(channels_pie_chart)
+        self._channels_pie_chart = QChart()
+        self._channels_pie_chart.addSeries(self._channels_pie_series)
+        self._channels_pie_chart.setTitle(self.tr("Channels distribution map"))
+        self._channels_pie_chart_view.setChart(self._channels_pie_chart)
 
     def set_current_index(self, index: QModelIndex):
         if not self._current_index_following or index is None or index.row() < 0 or index.row() >= len(self._model.result):
@@ -257,3 +256,7 @@ class AnalyticsWidget(QWidget):
         self._current_index_following = follow
         if not follow:
             self.set_current_index(None)
+
+    def set_charts_theme(self, theme):
+        self._channels_pie_chart.setTheme(theme)
+        self._channels_pie_series.rebuild()

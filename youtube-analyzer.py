@@ -38,6 +38,9 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QTabWidget
 )
+from PySide6.QtCharts import (
+    QChart
+)
 import xlsxwriter
 from defines import (
     app_name,
@@ -259,6 +262,10 @@ class MainWindow(QMainWindow):
 
         self._analytics_widget = AnalyticsWidget(self._model, self)
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
+        if int(self._settings.get(Settings.Theme)) == Theme.Dark:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
+        else:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
         self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
 
         self._side_tab_widget.setCurrentIndex(int(self._settings.get(Settings.LastActiveDetailsTab)))
@@ -440,6 +447,11 @@ class MainWindow(QMainWindow):
             return
 
         Theme.apply(QApplication.instance(), int(self._settings.get(Settings.Theme)))
+        if int(self._settings.get(Settings.Theme)) == Theme.Dark:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
+        else:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
+
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if self._settings.get(Settings.AnalyticsFollowTableSelect):
             self._analytics_widget.set_current_index(self._table_view.currentIndex())
