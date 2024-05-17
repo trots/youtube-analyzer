@@ -247,10 +247,6 @@ class MainWindow(QMainWindow):
         self._table_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
-        self._table_view.setColumnHidden(ResultFields.VideoLink, True) # Hide column because the link is on video title
-        self._table_view.setColumnHidden(ResultFields.ChannelLink, True) # Hide column because the link is on channel title
-        self._table_view.setColumnHidden(ResultFields.ChannelViews, True) # It's not supported in yotubesearchpython
-        self._table_view.setColumnHidden(ResultFields.ChannelJoinedDate, True) # It's not supported in yotubesearchpython
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
         self._side_tab_widget = QTabWidget()
@@ -327,12 +323,12 @@ class MainWindow(QMainWindow):
         engine = self._create_engine()
         if engine.search(self._request_text):
             for i in range(len(self._model.result)):
-                video_idx = self._sort_model.index(i, ResultFields.VideoTitle)
+                video_idx = self._sort_model.index(i, self._model.get_field_column(ResultFields.VideoTitle))
                 video_item = self._model.result[i]
                 video_label = self._create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
                 self._table_view.setIndexWidget(video_idx, video_label);
                 
-                channel_idx = self._sort_model.index(i, ResultFields.ChannelTitle)
+                channel_idx = self._sort_model.index(i, self._model.get_field_column(ResultFields.ChannelTitle))
                 channel_label = self._create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
                 self._table_view.setIndexWidget(channel_idx, channel_label);
             
