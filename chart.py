@@ -22,7 +22,7 @@ class ChannelsPieSeries(QPieSeries):
         super().__init__()
         self._current_channel = None
         self._model = model
-        self._model.modelReset.connect(self.rebuild)
+        self._model.modelReset.connect(self._on_model_reset)
         self._last_pen = None
         self._last_brush = None
         self.setHoleSize(0.3)
@@ -65,6 +65,10 @@ class ChannelsPieSeries(QPieSeries):
                 break
 
         self._current_channel = channel_name
+
+    def _on_model_reset(self):
+        self.set_current_channel(None)
+        self.rebuild()
 
     def _on_slice_hovered(self, pie_slice, state):
         if pie_slice.label() == self._current_channel:
