@@ -38,6 +38,10 @@ class ChannelsPieSeries(QPieSeries):
         for name in counter:
             self.append(name, counter[name])
 
+        current_channel = self._current_channel
+        self._current_channel = None
+        self.set_current_channel(current_channel)
+
     def set_current_channel(self, channel_name):
         if self._current_channel == channel_name:
             return
