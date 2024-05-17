@@ -38,9 +38,19 @@ class ResultTableModel(QAbstractTableModel):
     def __init__(self, parent, *args):
         QAbstractTableModel.__init__(self, parent, *args)
         self.result = []
+        # TODO: Remove header after export fixing. It's unused in this class.
         self.header = [self.tr("Title"), self.tr("Published Time"), self.tr("Duration"), self.tr("View Count"), self.tr("Link"), 
                        self.tr("Channel Name"), self.tr("Channel Link"), self.tr("Channel Subscribers"),
                        self.tr("Channel Views"), self.tr("Channel Joined Date"), self.tr("Views/Subscribers")]
+        self._fields = [
+            (ResultFields.VideoTitle, self.tr("Title")),
+            (ResultFields.VideoPublishedTime, self.tr("Published Time")),
+            (ResultFields.VideoDuration, self.tr("Duration")),
+            (ResultFields.VideoViews, self.tr("View Count")),
+            (ResultFields.ChannelTitle, self.tr("Channel Name")),
+            (ResultFields.ChannelSubscribers, self.tr("Channel Subscribers")),
+            (ResultFields.ViewRate, self.tr("Views/Subscribers")),
+        ]
         self._sort_cast = {}
 
     def setData(self, result):
@@ -57,35 +67,42 @@ class ResultTableModel(QAbstractTableModel):
     def set_sort_cast(self, column: int, cast_func):
         self._sort_cast[column] = cast_func
 
+    def get_field_column(self, result_field: ResultFields):
+        for i in range(len(self._fields)):
+            if self._fields[i][0] == result_field:
+                return i
+        return -1
+
     def rowCount(self, parent):
         return len(self.result)
 
     def columnCount(self, parent):
-        return len(self.header)
+        return len(self._fields)
 
     def data(self, index, role):
         if not index.isValid():
             return None
-        column = index.column()
+        row = index.row()
+        column = self._fields[index.column()][0]
         if role == ResultTableModel.SortRole:
             if column in self._sort_cast:
-                return self._sort_cast[column](self.result[index.row()][column])
+                return self._sort_cast[column](self.result[row][column])
             if column == ResultFields.ViewRate:
-                return float(self.result[index.row()][column][:-1])
-            return self.result[index.row()][column]
+                return float(self.result[row][column][:-1])
+            return self.result[row][column]
         elif role == Qt.ItemDataRole.DisplayRole:
             if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
                 return None
             if column == ResultFields.VideoViews or column == ResultFields.ChannelSubscribers:
-                update_data = '{0:,}'.format(self.result[index.row()][column]).replace(',', ' ')
+                update_data = '{0:,}'.format(self.result[row][column]).replace(',', ' ')
                 return update_data
-            return self.result[index.row()][column]
+            return self.result[row][column]
 
         return None
 
-    def headerData(self, col, orientation, role):
+    def headerData(self, column, orientation, role):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return self.header[col]
+            return self._fields[column][1]
         return None
 
     def sort(self, column, order):
