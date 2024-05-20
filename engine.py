@@ -140,12 +140,13 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     channel_subscribers = subcriber_count_to_int(channel_info["subscribers"]["simpleText"])
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
                     channel_logo_link = channel_info["thumbnails"][0]["url"] if len(channel_info["thumbnails"]) > 0 else ""
-                    video_duration_delta = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
-                    video_duration = timedelta_to_str(video_duration_delta) if video_duration_delta is not None else video["duration"]
+                    video_duration_td = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
+                    video_duration = timedelta_to_str(video_duration_td) if video_duration_td is not None else video["duration"]
                     result.append(
                         make_result_row(video["title"], video["publishedTime"], video_duration, 
                             views, video["link"], channel_info["title"], channel_info["url"], channel_subscribers,
-                            channel_views, channel_info["joinedDate"], preview_link, channel_logo_link, video_info["keywords"]))
+                            channel_views, channel_info["joinedDate"], preview_link, channel_logo_link, video_info["keywords"],
+                            video_duration_td))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -280,7 +281,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 result.append(
                     make_result_row(video_title, video_published_time, video_duration, views, 
                                     video_link, channel_title, channel_url, channel_subscribers,
-                                    channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags))
+                                    channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
+                                    video_duration_td))
 
             self._model.setData(result)
             return True

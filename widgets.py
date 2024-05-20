@@ -19,7 +19,8 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QTextEdit,
-    QStackedLayout
+    QStackedLayout,
+    QComboBox
 )
 from PySide6.QtCharts import (
     QChartView,
@@ -33,7 +34,8 @@ from model import (
     ResultTableModel
 )
 from chart import (
-    ChannelsPieSeries
+    ChannelsPieSeries,
+    VideoDurationChart
 )
 
 
@@ -230,19 +232,30 @@ class AnalyticsWidget(QWidget):
         super().__init__(parent)
         self._model = model
         self._current_index_following = True
+        self._charts = []
 
         main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(main_layout)
 
-        self._channels_pie_chart_view = QChartView()
-        self._channels_pie_chart_view.setRenderHint(QPainter.Antialiasing)
-        main_layout.addWidget(self._channels_pie_chart_view)
+        self._chart_combobox = QComboBox()
+        self._chart_combobox.addItem(self.tr("Channels distribution map"))
+        self._chart_combobox.addItem(self.tr("Video duration map"))
+        self._chart_combobox.currentIndexChanged.connect(self._on_current_chart_changed)
+        main_layout.addWidget(self._chart_combobox)
+
+        self._chart_view = QChartView()
+        self._chart_view.setRenderHint(QPainter.Antialiasing)
+        main_layout.addWidget(self._chart_view)
+
         self._channels_pie_series = ChannelsPieSeries(model)
         self._channels_pie_chart = QChart()
         self._channels_pie_chart.addSeries(self._channels_pie_series)
-        self._channels_pie_chart.setTitle(self.tr("Channels distribution map"))
-        self._channels_pie_chart_view.setChart(self._channels_pie_chart)
+        self._charts.append(self._channels_pie_chart)
+
+        self._video_duration_chart = VideoDurationChart(model)
+        self._charts.append(self._video_duration_chart)
+
+        self._chart_view.setChart(self._channels_pie_chart)
 
     def set_current_index(self, index: QModelIndex):
         if not self._current_index_following or index is None or index.row() < 0 or index.row() >= len(self._model.result):
@@ -251,6 +264,7 @@ class AnalyticsWidget(QWidget):
 
         row_data = self._model.result[index.row()]
         self._channels_pie_series.set_current_channel(row_data[ResultFields.ChannelTitle])
+        self._video_duration_chart.set_current_index(index)
 
     def set_current_index_following(self, follow):
         self._current_index_following = follow
@@ -260,3 +274,6 @@ class AnalyticsWidget(QWidget):
     def set_charts_theme(self, theme):
         self._channels_pie_chart.setTheme(theme)
         self._channels_pie_series.rebuild()
+
+    def _on_current_chart_changed(self, index):
+        self._chart_view.setChart(self._charts[index])

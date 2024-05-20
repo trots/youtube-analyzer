@@ -9,6 +9,9 @@ from PySide6.QtGui import (
 )
 from PySide6.QtCharts import (
     QPieSeries,
+    QBarSet,
+    QBarSeries,
+    QBarCategoryAxis,
     QChart
 )
 from model import (
@@ -74,3 +77,72 @@ class ChannelsPieSeries(QPieSeries):
         if pie_slice.label() == self._current_channel:
             return
         pie_slice.setLabelVisible(state)
+
+class VideoDurationChart(QChart):
+    def __init__(self, model: ResultTableModel):
+        super().__init__()
+        self._current_index = None
+        self._model = model
+        self._model.modelReset.connect(self._on_model_reset)
+        self._bar_set = None
+        self._categories = [
+            [300, self.tr("5m"), 0],
+            [600, self.tr("10m"), 0],
+            [900, self.tr("15m"), 0],
+            [1200, self.tr("20m"), 0],
+            [1800, self.tr("30m"), 0],
+            [2700, self.tr("45m"), 0],
+            [3600, self.tr("1h"), 0],
+            [5400, self.tr("1,5h"), 0],
+            [7200, self.tr("2h"), 0],
+            [10800, self.tr("3h"), 0],
+            [None, self.tr("3+h"), 0]
+        ]
+        self._axis_x = QBarCategoryAxis()
+        self._axis_x.append([category[1] for category in self._categories])
+        self.addAxis(self._axis_x, Qt.AlignBottom)
+        self.legend().setVisible(False)
+
+    def rebuild(self):
+        self.removeAllSeries()
+        self._bar_set = QBarSet("")
+        if len(self._model.result) == 0:
+            return
+
+        for category in self._categories:
+            category[2] = 0
+        durations_secs = [row[ResultFields.VideoDurationTimedelta].total_seconds() for row in self._model.result]
+
+        for i in range(len(durations_secs)):
+            category_index = self._find_category_for_value(durations_secs[i])
+            self._categories[category_index][2] = self._categories[category_index][2] + 1
+
+        self._bar_set.append([category[2] for category in self._categories])
+        self._bar_set.setSelectedColor(Qt.green)
+
+        bar_series = QBarSeries()
+        bar_series.append(self._bar_set)
+        self.addSeries(bar_series)
+
+    def set_current_index(self, index):
+        if self._bar_set is not None:
+            self._bar_set.deselectAllBars()
+
+        if index is None:
+            return
+
+        row = index.row()
+        duration = self._model.result[row][ResultFields.VideoDurationTimedelta].total_seconds()
+        category_index = self._find_category_for_value(duration)
+        self._bar_set.setBarSelected(category_index, True)
+
+    def _on_model_reset(self):
+        self.set_current_index(None)
+        self.rebuild()
+
+    def _find_category_for_value(self, duration:int ):
+        for i in range(len(self._categories) - 1):
+            if duration > self._categories[i][0]:
+                continue
+            return i
+        return len(self._categories) - 1
