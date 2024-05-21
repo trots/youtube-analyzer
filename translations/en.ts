@@ -4,39 +4,39 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="119"/>
+        <location filename="../youtube-analyzer.py" line="122"/>
         <source>About</source>
         <translation>About</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="131"/>
+        <location filename="../youtube-analyzer.py" line="134"/>
         <source>Version: </source>
         <translation>Version:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="128"/>
+        <location filename="../youtube-analyzer.py" line="131"/>
         <source>Software for analyzing of YouTube search output</source>
         <translation>Software for analyzing of YouTube search output</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="134"/>
+        <location filename="../youtube-analyzer.py" line="137"/>
         <source>Based on: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</source>
         <translation>Based on: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="141"/>
+        <location filename="../youtube-analyzer.py" line="144"/>
         <source>Web site:</source>
         <translation>Web site:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="146"/>
+        <location filename="../youtube-analyzer.py" line="149"/>
         <source>License:</source>
         <translation>License:</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="159"/>
+        <location filename="../youtube-analyzer.py" line="162"/>
         <source>All rights reserved</source>
         <translation>All rights reserved</translation>
     </message>
@@ -44,20 +44,25 @@
 <context>
     <name>AnalyticsWidget</name>
     <message>
-        <location filename="../widgets.py" line="244"/>
+        <location filename="../widgets.py" line="240"/>
         <source>Channels distribution map</source>
         <translation>Channels distribution map</translation>
+    </message>
+    <message>
+        <location filename="../widgets.py" line="241"/>
+        <source>Video duration map</source>
+        <translation>Video duration map</translation>
     </message>
 </context>
 <context>
     <name>AuthorsDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="166"/>
+        <location filename="../youtube-analyzer.py" line="169"/>
         <source>Authors</source>
         <translation>Authors</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="172"/>
+        <location filename="../youtube-analyzer.py" line="175"/>
         <source>The YouTube Analyzer team, in alphabetical order:
 </source>
         <translation>The YouTube Analyzer team, in alphabetical order:
@@ -67,7 +72,7 @@
 <context>
     <name>DontAskAgainQuestionDialog</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="109"/>
+        <location filename="../youtube-analyzer.py" line="112"/>
         <source>Don&apos;t ask again</source>
         <translation>Don&apos;t ask again</translation>
     </message>
@@ -75,117 +80,117 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../youtube-analyzer.py" line="191"/>
+        <location filename="../youtube-analyzer.py" line="194"/>
         <source>File</source>
         <translation>File</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="192"/>
+        <location filename="../youtube-analyzer.py" line="195"/>
         <source>Export to XLSX...</source>
         <translation>Export to XLSX...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="194"/>
+        <location filename="../youtube-analyzer.py" line="197"/>
         <source>Export to CSV...</source>
         <translation>Export to CSV...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="196"/>
+        <location filename="../youtube-analyzer.py" line="199"/>
         <source>Export to HTML...</source>
         <translation>Export to HTML...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="200"/>
+        <location filename="../youtube-analyzer.py" line="203"/>
         <source>Exit</source>
         <translation>Exit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="204"/>
+        <location filename="../youtube-analyzer.py" line="207"/>
         <source>Edit</source>
         <translation>Edit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="205"/>
+        <location filename="../youtube-analyzer.py" line="208"/>
         <source>Preferences...</source>
         <translation>Preferences...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="208"/>
+        <location filename="../youtube-analyzer.py" line="211"/>
         <source>View</source>
         <translation>View</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="209"/>
+        <location filename="../youtube-analyzer.py" line="212"/>
         <source>Show details</source>
         <translation>Show details</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="213"/>
+        <location filename="../youtube-analyzer.py" line="216"/>
         <source>Help</source>
         <translation>Help</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="214"/>
+        <location filename="../youtube-analyzer.py" line="217"/>
         <source>Authors...</source>
         <translation>Authors...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="216"/>
+        <location filename="../youtube-analyzer.py" line="219"/>
         <source>About...</source>
         <translation>About...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="221"/>
+        <location filename="../youtube-analyzer.py" line="224"/>
         <source>Enter request and press &apos;Search&apos;...</source>
         <translation>Enter request and press &apos;Search&apos;...</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="226"/>
+        <location filename="../youtube-analyzer.py" line="229"/>
         <source>Set the search result limit</source>
         <translation>Set the search result limit</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="232"/>
+        <location filename="../youtube-analyzer.py" line="235"/>
         <source>Search</source>
         <translation>Search</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="233"/>
+        <location filename="../youtube-analyzer.py" line="236"/>
         <source>Click to start searching</source>
         <translation>Click to start searching</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="258"/>
+        <location filename="../youtube-analyzer.py" line="257"/>
         <source>Details</source>
         <translation>Details</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="262"/>
+        <location filename="../youtube-analyzer.py" line="266"/>
         <source>Analytics</source>
         <translation>Analytics</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="290"/>
+        <location filename="../youtube-analyzer.py" line="294"/>
         <source>Exit?</source>
         <translation>Exit?</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="336"/>
+        <location filename="../youtube-analyzer.py" line="342"/>
         <source>Error in the searching process</source>
         <translation>Error in the searching process</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="361"/>
+        <location filename="../youtube-analyzer.py" line="368"/>
         <source>Save XLSX</source>
         <translation>Save XLSX</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="385"/>
+        <location filename="../youtube-analyzer.py" line="392"/>
         <source>Save CSV</source>
         <translation>Save CSV</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="401"/>
+        <location filename="../youtube-analyzer.py" line="408"/>
         <source>Save HTML</source>
         <translation>Save HTML</translation>
     </message>
@@ -193,57 +198,64 @@
 <context>
     <name>ResultTableModel</name>
     <message>
-        <location filename="../model.py" line="41"/>
+        <location filename="../model.py" line="44"/>
+        <location filename="../model.py" line="48"/>
         <source>Title</source>
         <translation>Title</translation>
     </message>
     <message>
-        <location filename="../model.py" line="41"/>
+        <location filename="../model.py" line="44"/>
+        <location filename="../model.py" line="49"/>
         <source>Published Time</source>
         <translation>Published Time</translation>
     </message>
     <message>
-        <location filename="../model.py" line="41"/>
+        <location filename="../model.py" line="44"/>
+        <location filename="../model.py" line="50"/>
         <source>Duration</source>
         <translation>Duration</translation>
     </message>
     <message>
-        <location filename="../model.py" line="41"/>
+        <location filename="../model.py" line="44"/>
+        <location filename="../model.py" line="51"/>
         <source>View Count</source>
         <translation>View Count</translation>
     </message>
     <message>
-        <location filename="../model.py" line="41"/>
+        <location filename="../model.py" line="44"/>
         <source>Link</source>
         <translation>Link</translation>
     </message>
     <message>
-        <location filename="../model.py" line="42"/>
+        <location filename="../model.py" line="45"/>
+        <location filename="../model.py" line="52"/>
         <source>Channel Name</source>
         <translation>Channel Name</translation>
     </message>
     <message>
-        <location filename="../model.py" line="42"/>
+        <location filename="../model.py" line="45"/>
         <source>Channel Link</source>
         <translation>Channel Link</translation>
     </message>
     <message>
-        <location filename="../model.py" line="42"/>
+        <location filename="../model.py" line="45"/>
+        <location filename="../model.py" line="53"/>
         <source>Channel Subscribers</source>
         <translation>Channel Subscribers</translation>
     </message>
     <message>
-        <location filename="../model.py" line="43"/>
+        <location filename="../model.py" line="46"/>
         <source>Channel Views</source>
         <translation>Channel Views</translation>
     </message>
     <message>
-        <location filename="../model.py" line="43"/>
+        <location filename="../model.py" line="46"/>
         <source>Channel Joined Date</source>
         <translation>Channel Joined Date</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
+        <location filename="../model.py" line="47"/>
+        <location filename="../model.py" line="54"/>
         <source>Views/Subscribers</source>
         <translation>Views/Subscribers</translation>
     </message>
@@ -251,67 +263,67 @@
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../settings.py" line="52"/>
+        <location filename="../settings.py" line="53"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="55"/>
+        <location filename="../settings.py" line="56"/>
         <source>YouTube API Key:</source>
         <translation>YouTube API Key:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="58"/>
+        <location filename="../settings.py" line="59"/>
         <source>Set the key to use the YouTube API for YouTube search</source>
         <translation>Set the key to use the YouTube API for YouTube search</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="61"/>
+        <location filename="../settings.py" line="62"/>
         <source>Language:</source>
         <translation>Language:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="64"/>
+        <location filename="../settings.py" line="65"/>
         <source>Set the interface language</source>
         <translation>Set the interface language</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="74"/>
+        <location filename="../settings.py" line="75"/>
         <source>Theme:</source>
         <translation>Theme:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="77"/>
+        <location filename="../settings.py" line="78"/>
         <source>Set the interface color theme</source>
         <translation>Set the interface color theme</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="78"/>
+        <location filename="../settings.py" line="79"/>
         <source>System</source>
         <translation>System</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="79"/>
+        <location filename="../settings.py" line="80"/>
         <source>Dark</source>
         <translation>Dark</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="83"/>
+        <location filename="../settings.py" line="84"/>
         <source>Analytics:</source>
         <translation>Analytics:</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="85"/>
+        <location filename="../settings.py" line="86"/>
         <source>Follow table selections in analytics charts</source>
         <translation>Follow table selections in analytics charts</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="86"/>
+        <location filename="../settings.py" line="87"/>
         <source>Highlight the selected item on the analytics charts</source>
         <translation>Highlight the selected item on the analytics charts</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="110"/>
+        <location filename="../settings.py" line="111"/>
         <source>Restart the application now to apply the selected language?</source>
         <translation>Restart the application now to apply the selected language?</translation>
     </message>
@@ -319,39 +331,97 @@
 <context>
     <name>VideoDetailsWidget</name>
     <message>
-        <location filename="../widgets.py" line="143"/>
+        <location filename="../widgets.py" line="144"/>
         <source>Tags:</source>
         <translation>Tags:</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="145"/>
+        <location filename="../widgets.py" line="146"/>
         <source>The video tags</source>
         <translation>The video tags</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="147"/>
+        <location filename="../widgets.py" line="148"/>
         <source>No tags</source>
         <translation>No tags</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="159"/>
+        <location filename="../widgets.py" line="160"/>
         <source>Select a video to see its details</source>
         <translation>Select a video to see its details</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="176"/>
+        <location filename="../widgets.py" line="177"/>
         <source> subscribers</source>
         <translation> subscribers</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="178"/>
+        <location filename="../widgets.py" line="179"/>
         <source> views</source>
         <translation> views</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="225"/>
+        <location filename="../widgets.py" line="226"/>
         <source>Download error: </source>
         <translation>Download error: </translation>
+    </message>
+</context>
+<context>
+    <name>VideoDurationChart</name>
+    <message>
+        <location filename="../chart.py" line="102"/>
+        <source>5m</source>
+        <translation>5m</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="103"/>
+        <source>10m</source>
+        <translation>10m</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="104"/>
+        <source>15m</source>
+        <translation>15m</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="105"/>
+        <source>20m</source>
+        <translation>20m</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="106"/>
+        <source>30m</source>
+        <translation>30m</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="107"/>
+        <source>45m</source>
+        <translation>45m</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="108"/>
+        <source>1h</source>
+        <translation>1h</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="109"/>
+        <source>1,5h</source>
+        <translation>1,5h</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="110"/>
+        <source>2h</source>
+        <translation>2h</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="111"/>
+        <source>3h</source>
+        <translation>3h</translation>
+    </message>
+    <message>
+        <location filename="../chart.py" line="112"/>
+        <source>3+h</source>
+        <translation>3+h</translation>
     </message>
 </context>
 </TS>
