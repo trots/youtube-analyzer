@@ -31,6 +31,7 @@ class Settings:
     DetailsVisible = SettingsKey("details", True)
     LastActiveDetailsTab = SettingsKey("last_active_details_tab", 0)
     AnalyticsFollowTableSelect = SettingsKey("analytics_follow_table_select", True)
+    LastActiveChartIndex = SettingsKey("last_active_chart_index", 0)
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
