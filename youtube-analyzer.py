@@ -267,6 +267,7 @@ class MainWindow(QMainWindow):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
         else:
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
+        self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
         self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
 
         self._side_tab_widget.setCurrentIndex(int(self._settings.get(Settings.LastActiveDetailsTab)))
@@ -306,6 +307,7 @@ class MainWindow(QMainWindow):
         self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
         self._settings.set(Settings.DetailsVisible, self._show_details_action.isChecked())
         self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+        self._settings.set(Settings.LastActiveChartIndex, self._analytics_widget.get_current_chart_index())
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()

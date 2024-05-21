@@ -263,6 +263,12 @@ class AnalyticsWidget(QWidget):
         if not follow:
             self.set_current_index(None)
 
+    def set_current_chart_index(self, chart_index: int):
+        self._chart_combobox.setCurrentIndex(chart_index)
+
+    def get_current_chart_index(self):
+        return self._chart_combobox.currentIndex()
+
     def set_charts_theme(self, theme):
         for chart in self._charts:
             chart.setTheme(theme)
