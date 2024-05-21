@@ -319,6 +319,7 @@ class MainWindow(QMainWindow):
         self._search_line_edit.setDisabled(True)
         self._search_button.setDisabled(True)
         self._table_view.setDisabled(True)
+        self._side_tab_widget.setDisabled(True)
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
         self._model.clear()
         self._sort_model.sort(-1)
@@ -350,6 +351,7 @@ class MainWindow(QMainWindow):
         self._search_line_edit.setDisabled(False)
         self._search_button.setDisabled(False)
         self._table_view.setDisabled(False)
+        self._side_tab_widget.setDisabled(False)
 
     def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
         indexes = current.indexes()
