@@ -20,61 +20,74 @@ from model import (
 )
 
 
-class ChannelsPieSeries(QPieSeries):
+class ChannelsPieChart(QChart):
     def __init__(self, model: ResultTableModel):
         super().__init__()
-        self._current_channel = None
+        self._current_index = None
         self._model = model
         self._model.modelReset.connect(self._on_model_reset)
+        self._series = QPieSeries()
+        self._series.setHoleSize(0.3)
+        self._series.hovered.connect(self._on_slice_hovered)
+        self.addSeries(self._series)
         self._last_pen = None
         self._last_brush = None
-        self.setHoleSize(0.3)
-        self.hovered.connect(self._on_slice_hovered)
 
     def rebuild(self):
-        self.clear()
+        self._series.clear()
         if len(self._model.result) == 0:
             return
 
         channel_names = [row[ResultFields.ChannelTitle] for row in self._model.result]
         counter = Counter(channel_names)
         for name in counter:
-            self.append(name, counter[name])
+            self._series.append(name, counter[name])
 
-        current_channel = self._current_channel
-        self._current_channel = None
-        self.set_current_channel(current_channel)
+        current_index = self._current_index
+        self._current_index = None
+        self.set_current_index(current_index)
 
-    def set_current_channel(self, channel_name):
-        if self._current_channel == channel_name:
+    def set_current_index(self, index):
+        current_row = self._current_index.row() if self._current_index is not None else None
+        row = index.row() if index is not None else None
+
+        if current_row == row:
             return
 
-        for slice in self.slices():
-            if slice.label() == self._current_channel:
-                slice.setExploded(False)
-                slice.setLabelVisible(False)
-                slice.setPen(self._last_pen)
-                slice.setBrush(self._last_brush)
-                break
-        
-        for slice in self.slices():
-            if slice.label() == channel_name:
-                slice.setExploded()
-                slice.setLabelVisible()
-                self._last_pen = slice.pen()
-                self._last_brush = slice.brush()
-                slice.setPen(QPen(Qt.darkGreen, 2))
-                slice.setBrush(Qt.green)
-                break
+        current_channel_name = self._model.get_field_data(current_row, ResultFields.ChannelTitle)
 
-        self._current_channel = channel_name
+        if current_channel_name is not None:
+            for slice in self._series.slices():
+                if slice.label() == current_channel_name:
+                    slice.setExploded(False)
+                    slice.setLabelVisible(False)
+                    slice.setPen(self._last_pen)
+                    slice.setBrush(self._last_brush)
+                    break
+
+        channel_name = self._model.get_field_data(row, ResultFields.ChannelTitle)
+
+        if channel_name is not None:
+            for slice in self._series.slices():
+                if slice.label() == channel_name:
+                    slice.setExploded()
+                    slice.setLabelVisible()
+                    self._last_pen = slice.pen()
+                    self._last_brush = slice.brush()
+                    slice.setPen(QPen(Qt.darkGreen, 2))
+                    slice.setBrush(Qt.green)
+                    break
+
+        self._current_index = index
 
     def _on_model_reset(self):
-        self.set_current_channel(None)
+        self.set_current_index(None)
         self.rebuild()
 
     def _on_slice_hovered(self, pie_slice, state):
-        if pie_slice.label() == self._current_channel:
+        row = self._current_index.row() if self._current_index is not None else None
+        channel_name = self._model.get_field_data(row, ResultFields.ChannelTitle)
+        if pie_slice.label() == channel_name:
             return
         pie_slice.setLabelVisible(state)
 
@@ -132,7 +145,7 @@ class VideoDurationChart(QChart):
             return
 
         row = index.row()
-        duration = self._model.result[row][ResultFields.VideoDurationTimedelta].total_seconds()
+        duration = self._model.get_field_data(row, ResultFields.VideoDurationTimedelta).total_seconds()
         category_index = self._find_category_for_value(duration)
         self._bar_set.setBarSelected(category_index, True)
 
