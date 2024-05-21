@@ -63,6 +63,11 @@ from widgets import (
     AnalyticsWidget
 )
 
+def exception_column(column):
+    if column == ResultFields.ChannelViews or column == ResultFields.ChannelJoinedDate:
+        return True
+    else:
+        return False
 
 app_need_restart = False
 
@@ -423,12 +428,14 @@ class MainWindow(QMainWindow):
         result_doc = html_o + body_o + table_o
         result_doc += tr_o
         for column in range(len(self._model.header)):
-            result_doc += th_o + str(self._model.header[column]) + th_c
+            if not exception_column(column):
+                result_doc += th_o + str(self._model.header[column]) + th_c
         result_doc += tr_c
         for row in range(len(self._model.result)):
             result_doc += tr_o
             for column in range(len(self._model.header)):
-                result_doc += td_o + str(self._model.result[row][column]) + td_c
+                if not exception_column(column):
+                    result_doc += td_o + str(self._model.result[row][column]) + td_c
             result_doc += tr_c
         result_doc += table_c + body_c + html_c 
         with open(file_name[0], 'w', encoding='utf-8') as htmlfile:
