@@ -23,8 +23,7 @@ from PySide6.QtWidgets import (
     QComboBox
 )
 from PySide6.QtCharts import (
-    QChartView,
-    QChart
+    QChartView
 )
 from engine import (
     ImageDownloader
@@ -34,7 +33,7 @@ from model import (
     ResultTableModel
 )
 from chart import (
-    ChannelsPieSeries,
+    ChannelsPieChart,
     VideoDurationChart
 )
 
@@ -247,24 +246,17 @@ class AnalyticsWidget(QWidget):
         self._chart_view.setRenderHint(QPainter.Antialiasing)
         main_layout.addWidget(self._chart_view)
 
-        self._channels_pie_series = ChannelsPieSeries(model)
-        self._channels_pie_chart = QChart()
-        self._channels_pie_chart.addSeries(self._channels_pie_series)
-        self._charts.append(self._channels_pie_chart)
+        channels_pie_chart = ChannelsPieChart(model)
+        self._charts.append(channels_pie_chart)
 
-        self._video_duration_chart = VideoDurationChart(model)
-        self._charts.append(self._video_duration_chart)
+        video_duration_chart = VideoDurationChart(model)
+        self._charts.append(video_duration_chart)
 
-        self._chart_view.setChart(self._channels_pie_chart)
+        self._chart_view.setChart(channels_pie_chart)
 
     def set_current_index(self, index: QModelIndex):
-        if not self._current_index_following or index is None or index.row() < 0 or index.row() >= len(self._model.result):
-            self._channels_pie_series.set_current_channel(None)
-            return
-
-        row_data = self._model.result[index.row()]
-        self._channels_pie_series.set_current_channel(row_data[ResultFields.ChannelTitle])
-        self._video_duration_chart.set_current_index(index)
+        for chart in self._charts:
+            chart.set_current_index(index)
 
     def set_current_index_following(self, follow):
         self._current_index_following = follow
@@ -272,8 +264,9 @@ class AnalyticsWidget(QWidget):
             self.set_current_index(None)
 
     def set_charts_theme(self, theme):
-        self._channels_pie_chart.setTheme(theme)
-        self._channels_pie_series.rebuild()
+        for chart in self._charts:
+            chart.setTheme(theme)
+            chart.rebuild()
 
-    def _on_current_chart_changed(self, index):
-        self._chart_view.setChart(self._charts[index])
+    def _on_current_chart_changed(self, chart_index: int):
+        self._chart_view.setChart(self._charts[chart_index])
