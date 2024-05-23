@@ -378,13 +378,18 @@ class MainWindow(QMainWindow):
         
         workbook = xlsxwriter.Workbook(file_name[0])
         worksheet = workbook.add_worksheet()
-
+        index = 0
         for column in range(len(self._model.header)):
-            worksheet.write(0, column, self._model.header[column])
+            if not exception_column(column):
+                worksheet.write(0, index, self._model.header[column])
+                index = index + 1
 
         for row in range(len(self._model.result)):
+            index = 0
             for column in range(len(self._model.header)):
-                worksheet.write(row + 1, column, self._model.result[row][column])
+                if not exception_column(column):
+                    worksheet.write(row + 1, index, self._model.result[row][column])
+                    index = index + 1
 
         worksheet.autofit()
         workbook.close()
