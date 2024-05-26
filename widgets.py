@@ -92,7 +92,7 @@ class VideoDetailsWidget(QWidget):
 
         self._preview_label = PixmapLabel(main_widget)
         self._preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.addWidget(self._preview_label, 1)
+        main_layout.addWidget(self._preview_label)
 
         self._title_label = QLabel(main_widget)
         self._title_label.setStyleSheet("font-weight: bold")
@@ -148,7 +148,6 @@ class VideoDetailsWidget(QWidget):
         self._tags_edit.setPlaceholderText(self.tr("No tags"))
         main_layout.addWidget(self._tags_edit)
 
-        main_layout.addStretch(2)
         main_widget.setLayout(main_layout)
         
         scroll_area = QScrollArea(self)
