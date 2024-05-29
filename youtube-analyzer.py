@@ -287,8 +287,17 @@ class MainWindow(QMainWindow):
 
     def showEvent(self, _event: QShowEvent):
         if self._restore_geometry_on_show:
-            self.restoreGeometry(self._settings.get(Settings.MainWindowGeometry))
-            self._main_splitter.setSizes(list(map(int, self._settings.get(Settings.MainSplitterState))))
+            # Restore window geometry
+            geometry = self._settings.get(Settings.MainWindowGeometry)
+            if not geometry.isEmpty():
+                self.restoreGeometry(geometry)
+            # Restore main splitter sizes
+            splitter_sizes = list(map(int, self._settings.get(Settings.MainSplitterState)))
+            if len(splitter_sizes) != 2 or splitter_sizes[0] == 0 or splitter_sizes[1] == 0:
+                window_width_part = self.width() / 5
+                splitter_sizes = [3 * window_width_part, 2 * window_width_part]
+            self._main_splitter.setSizes(splitter_sizes)
+            # Restore details panel visibility
             self._show_details_action.setChecked(self._settings.get(Settings.DetailsVisible))
             self._restore_geometry_on_show = False
         self._table_view.resizeColumnsToContents()
