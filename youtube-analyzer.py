@@ -1,5 +1,6 @@
 import sys
 import csv
+import traceback
 
 from PySide6.QtCore import (
     Qt,
@@ -312,6 +313,9 @@ class MainWindow(QMainWindow):
             self._settings.set(Settings.DontAskAgainExit, question.is_dont_ask_again())
 
         event.accept()
+        self.save_state()
+
+    def save_state(self):
         self._settings.set(Settings.MainWindowGeometry, self.saveGeometry())
         self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
         self._settings.set(Settings.DetailsVisible, self._show_details_action.isChecked())
@@ -507,7 +511,22 @@ class MainWindow(QMainWindow):
         return label
 
 
+def top_exception_handler(_exctype, value, tb):
+    dialog = QMessageBox(QMessageBox.Critical, app_name, str(value))
+    if tb:
+        format_exception = traceback.format_tb(tb)
+        for line in format_exception:
+            dialog.setDetailedText(str(line))
+    dialog.exec()
+    if window:
+        window.save_state()
+    app.exit(1)
+
+
+sys.excepthook = top_exception_handler
+
 app = QApplication(sys.argv)
+window = None
 app.setWindowIcon(QIcon("logo.png"))
 app.setStyle("Fusion")
 settings = Settings(app_name)
