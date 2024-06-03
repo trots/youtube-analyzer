@@ -1,8 +1,30 @@
 import unittest
 from datetime import timedelta
-from engine import (timedelta_to_str, YoutubeGrepEngine)
+from engine import (timedelta_to_str, view_count_to_int, subcriber_count_to_int, YoutubeGrepEngine)
 
 class TestStringMethods(unittest.TestCase):
+
+    def test_view_count_to_int(self):
+        self.assertEqual(view_count_to_int("123"), 123)
+        self.assertEqual(view_count_to_int("629 views"), 629)
+        self.assertEqual(view_count_to_int("578,614 views"), 578614)
+        self.assertEqual(view_count_to_int("22,112,475 views"), 22112475)
+
+        self.assertEqual(view_count_to_int(None), 0)
+        self.assertEqual(view_count_to_int(""), 0)
+
+    def test_subscriber_count_to_int(self):
+        self.assertEqual(subcriber_count_to_int("1 subscriber"), 1)
+        self.assertEqual(subcriber_count_to_int("640 subscribers"), 640)
+        self.assertEqual(subcriber_count_to_int("11K subscribers"), 11000)
+        self.assertEqual(subcriber_count_to_int("11.5K subscribers"), 11500)
+        self.assertEqual(subcriber_count_to_int("17M subscribers"), 17000000)
+        self.assertEqual(subcriber_count_to_int("17.3M subscribers"), 17300000)
+        self.assertEqual(subcriber_count_to_int("3B subscribers"), 3000000000)
+        self.assertEqual(subcriber_count_to_int("3.5B subscribers"), 3500000000)
+
+        self.assertEqual(subcriber_count_to_int(None), 0)
+        self.assertEqual(subcriber_count_to_int(""), 0)
 
     def test_timedelta_to_str(self):
         self.assertEqual(timedelta_to_str(timedelta(seconds=0)), "00:00:00")
