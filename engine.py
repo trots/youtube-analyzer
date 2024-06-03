@@ -28,7 +28,7 @@ from model import (
 )
 
 
-def view_count_to_int(count_str):
+def view_count_to_int(count_str: str):
     if not count_str:
         return 0
     parts = count_str.split()
@@ -38,7 +38,7 @@ def view_count_to_int(count_str):
     return int(processed_count) if processed_count.isdigit() else 0
 
 
-def subcriber_count_to_int(count_str):
+def subcriber_count_to_int(count_str: str):
     if not count_str:
         return 0
     parts = count_str.split()
