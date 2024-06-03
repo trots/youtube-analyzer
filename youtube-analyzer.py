@@ -407,9 +407,20 @@ class MainWindow(QMainWindow):
 
         with open(file_name[0], 'w', newline='', encoding='utf-8') as csvfile:
             csv_writer = csv.writer(csvfile, delimiter=';')
-            csv_writer.writerow(self._model.header)
-            for result_item in self._model.result:
-                csv_writer.writerow(result_item)
+
+            header_csv = []
+            for column in range(len(self._model.header)):
+                if not exception_column(column):
+                    header_csv.append(self._model.header[column])
+            csv_writer.writerow(header_csv)
+
+            result_csv = []
+            for row in range(len(self._model.result)):
+                for column in range(len(self._model.header)):
+                    if not exception_column(column):
+                        result_csv.append(self._model.result[row][column])
+                csv_writer.writerow(result_csv)
+                result_csv.clear()
 
     def _on_export_html(self):
         if self._request_text == "" or len(self._model.result) == 0:
