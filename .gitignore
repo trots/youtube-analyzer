@@ -8,3 +8,4 @@ translations/*.qm
 youtube-analyzer.build
 youtube-analyzer.dist
 Output
+.coverage
