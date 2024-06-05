@@ -419,7 +419,7 @@ class MainWindow(QMainWindow):
         self._settings.set(Settings.LastSaveDir, QFileInfo(file_name[0]).dir().absolutePath())
 
         with open(file_name[0], 'w', newline='', encoding='utf-8') as csvfile:
-            csv_writer = csv.writer(csvfile, delimiter=';')
+            csv_writer = csv.writer(csvfile, delimiter=',')
 
             header_csv = []
             for column in range(len(self._model.header)):
