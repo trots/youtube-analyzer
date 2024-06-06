@@ -126,7 +126,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
     def search(self, request_text: str):
         try:
             self.error = ""
-            videos_search = VideosSearch(request_text, limit = self._request_limit)
+            videos_search = self._create_video_searcher(request_text)
             result = []
             has_next_page = True
             counter = 0
@@ -134,8 +134,8 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                 result_array = videos_search.result()["result"]
                 for video in result_array:
                     views = view_count_to_int(video["viewCount"]["text"])
-                    video_info = Video.getInfo(video["id"])
-                    channel_info = Channel.get(video["channel"]["id"])
+                    video_info = self._get_video_info(video["id"])
+                    channel_info = self._get_channel_info(video["channel"]["id"])
                     channel_views = view_count_to_int(channel_info["views"])
                     channel_subscribers = subcriber_count_to_int(channel_info["subscribers"]["simpleText"])
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
@@ -203,6 +203,15 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
         if pb_timedelta == "":
             return None
         return float(pb_timedelta.replace(":", ""))
+
+    def _create_video_searcher(self, request_text: str):
+        return VideosSearch(request_text, limit=self._request_limit)
+
+    def _get_video_info(self, video_id: str):
+        return Video.getInfo(video_id)
+
+    def _get_channel_info(self, channel_id: str):
+        return Channel.get(channel_id)
 
 
 class YoutubeApiEngine(AbstractYoutubeEngine):
