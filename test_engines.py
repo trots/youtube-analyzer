@@ -1,6 +1,119 @@
 import unittest
 from datetime import timedelta
+from model import (ResultFields, ResultTableModel)
 from engine import (timedelta_to_str, view_count_to_int, subcriber_count_to_int, YoutubeGrepEngine)
+
+
+class MockVideosSearch:
+    def __init__(self, request_limit: int):
+        self._request_limit = min(request_limit, 3)
+        self._has_next = True if request_limit == 3 else False
+        self._result = {
+            "result": []
+        }
+        if request_limit > 0:
+            self._result["result"].append({
+                "title": "First video",
+                "id": "1",
+                "duration": "12:34",
+                "publishedTime": "8 hours ago",
+                "link": "https://video_1",
+                "viewCount": {
+                    "text": "123 views"
+                },
+                "channel": {
+                    "id": "1"
+                },
+                "thumbnails": [
+                    {
+                        "url": "https://thumb_1.png"
+                    }
+                ]
+            })
+        if request_limit > 1:
+            self._result["result"].append({
+                "title": "Second video",
+                "id": "2",
+                "duration": "23:12",
+                "publishedTime": "3 hours ago",
+                "link": "https://video_2",
+                "viewCount": {
+                    "text": "800 views"
+                },
+                "channel": {
+                    "id": "2"
+                },
+                "thumbnails": [
+                    {
+                        "url": "https://thumb_2.png"
+                    }
+                ]
+            })
+
+    def next(self):
+        has_next = self._has_next
+        self._has_next = False
+
+        if has_next:
+            self._result = {
+                "result": [
+                    {
+                        "title": "Third video",
+                        "id": "3",
+                        "duration": "36:47",
+                        "publishedTime": "10 hours ago",
+                        "link": "https://video_3",
+                        "viewCount": {
+                            "text": "409 views"
+                        },
+                        "channel": {
+                            "id": "3"
+                        },
+                        "thumbnails": [
+                            {
+                                "url": "https://thumb_3.png"
+                            }
+                        ]
+                    }
+                ]
+            }
+        return has_next
+
+    def result(self):
+        return self._result
+
+
+class MockGrepEngine(YoutubeGrepEngine):
+    def __init__(self, request_limit: int):
+        super().__init__(ResultTableModel(None), request_limit)
+
+    def model(self):
+        return self._model
+
+    def _create_video_searcher(self, _request_text):
+        return MockVideosSearch(self._request_limit)
+
+    def _get_video_info(self, _video_id: str):
+        return {
+            "keywords": ["word1", "word2"]
+        }
+
+    def _get_channel_info(self, _channel_id: str):
+        return {
+            "title": "First channel title",
+            "url": "https://fchannel",
+            "views": "895 views",
+            "joinedDate": "2020-05-18",
+            "subscribers": {
+                "simpleText": "30 subscribers"
+            },
+            "thumbnails": [
+                {
+                    "url": "https://logo_1.png"
+                }
+            ]
+        }
+
 
 class TestStringMethods(unittest.TestCase):
 
@@ -80,6 +193,59 @@ class TestStringMethods(unittest.TestCase):
         self.assertIsNone(YoutubeGrepEngine.published_time_sort_cast(None))
         self.assertIsNone(YoutubeGrepEngine.published_time_sort_cast("0"))
         self.assertIsNone(YoutubeGrepEngine.published_time_sort_cast("1 part ago"))
+
+    def test_youtube_grep_engine(self):
+        for count in range(4):
+            engine = MockGrepEngine(count)
+            self.assertTrue(engine.search("request"))
+            model = engine.model()
+            self.assertEqual(len(model.result), count)
+
+            if count > 0:
+                self.assertEqual(model.result[0][ResultFields.VideoTitle], "First video")
+                self.assertEqual(model.result[0][ResultFields.VideoPublishedTime], "8 hours ago")
+                self.assertEqual(model.result[0][ResultFields.VideoDuration], "00:12:34")
+                self.assertEqual(model.result[0][ResultFields.VideoViews], 123)
+                self.assertEqual(model.result[0][ResultFields.VideoLink], "https://video_1")
+                self.assertEqual(model.result[0][ResultFields.ChannelTitle], "First channel title")
+                self.assertEqual(model.result[0][ResultFields.ChannelLink], "https://fchannel")
+                self.assertEqual(model.result[0][ResultFields.ChannelSubscribers], 30)
+                self.assertEqual(model.result[0][ResultFields.ChannelJoinedDate], "2020-05-18")
+                self.assertEqual(model.result[0][ResultFields.ViewRate], "410.0%")
+                self.assertEqual(model.result[0][ResultFields.VideoPreviewLink], "https://thumb_1.png")
+                self.assertEqual(model.result[0][ResultFields.ChannelLogoLink], "https://logo_1.png")
+                self.assertEqual(model.result[0][ResultFields.VideoTags], ["word1", "word2"])
+                self.assertEqual(model.result[0][ResultFields.VideoDurationTimedelta], timedelta(seconds=754))
+            if count > 1:
+                self.assertEqual(model.result[1][ResultFields.VideoTitle], "Second video")
+                self.assertEqual(model.result[1][ResultFields.VideoPublishedTime], "3 hours ago")
+                self.assertEqual(model.result[1][ResultFields.VideoDuration], "00:23:12")
+                self.assertEqual(model.result[1][ResultFields.VideoViews], 800)
+                self.assertEqual(model.result[1][ResultFields.VideoLink], "https://video_2")
+                self.assertEqual(model.result[1][ResultFields.ChannelTitle], "First channel title")
+                self.assertEqual(model.result[1][ResultFields.ChannelLink], "https://fchannel")
+                self.assertEqual(model.result[1][ResultFields.ChannelSubscribers], 30)
+                self.assertEqual(model.result[1][ResultFields.ChannelJoinedDate], "2020-05-18")
+                self.assertEqual(model.result[1][ResultFields.ViewRate], "2666.67%")
+                self.assertEqual(model.result[1][ResultFields.VideoPreviewLink], "https://thumb_2.png")
+                self.assertEqual(model.result[1][ResultFields.ChannelLogoLink], "https://logo_1.png")
+                self.assertEqual(model.result[1][ResultFields.VideoTags], ["word1", "word2"])
+                self.assertEqual(model.result[1][ResultFields.VideoDurationTimedelta], timedelta(seconds=1392))
+            if count > 2:
+                self.assertEqual(model.result[2][ResultFields.VideoTitle], "Third video")
+                self.assertEqual(model.result[2][ResultFields.VideoPublishedTime], "10 hours ago")
+                self.assertEqual(model.result[2][ResultFields.VideoDuration], "00:36:47")
+                self.assertEqual(model.result[2][ResultFields.VideoViews], 409)
+                self.assertEqual(model.result[2][ResultFields.VideoLink], "https://video_3")
+                self.assertEqual(model.result[2][ResultFields.ChannelTitle], "First channel title")
+                self.assertEqual(model.result[2][ResultFields.ChannelLink], "https://fchannel")
+                self.assertEqual(model.result[2][ResultFields.ChannelSubscribers], 30)
+                self.assertEqual(model.result[2][ResultFields.ChannelJoinedDate], "2020-05-18")
+                self.assertEqual(model.result[2][ResultFields.ViewRate], "1363.33%")
+                self.assertEqual(model.result[2][ResultFields.VideoPreviewLink], "https://thumb_3.png")
+                self.assertEqual(model.result[2][ResultFields.ChannelLogoLink], "https://logo_1.png")
+                self.assertEqual(model.result[2][ResultFields.VideoTags], ["word1", "word2"])
+                self.assertEqual(model.result[2][ResultFields.VideoDurationTimedelta], timedelta(seconds=2207))
 
 if __name__ == "__main__":
     unittest.main()
