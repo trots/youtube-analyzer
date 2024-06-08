@@ -220,20 +220,9 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         self._api_key = api_key
 
     def search(self, request_text: str):
-        api_service_name = "youtube"
-        api_version = "v3"
-
         try:
-            youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey = self._api_key)
-
-            request = youtube.search().list(
-                part = "snippet",
-                maxResults = self._request_limit,
-                q = request_text,
-                type="video"
-            )
-
-            search_response = request.execute()
+            youtube = self._create_youtube_client()
+            search_response = self._search_videos(youtube, request_text)
 
             video_ids = ""
             channel_ids = ""
@@ -246,17 +235,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             video_ids = video_ids[1:] # Remove first comma
             channel_ids = channel_ids[1:] # Remove first comma
 
-            video_request = youtube.videos().list(
-                part = "contentDetails,statistics,snippet",
-                id = video_ids
-            )
-            video_response = video_request.execute()
-
-            channel_request = youtube.channels().list(
-                part="snippet,statistics",
-                id=channel_ids
-            )
-            channel_response = channel_request.execute()
+            video_response = self._get_video_details(youtube, video_ids)
+            channel_response = self._get_channel_details(youtube, channel_ids)
             channels = {}
             for channel_item in channel_response["items"]:
                 channels[channel_item["id"]] = channel_item
@@ -283,7 +263,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 video_preview_link = search_snippet["thumbnails"]["high"]["url"]
                 channel_snippet = channel_item["snippet"]
                 channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
-                channel_logo_link = channel_logo_link.replace("https", "http") # https not working. I don't know why (2024.03.10)
+                channel_logo_link = channel_logo_link.replace("https", "http") # https is not working. I don't know why (2024.03.10)
                 video_snippet = video_item["snippet"]
                 tags = video_snippet["tags"] if "tags" in video_snippet else None
                 count = count + 1
@@ -298,3 +278,31 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         except Exception as e:
             self.error = str(e)
             return False
+
+    def _create_youtube_client(self):
+        api_service_name = "youtube"
+        api_version = "v3"
+        return googleapiclient.discovery.build(api_service_name, api_version, developerKey=self._api_key)
+
+    def _search_videos(self, youtube, request_text: str):
+        request = youtube.search().list(
+            part="snippet",
+            maxResults=self._request_limit,
+            q=request_text,
+            type="video"
+        )
+        return request.execute()
+
+    def _get_video_details(self, youtube, video_ids):
+        video_request = youtube.videos().list(
+            part="contentDetails,statistics,snippet",
+            id=video_ids
+        )
+        return video_request.execute()
+
+    def _get_channel_details(self, youtube, channel_ids):
+        channel_request = youtube.channels().list(
+            part="snippet,statistics",
+            id=channel_ids
+        )
+        return channel_request.execute()

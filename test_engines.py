@@ -1,7 +1,9 @@
 import unittest
 from datetime import timedelta
 from model import (ResultFields, ResultTableModel)
-from engine import (timedelta_to_str, view_count_to_int, subcriber_count_to_int, YoutubeGrepEngine)
+from engine import (
+    timedelta_to_str, view_count_to_int, subcriber_count_to_int,
+    YoutubeGrepEngine, YoutubeApiEngine)
 
 
 class MockVideosSearch:
@@ -84,13 +86,16 @@ class MockVideosSearch:
 
 
 class MockGrepEngine(YoutubeGrepEngine):
-    def __init__(self, request_limit: int):
+    def __init__(self, request_limit: int, exception=False):
         super().__init__(ResultTableModel(None), request_limit)
+        self._exception = exception
 
     def model(self):
         return self._model
 
     def _create_video_searcher(self, _request_text):
+        if self._exception:
+            raise "Exception"
         return MockVideosSearch(self._request_limit)
 
     def _get_video_info(self, _video_id: str):
@@ -113,6 +118,122 @@ class MockGrepEngine(YoutubeGrepEngine):
                 }
             ]
         }
+
+
+class MockApiEngine(YoutubeApiEngine):
+    def __init__(self, empty=False, exception=False):
+        super().__init__(ResultTableModel(None), 1, "")
+        self._exception = exception
+        self._search_responce = {
+            "items": []
+        }
+        self._video_responce = {
+            "items": []
+        }
+        self._channel_responce = {
+            "items": []
+        }
+        if empty:
+            return
+        self._search_responce["items"].append({
+            "id": {
+                "videoId": "video1"
+            },
+            "snippet": {
+                "title": "First video",
+                "publishTime": "2024-06-05T13:01:03Z",
+                "channelId": "channel1",
+                "channelTitle": "First channel",
+                "thumbnails": {
+                    "high": {
+                        "url": "https://yt3.com/high1.png"
+                    }
+                }
+            }
+        })
+        self._search_responce["items"].append({
+            "id": {
+                "videoId": "video2"
+            },
+            "snippet": {
+                "title": "Second video",
+                "publishTime": "2023-04-12T15:12:43Z",
+                "channelId": "channel2",
+                "channelTitle": "Second channel",
+                "thumbnails": {
+                    "high": {
+                        "url": "https://yt3.com/high2.png"
+                    }
+                }
+            }
+        })
+        self._video_responce["items"].append({
+            "contentDetails": {
+                "duration": "PT16M40S"
+            },
+            "statistics": {
+                "viewCount": "589025"
+            },
+            "snippet": {
+                "tags": ["word1", "word2"]
+            }
+        })
+        self._video_responce["items"].append({
+            "contentDetails": {
+                "duration": "PT24M31S"
+            },
+            "statistics": {
+                "viewCount": "1598"
+            },
+            "snippet": {
+                "tags": ["word2", "word3"]
+            }
+        })
+        self._channel_responce["items"].append({
+            "id": "channel1",
+            "statistics": {
+                "viewCount": "76177771",
+                "subscriberCount": "77900"
+            },
+            "snippet": {
+                "thumbnails": {
+                    "default": {
+                        "url": "https://yt3.com/default1.png"
+                    }
+                }
+            }
+        })
+        self._channel_responce["items"].append({
+            "id": "channel2",
+            "statistics": {
+                "viewCount": "789025",
+                "subscriberCount": "734"
+            },
+            "snippet": {
+                "thumbnails": {
+                    "default": {
+                        "url": "https://yt3.com/default2.png"
+                    }
+                }
+            }
+        })
+
+    def model(self):
+        return self._model
+
+    def _create_youtube_client(self):
+        return None
+
+    def _search_videos(self, _youtube, _request_text: str):
+        if self._exception:
+            raise "Exception"
+        return self._search_responce
+
+    def _get_video_details(self, _youtube, _video_ids):
+        return self._video_responce
+
+    def _get_channel_details(self, _youtube, _channel_ids):
+        return self._channel_responce
 
 
 class TestStringMethods(unittest.TestCase):
@@ -246,6 +367,65 @@ class TestStringMethods(unittest.TestCase):
                 self.assertEqual(model.result[2][ResultFields.ChannelLogoLink], "https://logo_1.png")
                 self.assertEqual(model.result[2][ResultFields.VideoTags], ["word1", "word2"])
                 self.assertEqual(model.result[2][ResultFields.VideoDurationTimedelta], timedelta(seconds=2207))
+
+    def test_youtube_grep_engine_failures(self):
+        engine = MockGrepEngine(0)
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(len(model.result), 0)
+
+        engine = MockGrepEngine(1, exception=True)
+        self.assertFalse(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(len(model.result), 0)
+
+    def test_youtube_api_engine(self):
+        engine = MockApiEngine()
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(len(model.result), 2)
+
+        self.assertEqual(model.result[0][ResultFields.VideoTitle], "First video")
+        self.assertEqual(model.result[0][ResultFields.VideoPublishedTime], "2024-06-05 13:01:03")
+        self.assertEqual(model.result[0][ResultFields.VideoDuration], "00:16:40")
+        self.assertEqual(model.result[0][ResultFields.VideoViews], 589025)
+        self.assertEqual(model.result[0][ResultFields.VideoLink], "https://www.youtube.com/watch?v=video1")
+        self.assertEqual(model.result[0][ResultFields.ChannelTitle], "First channel")
+        self.assertEqual(model.result[0][ResultFields.ChannelLink], "https://www.youtube.com/channel/channel1")
+        self.assertEqual(model.result[0][ResultFields.ChannelSubscribers], 77900)
+        self.assertEqual(model.result[0][ResultFields.ChannelJoinedDate], "")
+        self.assertEqual(model.result[0][ResultFields.ViewRate], "756.13%")
+        self.assertEqual(model.result[0][ResultFields.VideoPreviewLink], "https://yt3.com/high1.png")
+        self.assertEqual(model.result[0][ResultFields.ChannelLogoLink], "http://yt3.com/default1.png")
+        self.assertEqual(model.result[0][ResultFields.VideoTags], ["word1", "word2"])
+        self.assertEqual(model.result[0][ResultFields.VideoDurationTimedelta], timedelta(seconds=1000))
+
+        self.assertEqual(model.result[1][ResultFields.VideoTitle], "Second video")
+        self.assertEqual(model.result[1][ResultFields.VideoPublishedTime], "2023-04-12 15:12:43")
+        self.assertEqual(model.result[1][ResultFields.VideoDuration], "00:24:31")
+        self.assertEqual(model.result[1][ResultFields.VideoViews], 1598)
+        self.assertEqual(model.result[1][ResultFields.VideoLink], "https://www.youtube.com/watch?v=video2")
+        self.assertEqual(model.result[1][ResultFields.ChannelTitle], "Second channel")
+        self.assertEqual(model.result[1][ResultFields.ChannelLink], "https://www.youtube.com/channel/channel2")
+        self.assertEqual(model.result[1][ResultFields.ChannelSubscribers], 734)
+        self.assertEqual(model.result[1][ResultFields.ChannelJoinedDate], "")
+        self.assertEqual(model.result[1][ResultFields.ViewRate], "217.71%")
+        self.assertEqual(model.result[1][ResultFields.VideoPreviewLink], "https://yt3.com/high2.png")
+        self.assertEqual(model.result[1][ResultFields.ChannelLogoLink], "http://yt3.com/default2.png")
+        self.assertEqual(model.result[1][ResultFields.VideoTags], ["word2", "word3"])
+        self.assertEqual(model.result[1][ResultFields.VideoDurationTimedelta], timedelta(seconds=1471))
+
+    def test_youtube_api_engine_failures(self):
+        engine = MockApiEngine(empty=True)
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(len(model.result), 0)
+
+        engine = MockApiEngine(exception=True)
+        self.assertFalse(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(len(model.result), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
