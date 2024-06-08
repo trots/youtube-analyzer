@@ -279,10 +279,10 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(timedelta_to_str(YoutubeGrepEngine.duration_to_timedelta("100:10:01")), "4:04:10:01")
         self.assertEqual(timedelta_to_str(YoutubeGrepEngine.duration_to_timedelta("1000:10:01")), "41:16:10:01")
 
-        self.assertIsNone(YoutubeGrepEngine.duration_to_timedelta(""))
-        self.assertIsNone(YoutubeGrepEngine.duration_to_timedelta(None))
-        self.assertIsNone(YoutubeGrepEngine.duration_to_timedelta("0"))
-        self.assertIsNone(YoutubeGrepEngine.duration_to_timedelta("0:0:0:0"))
+        self.assertEqual(YoutubeGrepEngine.duration_to_timedelta(""), timedelta(seconds=0))
+        self.assertEqual(YoutubeGrepEngine.duration_to_timedelta(None), timedelta(seconds=0))
+        self.assertEqual(YoutubeGrepEngine.duration_to_timedelta("0"), timedelta(seconds=0))
+        self.assertEqual(YoutubeGrepEngine.duration_to_timedelta("0:0:0:0"), timedelta(seconds=0))
 
     def test_youtube_grep_publish_time_converter(self):
         self.assertEqual(timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta("54 seconds ago")), "00:00:54")

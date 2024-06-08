@@ -141,7 +141,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
                     channel_logo_link = channel_info["thumbnails"][0]["url"] if len(channel_info["thumbnails"]) > 0 else ""
                     video_duration_d = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
-                    video_duration = timedelta_to_str(video_duration_d) if video_duration_d is not None else video["duration"]
+                    video_duration = timedelta_to_str(video_duration_d)
                     result.append(
                         make_result_row(
                             video["title"], video["publishedTime"], video_duration,
@@ -165,10 +165,10 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
     @staticmethod
     def duration_to_timedelta(duration: str):
         if not duration:
-            return None
+            return timedelta(seconds=0)
         parts = duration.split(":")
         if len(parts) <= 1 or len(parts) > 3:
-            return None
+            return timedelta(seconds=0)
         parts.reverse()
         if len(parts) >= 2:
             seconds = int(parts[0])
