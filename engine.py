@@ -15,7 +15,7 @@ from PySide6.QtNetwork import (
     QNetworkReply
 )
 from youtubesearchpython import (
-    VideosSearch, 
+    VideosSearch,
     Channel,
     Video
 )
@@ -60,16 +60,16 @@ def subcriber_count_to_int(count_str: str):
 
 
 def timedelta_to_str(td: timedelta):
-        if td is None:
-            return ""
-        mm, ss = divmod(td.seconds, 60)
-        hh, mm = divmod(mm, 60)
-        s = "%02d:%02d:%02d" % (hh, mm, ss)
-        if td.days:
-            s = ("%d:" % td.days) + s
-        if td.microseconds:
-            s = s + ".%06d" % td.microseconds
-        return s
+    if td is None:
+        return ""
+    mm, ss = divmod(td.seconds, 60)
+    hh, mm = divmod(mm, 60)
+    s = "%02d:%02d:%02d" % (hh, mm, ss)
+    if td.days:
+        s = ("%d:" % td.days) + s
+    if td.microseconds:
+        s = s + ".%06d" % td.microseconds
+    return s
 
 
 class ImageDownloader(QObject):
@@ -140,13 +140,14 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                     channel_subscribers = subcriber_count_to_int(channel_info["subscribers"]["simpleText"])
                     preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
                     channel_logo_link = channel_info["thumbnails"][0]["url"] if len(channel_info["thumbnails"]) > 0 else ""
-                    video_duration_td = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
-                    video_duration = timedelta_to_str(video_duration_td) if video_duration_td is not None else video["duration"]
+                    video_duration_d = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
+                    video_duration = timedelta_to_str(video_duration_d) if video_duration_d is not None else video["duration"]
                     result.append(
-                        make_result_row(video["title"], video["publishedTime"], video_duration, 
-                            views, video["link"], channel_info["title"], channel_info["url"], channel_subscribers,
-                            channel_views, channel_info["joinedDate"], preview_link, channel_logo_link, video_info["keywords"],
-                            video_duration_td))
+                        make_result_row(
+                            video["title"], video["publishedTime"], video_duration,
+                            views, video["link"], channel_info["title"], channel_info["url"],
+                            channel_subscribers, channel_views, channel_info["joinedDate"], preview_link, channel_logo_link,
+                            video_info["keywords"], video_duration_d))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -156,10 +157,11 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
             self._model.setData(result)
             self._model.set_sort_cast(ResultFields.VideoPublishedTime, YoutubeGrepEngine.published_time_sort_cast)
             return True
-        except Exception as _:
-            self.error = traceback.format_exc() 
+        except Exception as exc:
+            print(exc)
+            self.error = traceback.format_exc()
             return False
-        
+
     @staticmethod
     def duration_to_timedelta(duration: str):
         if not duration:
@@ -232,8 +234,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 if channel_id in channel_ids:
                     continue
                 channel_ids = channel_ids + "," + channel_id
-            video_ids = video_ids[1:] # Remove first comma
-            channel_ids = channel_ids[1:] # Remove first comma
+            video_ids = video_ids[1:]  # Remove first comma
+            channel_ids = channel_ids[1:]  # Remove first comma
 
             video_response = self._get_video_details(youtube, video_ids)
             channel_response = self._get_channel_details(youtube, channel_ids)
@@ -263,12 +265,12 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 video_preview_link = search_snippet["thumbnails"]["high"]["url"]
                 channel_snippet = channel_item["snippet"]
                 channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
-                channel_logo_link = channel_logo_link.replace("https", "http") # https is not working. I don't know why (2024.03.10)
+                channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
                 video_snippet = video_item["snippet"]
                 tags = video_snippet["tags"] if "tags" in video_snippet else None
                 count = count + 1
                 result.append(
-                    make_result_row(video_title, video_published_time, video_duration, views, 
+                    make_result_row(video_title, video_published_time, video_duration, views,
                                     video_link, channel_title, channel_url, channel_subscribers,
                                     channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
                                     video_duration_td))

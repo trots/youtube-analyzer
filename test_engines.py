@@ -292,7 +292,8 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta("2 weeks ago")), "14:00:00:00")
         self.assertEqual(timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta("4 months ago")), "120:00:00:00")
         self.assertEqual(timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta("3 years ago")), "1080:00:00:00")
-        self.assertEqual(timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta("Streamed 3 years ago")), "1080:00:00:00")
+        self.assertEqual(
+            timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta("Streamed 3 years ago")), "1080:00:00:00")
 
         self.assertIsNone(YoutubeGrepEngine.published_time_to_timedelta(""))
         self.assertIsNone(YoutubeGrepEngine.published_time_to_timedelta(None))
