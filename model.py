@@ -66,6 +66,9 @@ class ResultTableModel(QAbstractTableModel):
         self.result.clear()
         self.endResetModel()
 
+    def has_data(self):
+        return len(self.result) > 0
+
     def set_sort_cast(self, column: int, cast_func):
         self._sort_cast[column] = cast_func
 

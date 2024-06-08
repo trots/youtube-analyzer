@@ -141,7 +141,7 @@ class VideoDurationChart(QChart):
         if self._bar_set is not None:
             self._bar_set.deselectAllBars()
 
-        if index is None:
+        if index is None or not self._model.has_data():
             return
 
         row = index.row()
