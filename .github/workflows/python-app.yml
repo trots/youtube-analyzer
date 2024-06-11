@@ -38,3 +38,4 @@ jobs:
     - name: Test with unittest
       run: |
         python test_engines.py
+        python test_export.py
