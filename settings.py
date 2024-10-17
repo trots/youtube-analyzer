@@ -14,7 +14,8 @@ from PySide6.QtWidgets import (
     QComboBox,
     QMessageBox,
     QCheckBox,
-    QTabWidget
+    QTabWidget,
+    QSpinBox
 )
 
 
@@ -37,6 +38,7 @@ class Settings:
     LastActiveDetailsTab = SettingsKey("last_active_details_tab", 0)
     AnalyticsFollowTableSelect = SettingsKey("analytics_follow_table_select", True)
     LastActiveChartIndex = SettingsKey("last_active_chart_index", 0)
+    RequestTimeoutSec = SettingsKey("request_timeout_sec", 10)
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
@@ -121,6 +123,28 @@ class AnalyticsTab(QWidget):
         self._settings.set(Settings.AnalyticsFollowTableSelect, self._follow_for_analytics_checkbox.isChecked())
 
 
+class AdvancedTab(QWidget):
+    def __init__(self, settings: Settings, parent=None):
+        super().__init__(parent)
+        self._settings = settings
+        layout = QVBoxLayout()
+
+        timeout_label = QLabel(self.tr("Request timeout in seconds:"))
+        layout.addWidget(timeout_label)
+        self._request_timeout_sec_edit = QSpinBox()
+        self._request_timeout_sec_edit.setMinimum(2)
+        self._request_timeout_sec_edit.setMaximum(1000)
+        self._request_timeout_sec_edit.setToolTip(self.tr("Set the maximum waiting time in seconds for YouTube request"))
+        self._request_timeout_sec_edit.setValue(int(self._settings.get(Settings.RequestTimeoutSec)))
+        layout.addWidget(self._request_timeout_sec_edit)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def save_settings(self):
+        self._settings.set(Settings.RequestTimeoutSec, self._request_timeout_sec_edit.value())
+
+
 class SettingsDialog(QDialog):
     def __init__(self, settings: Settings, parent=None):
         super().__init__(parent)
@@ -138,6 +162,9 @@ class SettingsDialog(QDialog):
         self._analytics_tab = AnalyticsTab(settings)
         tab_widget.addTab(self._analytics_tab, self.tr("Analytics"))
 
+        self._advanced_tab = AdvancedTab(settings)
+        tab_widget.addTab(self._advanced_tab, self.tr("Advanced"))
+
         layout.addWidget(tab_widget)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -153,6 +180,7 @@ class SettingsDialog(QDialog):
     def _on_accepted(self):
         self._general_tab.save_settings()
         self._analytics_tab.save_settings()
+        self._advanced_tab.save_settings()
 
         if self._need_restart:
             text = self.tr("Restart the application now to apply the selected language?")
