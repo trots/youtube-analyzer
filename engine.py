@@ -110,10 +110,14 @@ class ImageDownloader(QObject):
 
 
 class AbstractYoutubeEngine:
-    def __init__(self, model: ResultTableModel, request_limit: int):
+    def __init__(self, model: ResultTableModel, request_limit: int, request_timeout_sec: int = 10):
         self.error = ""
         self._model = model
         self._request_limit = request_limit
+        self._request_timeout_sec = request_timeout_sec
+
+    def set_request_timeout_sec(self, value_sec: int):
+        self._request_timeout_sec = value_sec
 
     def search(self, request_text: str):
         pass
@@ -207,10 +211,10 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
         return float(pb_timedelta.replace(":", ""))
 
     def _create_video_searcher(self, request_text: str):
-        return VideosSearch(request_text, limit=self._request_limit)
+        return VideosSearch(request_text, limit=self._request_limit, timeout=self._request_timeout_sec)
 
     def _get_video_info(self, video_id: str):
-        return Video.getInfo(video_id)
+        return Video.getInfo(video_id, timeout=self._request_timeout_sec)
 
     def _get_channel_info(self, channel_id: str):
         return Channel.get(channel_id)
