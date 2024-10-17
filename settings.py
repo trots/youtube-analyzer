@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from PySide6.QtCore import (
+    Signal,
     QByteArray,
     QSettings
 )
 from PySide6.QtWidgets import (
+    QWidget,
     QLineEdit,
     QVBoxLayout,
     QDialog,
@@ -11,13 +13,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QComboBox,
     QMessageBox,
-    QCheckBox
+    QCheckBox,
+    QTabWidget
 )
+
 
 @dataclass
 class SettingsKey:
     key: str
     default_value: any
+
 
 class Settings:
     MainWindowGeometry = SettingsKey("main_window_geometry", QByteArray())
@@ -45,12 +50,12 @@ class Settings:
         self._impl.setValue(key.key, value)
 
 
-class SettingsDialog(QDialog):
-    def __init__(self, settings: Settings, parent = None):
+class GeneralTab(QWidget):
+    language_changed = Signal()
+
+    def __init__(self, settings: Settings, parent=None):
         super().__init__(parent)
         self._settings = settings
-        self._need_restart = False
-        self.setWindowTitle(self.tr("Settings"))
         layout = QVBoxLayout()
 
         yt_api_key_label = QLabel(self.tr("YouTube API Key:"))
@@ -81,12 +86,59 @@ class SettingsDialog(QDialog):
         self._theme_combo.setCurrentIndex(int(self._settings.get(Settings.Theme)))
         layout.addWidget(self._theme_combo)
 
-        analytics_label = QLabel(self.tr("Analytics:"))
-        layout.addWidget(analytics_label)
+        self.setLayout(layout)
+
+    def save_settings(self):
+        self._settings.set(Settings.YouTubeApiKey, self._yt_api_key_edit.text())
+        if self._language_combo.currentText() == "Русский":
+            self._settings.set(Settings.Language, "Ru")
+        else:
+            self._settings.set(Settings.Language, "En")
+        self._settings.set(Settings.Theme, self._theme_combo.currentIndex())
+
+    def get_current_language(self):
+        return self._language_combo.currentText()
+
+    def _on_language_changed(self):
+        self.language_changed.emit()
+
+
+class AnalyticsTab(QWidget):
+    def __init__(self, settings: Settings, parent=None):
+        super().__init__(parent)
+        self._settings = settings
+        layout = QVBoxLayout()
+
         self._follow_for_analytics_checkbox = QCheckBox(self.tr("Follow table selections in analytics charts"))
         self._follow_for_analytics_checkbox.setToolTip(self.tr("Highlight the selected item on the analytics charts"))
         self._follow_for_analytics_checkbox.setChecked(self._settings.get(Settings.AnalyticsFollowTableSelect))
         layout.addWidget(self._follow_for_analytics_checkbox)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def save_settings(self):
+        self._settings.set(Settings.AnalyticsFollowTableSelect, self._follow_for_analytics_checkbox.isChecked())
+
+
+class SettingsDialog(QDialog):
+    def __init__(self, settings: Settings, parent=None):
+        super().__init__(parent)
+        self._settings = settings
+        self._need_restart = False
+        self.setWindowTitle(self.tr("Settings"))
+
+        layout = QVBoxLayout()
+        tab_widget = QTabWidget()
+
+        self._general_tab = GeneralTab(settings)
+        self._general_tab.language_changed.connect(self._on_force_restart)
+        tab_widget.addTab(self._general_tab, self.tr("General"))
+
+        self._analytics_tab = AnalyticsTab(settings)
+        tab_widget.addTab(self._analytics_tab, self.tr("Analytics"))
+
+        layout.addWidget(tab_widget)
 
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accepted)
@@ -99,24 +151,19 @@ class SettingsDialog(QDialog):
         return self._need_restart
 
     def _on_accepted(self):
-        self._settings.set(Settings.YouTubeApiKey, self._yt_api_key_edit.text())
-        if self._language_combo.currentText() == "Русский":
-            self._settings.set(Settings.Language, "Ru")
-        else:
-            self._settings.set(Settings.Language, "En")
-        self._settings.set(Settings.Theme, self._theme_combo.currentIndex())
+        self._general_tab.save_settings()
+        self._analytics_tab.save_settings()
 
         if self._need_restart:
             text = self.tr("Restart the application now to apply the selected language?")
             if QMessageBox.question(self, self.windowTitle(), text) == QMessageBox.StandardButton.No:
                 self._need_restart = False
 
-        self._settings.set(Settings.AnalyticsFollowTableSelect, self._follow_for_analytics_checkbox.isChecked())
         self.accept()
 
     def _on_rejected(self):
         self._need_restart = False
         self.reject()
 
-    def _on_language_changed(self):
+    def _on_force_restart(self):
         self._need_restart = True
