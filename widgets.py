@@ -254,8 +254,9 @@ class AnalyticsWidget(QWidget):
         self._chart_view.setChart(channels_pie_chart)
 
     def set_current_index(self, index: QModelIndex):
+        target_index = index if self._current_index_following else None
         for chart in self._charts:
-            chart.set_current_index(index)
+            chart.set_current_index(target_index)
 
     def set_current_index_following(self, follow):
         self._current_index_following = follow
