@@ -71,13 +71,13 @@
     <name>AnalyticsWidget</name>
     <message>
         <location filename="../widgets.py" line="239"/>
-        <source>Channels distribution map</source>
-        <translation>Channels distribution map</translation>
+        <source>Channels distribution chart</source>
+        <translation>Channels distribution chart</translation>
     </message>
     <message>
         <location filename="../widgets.py" line="240"/>
-        <source>Video duration map</source>
-        <translation>Video duration map</translation>
+        <source>Video duration chart</source>
+        <translation>Video duration chart</translation>
     </message>
 </context>
 <context>
