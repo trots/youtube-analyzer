@@ -39,6 +39,7 @@ class Settings:
     AnalyticsFollowTableSelect = SettingsKey("analytics_follow_table_select", True)
     LastActiveChartIndex = SettingsKey("last_active_chart_index", 0)
     RequestTimeoutSec = SettingsKey("request_timeout_sec", 10)
+    MainTableHeaderState = SettingsKey("main_table_header_state", QByteArray())
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
