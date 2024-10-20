@@ -299,6 +299,10 @@ class MainWindow(QMainWindow):
             # Restore details panel visibility
             self._show_details_action.setChecked(self._settings.get(Settings.DetailsVisible))
             self._restore_geometry_on_show = False
+            # Restore main table
+            table_header_state = self._settings.get(Settings.MainTableHeaderState)
+            if not table_header_state.isEmpty():
+                self._table_view.horizontalHeader().restoreState(table_header_state)
         self._table_view.resizeColumnsToContents()
 
     def closeEvent(self, event):
@@ -319,6 +323,7 @@ class MainWindow(QMainWindow):
         self._settings.set(Settings.DetailsVisible, self._show_details_action.isChecked())
         self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
         self._settings.set(Settings.LastActiveChartIndex, self._analytics_widget.get_current_chart_index())
+        self._settings.set(Settings.MainTableHeaderState, self._table_view.horizontalHeader().saveState())
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()
