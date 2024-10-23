@@ -32,6 +32,7 @@ class ChannelsPieChart(QChart):
         self.addSeries(self._series)
         self._last_pen = None
         self._last_brush = None
+        self.legend().setAlignment(Qt.AlignmentFlag.AlignLeft)
 
     def rebuild(self):
         self._series.clear()
