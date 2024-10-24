@@ -237,9 +237,10 @@ class AnalyticsWidget(QWidget):
         self.setLayout(main_layout)
 
         self._chart_combobox = QComboBox()
-        self._chart_combobox.addItem(self.tr("Channels distribution map"))
-        self._chart_combobox.addItem(self.tr("Video duration map"))
-        self._chart_combobox.addItem(self.tr("Title words map"))
+        self._chart_combobox.addItem(self.tr("Channels distribution chart"))
+        self._chart_combobox.addItem(self.tr("Video duration chart"))
+        self._chart_combobox.addItem(self.tr("Title words chart"))
+        
         self._chart_combobox.currentIndexChanged.connect(self._on_current_chart_changed)
         main_layout.addWidget(self._chart_combobox)
 
@@ -259,8 +260,9 @@ class AnalyticsWidget(QWidget):
         self._chart_view.setChart(channels_pie_chart)
 
     def set_current_index(self, index: QModelIndex):
+        target_index = index if self._current_index_following else None
         for chart in self._charts:
-            chart.set_current_index(index)
+            chart.set_current_index(target_index)
 
     def set_current_index_following(self, follow):
         self._current_index_following = follow

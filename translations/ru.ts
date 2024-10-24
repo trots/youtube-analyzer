@@ -42,16 +42,42 @@
     </message>
 </context>
 <context>
+    <name>AdvancedTab</name>
+    <message>
+        <location filename="../settings.py" line="132"/>
+        <source>Request timeout in seconds:</source>
+        <translation>Время ожидания запроса в секундах:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="137"/>
+        <source>Set the maximum waiting time in seconds for YouTube request</source>
+        <translation>Установить максимальное время ожидания запроса на YouTube в секундах</translation>
+    </message>
+</context>
+<context>
+    <name>AnalyticsTab</name>
+    <message>
+        <location filename="../settings.py" line="114"/>
+        <source>Follow table selections in analytics charts</source>
+        <translation>Следовать в графиках за выделением в таблице</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="115"/>
+        <source>Highlight the selected item on the analytics charts</source>
+        <translation>Подсвечивать выбранный в таблице элемент на графиках аналитики</translation>
+    </message>
+</context>
+<context>
     <name>AnalyticsWidget</name>
     <message>
         <location filename="../widgets.py" line="239"/>
-        <source>Channels distribution map</source>
-        <translation>Карта распределения каналов</translation>
+        <source>Channels distribution chart</source>
+        <translation>График распределения каналов</translation>
     </message>
     <message>
         <location filename="../widgets.py" line="240"/>
-        <source>Video duration map</source>
-        <translation>Карта продолжительности видео</translation>
+        <source>Video duration chart</source>
+        <translation>График продолжительности видео</translation>
     </message>
 </context>
 <context>
@@ -75,6 +101,49 @@
         <location filename="../youtube-analyzer.py" line="116"/>
         <source>Don&apos;t ask again</source>
         <translation>Не спрашивать снова</translation>
+    </message>
+</context>
+<context>
+    <name>GeneralTab</name>
+    <message>
+        <location filename="../settings.py" line="63"/>
+        <source>YouTube API Key:</source>
+        <translation>Ключ YouTube API:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="66"/>
+        <source>Set the key to use the YouTube API for YouTube search</source>
+        <translation>Установите ключ для включения поиска через YouTube API</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="69"/>
+        <source>Language:</source>
+        <translation>Язык:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="72"/>
+        <source>Set the interface language</source>
+        <translation>Установите язык интерфейса</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="82"/>
+        <source>Theme:</source>
+        <translation>Тема:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="85"/>
+        <source>Set the interface color theme</source>
+        <translation>Установите цветовую тему интерфейса</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="86"/>
+        <source>System</source>
+        <translation>Системная</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="87"/>
+        <source>Dark</source>
+        <translation>Тёмная</translation>
     </message>
 </context>
 <context>
@@ -278,67 +347,27 @@
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../settings.py" line="53"/>
+        <location filename="../settings.py" line="153"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="56"/>
-        <source>YouTube API Key:</source>
-        <translation>Ключ YouTube API:</translation>
+        <location filename="../settings.py" line="160"/>
+        <source>General</source>
+        <translation>Общие</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="59"/>
-        <source>Set the key to use the YouTube API for YouTube search</source>
-        <translation>Установите ключ для включения поиска через YouTube API</translation>
+        <location filename="../settings.py" line="163"/>
+        <source>Analytics</source>
+        <translation>Аналитика</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="62"/>
-        <source>Language:</source>
-        <translation>Язык:</translation>
+        <location filename="../settings.py" line="166"/>
+        <source>Advanced</source>
+        <translation>Продвинутые</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="65"/>
-        <source>Set the interface language</source>
-        <translation>Установите язык интерфейса</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="75"/>
-        <source>Theme:</source>
-        <translation>Тема:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="78"/>
-        <source>Set the interface color theme</source>
-        <translation>Установите цветовую тему интерфейса</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="79"/>
-        <source>System</source>
-        <translation>Системная</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="80"/>
-        <source>Dark</source>
-        <translation>Тёмная</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="84"/>
-        <source>Analytics:</source>
-        <translation>Аналитика:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="86"/>
-        <source>Follow table selections in analytics charts</source>
-        <translation>Следовать в графиках за выделением в таблице</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="87"/>
-        <source>Highlight the selected item on the analytics charts</source>
-        <translation>Подсвечивать выбранный в таблице элемент на графиках аналитики</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="111"/>
+        <location filename="../settings.py" line="187"/>
         <source>Restart the application now to apply the selected language?</source>
         <translation>Перезапустить приложение для применения выбранного языка?</translation>
     </message>

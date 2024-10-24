@@ -42,16 +42,42 @@
     </message>
 </context>
 <context>
+    <name>AdvancedTab</name>
+    <message>
+        <location filename="../settings.py" line="132"/>
+        <source>Request timeout in seconds:</source>
+        <translation>Request timeout in seconds:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="137"/>
+        <source>Set the maximum waiting time in seconds for YouTube request</source>
+        <translation>Set the maximum waiting time in seconds for YouTube request</translation>
+    </message>
+</context>
+<context>
+    <name>AnalyticsTab</name>
+    <message>
+        <location filename="../settings.py" line="114"/>
+        <source>Follow table selections in analytics charts</source>
+        <translation>Follow table selections in analytics charts</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="115"/>
+        <source>Highlight the selected item on the analytics charts</source>
+        <translation>Highlight the selected item on the analytics charts</translation>
+    </message>
+</context>
+<context>
     <name>AnalyticsWidget</name>
     <message>
         <location filename="../widgets.py" line="239"/>
-        <source>Channels distribution map</source>
-        <translation>Channels distribution map</translation>
+        <source>Channels distribution chart</source>
+        <translation>Channels distribution chart</translation>
     </message>
     <message>
         <location filename="../widgets.py" line="240"/>
-        <source>Video duration map</source>
-        <translation>Video duration map</translation>
+        <source>Video duration chart</source>
+        <translation>Video duration chart</translation>
     </message>
 </context>
 <context>
@@ -75,6 +101,49 @@
         <location filename="../youtube-analyzer.py" line="116"/>
         <source>Don&apos;t ask again</source>
         <translation>Don&apos;t ask again</translation>
+    </message>
+</context>
+<context>
+    <name>GeneralTab</name>
+    <message>
+        <location filename="../settings.py" line="63"/>
+        <source>YouTube API Key:</source>
+        <translation>YouTube API Key:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="66"/>
+        <source>Set the key to use the YouTube API for YouTube search</source>
+        <translation>Set the key to use the YouTube API for YouTube search</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="69"/>
+        <source>Language:</source>
+        <translation>Language:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="72"/>
+        <source>Set the interface language</source>
+        <translation>Set the interface language</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="82"/>
+        <source>Theme:</source>
+        <translation>Theme:</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="85"/>
+        <source>Set the interface color theme</source>
+        <translation>Set the interface color theme</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="86"/>
+        <source>System</source>
+        <translation>System</translation>
+    </message>
+    <message>
+        <location filename="../settings.py" line="87"/>
+        <source>Dark</source>
+        <translation>Dark</translation>
     </message>
 </context>
 <context>
@@ -278,67 +347,27 @@
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../settings.py" line="53"/>
+        <location filename="../settings.py" line="153"/>
         <source>Settings</source>
         <translation>Settings</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="56"/>
-        <source>YouTube API Key:</source>
-        <translation>YouTube API Key:</translation>
+        <location filename="../settings.py" line="160"/>
+        <source>General</source>
+        <translation>General</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="59"/>
-        <source>Set the key to use the YouTube API for YouTube search</source>
-        <translation>Set the key to use the YouTube API for YouTube search</translation>
+        <location filename="../settings.py" line="163"/>
+        <source>Analytics</source>
+        <translation>Analytics</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="62"/>
-        <source>Language:</source>
-        <translation>Language:</translation>
+        <location filename="../settings.py" line="166"/>
+        <source>Advanced</source>
+        <translation>Advanced</translation>
     </message>
     <message>
-        <location filename="../settings.py" line="65"/>
-        <source>Set the interface language</source>
-        <translation>Set the interface language</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="75"/>
-        <source>Theme:</source>
-        <translation>Theme:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="78"/>
-        <source>Set the interface color theme</source>
-        <translation>Set the interface color theme</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="79"/>
-        <source>System</source>
-        <translation>System</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="80"/>
-        <source>Dark</source>
-        <translation>Dark</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="84"/>
-        <source>Analytics:</source>
-        <translation>Analytics:</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="86"/>
-        <source>Follow table selections in analytics charts</source>
-        <translation>Follow table selections in analytics charts</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="87"/>
-        <source>Highlight the selected item on the analytics charts</source>
-        <translation>Highlight the selected item on the analytics charts</translation>
-    </message>
-    <message>
-        <location filename="../settings.py" line="111"/>
+        <location filename="../settings.py" line="187"/>
         <source>Restart the application now to apply the selected language?</source>
         <translation>Restart the application now to apply the selected language?</translation>
     </message>
