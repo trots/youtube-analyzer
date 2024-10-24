@@ -3,7 +3,8 @@ from PySide6.QtCore import (
     Qt,
     QModelIndex,
     QUrl,
-    QTimer
+    QTimer,
+    QStringListModel
 )
 from PySide6.QtGui import (
     QImage,
@@ -20,13 +21,16 @@ from PySide6.QtWidgets import (
     QLabel,
     QTextEdit,
     QStackedLayout,
-    QComboBox
+    QComboBox,
+    QLineEdit,
+    QCompleter
 )
 from PySide6.QtCharts import (
     QChartView
 )
 from engine import (
-    ImageDownloader
+    ImageDownloader,
+    SearchAutocompleteDownloader
 )
 from model import (
     ResultFields,
@@ -284,3 +288,37 @@ class AnalyticsWidget(QWidget):
 
     def _on_current_chart_changed(self, chart_index: int):
         self._chart_view.setChart(self._charts[chart_index])
+
+
+class SearchLineEdit(QLineEdit):
+    def __init__(self, parent: QWidget = None):
+        super().__init__(parent)
+
+        self.setPlaceholderText(self.tr("Enter request and press 'Search'..."))
+        self.setToolTip(self.placeholderText())
+        self.setClearButtonEnabled(True)
+        self.textEdited.connect(self._on_text_changed)
+
+        self._autocomplete_timer = QTimer()
+        self._autocomplete_timer.setSingleShot(True)
+        self._autocomplete_timer.setInterval(200)
+        self._autocomplete_timer.timeout.connect(self._on_editing_timeout)
+
+        self._autocomplete_model = QStringListModel()
+        completer = QCompleter(self._autocomplete_model)
+        completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        self.setCompleter(completer)
+
+        self._autocomplete_downloader = SearchAutocompleteDownloader()
+        self._autocomplete_downloader.finished.connect(self._on_autocomplete_downloaded)
+
+    def _on_text_changed(self):
+        self._autocomplete_timer.start()
+
+    def _on_editing_timeout(self):
+        self._autocomplete_downloader.start_download(self.text())
+
+    def _on_autocomplete_downloaded(self, autocomplete_list):
+        print("autocomplete")
+        print(autocomplete_list)
+        self._autocomplete_model.setStringList(autocomplete_list)

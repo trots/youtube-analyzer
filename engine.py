@@ -4,7 +4,8 @@ import isodate
 from PySide6.QtCore import (
     QObject,
     Signal,
-    QUrl
+    QUrl,
+    QJsonDocument
 )
 from PySide6.QtGui import (
     QImage
@@ -107,6 +108,42 @@ class ImageDownloader(QObject):
         self._try_again = True
         self._data_cache.cache_image(reply.url().toString(), image)
         self.finished.emit(image)
+
+
+class SearchAutocompleteDownloader(QObject):
+    finished = Signal(list)
+    error = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._manager = QNetworkAccessManager()
+        self._manager.finished.connect(self._handle_finished)
+        self._data = []
+
+    def start_download(self, query: str):
+        url = "http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" + query
+        self._data.clear()
+        self._manager.clearConnectionCache()
+        self._manager.get(QNetworkRequest(url))
+
+    def _handle_finished(self, reply: QNetworkReply):
+        if reply.error() != QNetworkReply.NoError:
+            self.error.emit(reply.errorString())
+            return
+        json = QJsonDocument.fromJson(reply.readAll())
+        if not json.isArray():
+            self.error.emit("Reply is not JSON array")
+            return
+
+        json_array = json.array()
+        if json_array.size() < 2:
+            self.error.emit("JSON array has incompatible size")
+            return
+
+        autocomplete_json_array = json_array.at(1).toArray()
+        for i in range(autocomplete_json_array.size()):
+            self._data.append(autocomplete_json_array.at(i).toString())
+        self.finished.emit(self._data)
 
 
 class AbstractYoutubeEngine:

@@ -19,7 +19,6 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication,
-    QLineEdit,
     QMainWindow,
     QPushButton,
     QHBoxLayout,
@@ -60,7 +59,8 @@ from engine import (
 )
 from widgets import (
     VideoDetailsWidget,
-    AnalyticsWidget
+    AnalyticsWidget,
+    SearchLineEdit
 )
 from export import (
     export_to_xlsx,
@@ -227,9 +227,7 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self._on_about)
 
         h_layout = QHBoxLayout()
-        self._search_line_edit = QLineEdit()
-        self._search_line_edit.setPlaceholderText(self.tr("Enter request and press 'Search'..."))
-        self._search_line_edit.setToolTip(self._search_line_edit.placeholderText())
+        self._search_line_edit = SearchLineEdit()
         self._search_line_edit.returnPressed.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_line_edit)
         self._search_limit_spin_box = QSpinBox()
