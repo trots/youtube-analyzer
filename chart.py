@@ -18,6 +18,8 @@ from model import (
     ResultFields,
     ResultTableModel
 )
+import string
+import re
 
 
 class ChannelsPieChart(QChart):
@@ -91,6 +93,7 @@ class ChannelsPieChart(QChart):
             return
         pie_slice.setLabelVisible(state)
 
+
 class VideoDurationChart(QChart):
     def __init__(self, model: ResultTableModel):
         super().__init__()
@@ -153,9 +156,73 @@ class VideoDurationChart(QChart):
         self.set_current_index(None)
         self.rebuild()
 
-    def _find_category_for_value(self, duration:int ):
+    def _find_category_for_value(self, duration: int):
         for i in range(len(self._categories) - 1):
             if duration > self._categories[i][0]:
                 continue
             return i
         return len(self._categories) - 1
+
+
+class WordsPieChart(QChart):
+    def __init__(self, model: ResultTableModel):
+        super().__init__()
+        self._current_index = None
+        self._model = model
+        self._model.modelReset.connect(self._on_model_reset)
+        self._series = QPieSeries()
+        self._series.setHoleSize(0.3)
+        self._series.hovered.connect(self._on_slice_hovered)
+        self.addSeries(self._series)
+        self._last_pen = None
+        self._last_brush = None
+
+    def rebuild(self):
+        self._series.clear()
+        if len(self._model.result) == 0:
+            return
+        text_title = str('')
+        for row in range(len(self._model.result)):
+            text_title += str(self._model.result[row][0]) + ' '
+
+        for p in string.punctuation + '\n':
+            if p in text_title:
+                text_title = text_title.replace(p, '')
+
+        regrex_pattern = re.compile(pattern="["
+                                u"\U00000000-\U00000009"
+                                u"\U0000000B-\U0000001F"
+                                u"\U00000080-\U00000400"
+                                u"\U00000402-\U0000040F"
+                                u"\U00000450-\U00000450"
+                                u"\U00000452-\U0010FFFF"
+                                "]+", flags=re.UNICODE)
+
+        text = regrex_pattern.sub(r'', text_title)
+
+        text = text.lower()
+        list_word = text.split()
+        count = {}
+        for element in list_word:
+            if (len(element) > 2):
+                if count.get(element, None):
+                    count[element] += 1
+                else:
+                    count[element] = 1
+
+        sorted_values = sorted(count.items(), key=lambda tpl: tpl[1], reverse=True)
+        dict(sorted_values)
+        for name in range(len(sorted_values)):
+            if (name < 5):
+                count = '('+str(sorted_values[name][1])+')'
+                self._series.append(sorted_values[name][0]+count, sorted_values[name][1])
+
+    def _on_model_reset(self):
+        self.rebuild()
+
+    def _on_slice_hovered(self, pie_slice, state):
+        row = self._current_index.row() if self._current_index is not None else None
+        channel_name = self._model.get_field_data(row, ResultFields.VideoTitle)
+        if pie_slice.label() == channel_name:
+            return
+        pie_slice.setLabelVisible(state)
