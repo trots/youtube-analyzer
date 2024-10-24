@@ -34,7 +34,8 @@ from model import (
 )
 from chart import (
     ChannelsPieChart,
-    VideoDurationChart
+    VideoDurationChart,
+    WordsPieChart
 )
 
 
@@ -50,16 +51,16 @@ class PixmapLabel(QLabel):
         scaled_pixmap = self._scaled_pixmap()
         if scaled_pixmap is not None:
             return super().setPixmap(scaled_pixmap)
-    
+
     def heightForWidth(self, width: int):
         if self._pixmap is None or self._pixmap.width() == 0:
             return self.height()
         return self._pixmap.height() * width / self._pixmap.width()
-    
+
     def sizeHint(self):
         width = self.width()
         return QSize(width, self.heightForWidth(width))
-    
+
     def resizeEvent(self, _event: QResizeEvent):
         if self._pixmap is not None:
             QTimer.singleShot(0, self, self._set_pixmap_delayed)
@@ -68,7 +69,7 @@ class PixmapLabel(QLabel):
         if self._pixmap is None or self._pixmap.width() == 0:
             return None
         return self._pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-    
+
     def _set_pixmap_delayed(self):
         scaled_pixmap = self._scaled_pixmap()
         if scaled_pixmap is not None:
@@ -149,7 +150,7 @@ class VideoDetailsWidget(QWidget):
         main_layout.addWidget(self._tags_edit)
 
         main_widget.setLayout(main_layout)
-        
+
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
         scroll_area.setWidget(main_widget)
@@ -238,6 +239,8 @@ class AnalyticsWidget(QWidget):
         self._chart_combobox = QComboBox()
         self._chart_combobox.addItem(self.tr("Channels distribution chart"))
         self._chart_combobox.addItem(self.tr("Video duration chart"))
+        self._chart_combobox.addItem(self.tr("Title words chart"))
+        
         self._chart_combobox.currentIndexChanged.connect(self._on_current_chart_changed)
         main_layout.addWidget(self._chart_combobox)
 
@@ -250,6 +253,9 @@ class AnalyticsWidget(QWidget):
 
         video_duration_chart = VideoDurationChart(model)
         self._charts.append(video_duration_chart)
+
+        words_pie_chart = WordsPieChart(model)
+        self._charts.append(words_pie_chart)
 
         self._chart_view.setChart(channels_pie_chart)
 
