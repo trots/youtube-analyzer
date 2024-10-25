@@ -177,6 +177,7 @@ class WordsPieChart(QChart):
         self.addSeries(self._series)
         self._last_pen = None
         self._last_brush = None
+        self.legend().setAlignment(Qt.AlignmentFlag.AlignLeft)
 
     def rebuild(self):
         self._series.clear()
@@ -214,9 +215,13 @@ class WordsPieChart(QChart):
         sorted_values = sorted(count.items(), key=lambda tpl: tpl[1], reverse=True)
         dict(sorted_values)
         for name in range(len(sorted_values)):
-            if (name < 5):
-                count = '('+str(sorted_values[name][1])+')'
-                self._series.append(sorted_values[name][0]+count, sorted_values[name][1])
+            count_num = sorted_values[name][1]
+            if count_num >= 5:  # TODO: possible setting
+                count_str = ' (' + str(count_num) + ')'
+                self._series.append(sorted_values[name][0] + count_str, count_num)
+
+    def set_current_index(self, _index):
+        pass
 
     def _on_model_reset(self):
         self.rebuild()

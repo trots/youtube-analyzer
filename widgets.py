@@ -239,7 +239,7 @@ class AnalyticsWidget(QWidget):
         self._chart_combobox = QComboBox()
         self._chart_combobox.addItem(self.tr("Channels distribution chart"))
         self._chart_combobox.addItem(self.tr("Video duration chart"))
-        self._chart_combobox.addItem(self.tr("Title words chart"))
+        self._chart_combobox.addItem(self.tr("Popular title words chart"))
         
         self._chart_combobox.currentIndexChanged.connect(self._on_current_chart_changed)
         main_layout.addWidget(self._chart_combobox)
