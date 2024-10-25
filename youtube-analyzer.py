@@ -94,10 +94,10 @@ class Theme:
             palette.setColor(QPalette.Highlight, QColor(19, 60, 110))
             palette.setColor(QPalette.HighlightedText, Qt.white)
             palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
-            palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(53, 53, 53).lighter());
-            palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(53, 53, 53).lighter());
-            palette.setColor(QPalette.Disabled, QPalette.Text, QColor(53, 53, 53).lighter());
-            palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53));
+            palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(53, 53, 53).lighter())
+            palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(53, 53, 53).lighter())
+            palette.setColor(QPalette.Disabled, QPalette.Text, QColor(53, 53, 53).lighter())
+            palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
             app.setPalette(palette)
         else:
             palette = QPalette()
@@ -106,7 +106,7 @@ class Theme:
 
 
 class DontAskAgainQuestionDialog(QMessageBox):
-    def __init__(self, title: str, text: str, parent = None):
+    def __init__(self, title: str, text: str, parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.setText(text)
@@ -122,12 +122,12 @@ class DontAskAgainQuestionDialog(QMessageBox):
 
 
 class AboutDialog(QDialog):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(self.tr("About"))
         layout = QGridLayout()
-        layout.setSizeConstraint( QGridLayout.SizeConstraint.SetFixedSize )
-        
+        layout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
+
         row = 0
         title = QLabel(app_name)
         title.setStyleSheet("font-size: 14px")
@@ -136,11 +136,12 @@ class AboutDialog(QDialog):
         layout.addWidget(QLabel(self.tr("Software for analyzing of YouTube search output")), row, 0, 1, 2,
                          Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel(self.tr("Version: ") + version), 
+        layout.addWidget(QLabel(self.tr("Version: ") + version),
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
-        layout.addWidget(QLabel(self.tr("Based on: PySide6, youtube-search-python,\n google-api-python-client, XlsxWriter, isodate.")), 
-                         row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(QLabel(
+            self.tr("Based on: PySide6, youtube-search-python,\n google-api-python-client, XlsxWriter, isodate.")),
+            row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
         vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)
         layout.addItem(vertical_spacer, row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
@@ -168,13 +169,14 @@ class AboutDialog(QDialog):
 
         self.setLayout(layout)
 
+
 class AuthorsDialog(QDialog):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(self.tr("Authors"))
         layout = QGridLayout()
-        layout.setSizeConstraint( QGridLayout.SizeConstraint.SetFixedSize )
-        
+        layout.setSizeConstraint(QGridLayout.SizeConstraint.SetFixedSize)
+
         self._edit_text = QTextEdit()
         self._edit_text.setReadOnly(True)
         self._edit_text.append(self.tr("The YouTube Analyzer team, in alphabetical order:\n"))
@@ -368,12 +370,13 @@ class MainWindow(QMainWindow):
                 video_idx = self._sort_model.index(i, self._model.get_field_column(ResultFields.VideoTitle))
                 video_item = self._model.result[i]
                 video_label = self._create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
-                self._table_view.setIndexWidget(video_idx, video_label);
-                
+                self._table_view.setIndexWidget(video_idx, video_label)
+
                 channel_idx = self._sort_model.index(i, self._model.get_field_column(ResultFields.ChannelTitle))
-                channel_label = self._create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
-                self._table_view.setIndexWidget(channel_idx, channel_label);
-            
+                channel_label = self._create_link_label(video_item[ResultFields.ChannelLink],
+                                                        video_item[ResultFields.ChannelTitle])
+                self._table_view.setIndexWidget(channel_idx, channel_label)
+
             self._table_view.resizeColumnsToContents()
         else:
             dialog = QMessageBox()
@@ -382,7 +385,7 @@ class MainWindow(QMainWindow):
             dialog.setIcon(QMessageBox.Critical)
             dialog.setDetailedText(engine.error)
             dialog.exec()
-        
+
         QApplication.restoreOverrideCursor()
         self._search_line_edit.setDisabled(False)
         self._search_button.setDisabled(False)
@@ -461,7 +464,7 @@ class MainWindow(QMainWindow):
             return YoutubeGrepEngine(self._model, request_limit)
         else:
             return YoutubeApiEngine(self._model, request_limit, api_key)
-        
+
     def _create_link_label(self, link: str, text: str):
         label = QLabel("<a href=\"" + link + "\">" + text + "</a>")
         label_size_policy = label.sizePolicy()
