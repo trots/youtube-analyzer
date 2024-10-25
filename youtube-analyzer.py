@@ -7,7 +7,8 @@ from PySide6.QtCore import (
     QSortFilterProxyModel,
     QTranslator,
     QLibraryInfo,
-    QItemSelection
+    QItemSelection,
+    QTimer
 )
 from PySide6.QtGui import (
     QKeySequence,
@@ -215,7 +216,7 @@ class MainWindow(QMainWindow):
         view_menu = self.menuBar().addMenu(self.tr("View"))
         self._show_details_action = view_menu.addAction(self.tr("Show details"))
         self._show_details_action.setCheckable(True)
-        self._show_details_action.setChecked(True)
+        self._show_details_action.setChecked(False)
 
         help_menu = self.menuBar().addMenu(self.tr("Help"))
         authors_action = help_menu.addAction(self.tr("Authors..."))
@@ -254,28 +255,26 @@ class MainWindow(QMainWindow):
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
         self._side_tab_widget = QTabWidget()
-        self._side_tab_widget.setVisible(self._show_details_action.isChecked())
-        self._show_details_action.toggled.connect(self._side_tab_widget.setVisible)
+        self._side_tab_widget.setVisible(False)
+        self._show_details_action.toggled.connect(self._on_switch_side_panel)
 
         self._details_widget = VideoDetailsWidget(self._model, self)
-        self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
+        self._details_widget.setVisible(False)
 
         self._analytics_widget = AnalyticsWidget(self._model, self)
+        self._analytics_widget.setVisible(False)
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if int(self._settings.get(Settings.Theme)) == Theme.Dark:
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
         else:
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
         self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
-        self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
-
-        self._side_tab_widget.setCurrentIndex(int(self._settings.get(Settings.LastActiveDetailsTab)))
 
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._main_splitter.setChildrenCollapsible(False)
         self._main_splitter.addWidget(self._table_view)
         self._main_splitter.addWidget(self._side_tab_widget)
-        
+
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
         v_layout.addWidget(self._main_splitter)
@@ -297,7 +296,8 @@ class MainWindow(QMainWindow):
                 splitter_sizes = [3 * window_width_part, 2 * window_width_part]
             self._main_splitter.setSizes(splitter_sizes)
             # Restore details panel visibility
-            self._show_details_action.setChecked(self._settings.get(Settings.DetailsVisible))
+            if self._settings.get(Settings.DetailsVisible):
+                self._show_details_action.setChecked(True)
             self._restore_geometry_on_show = False
             # Restore main table
             table_header_state = self._settings.get(Settings.MainTableHeaderState)
@@ -319,11 +319,29 @@ class MainWindow(QMainWindow):
 
     def save_state(self):
         self._settings.set(Settings.MainWindowGeometry, self.saveGeometry())
-        self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
         self._settings.set(Settings.DetailsVisible, self._show_details_action.isChecked())
-        self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
         self._settings.set(Settings.LastActiveChartIndex, self._analytics_widget.get_current_chart_index())
         self._settings.set(Settings.MainTableHeaderState, self._table_view.horizontalHeader().saveState())
+        if self._show_details_action.isChecked():
+            self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
+            self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+
+    def _on_switch_side_panel(self, visible):
+        # Workaround for the hide/show bug of the QTabWidget.
+        # Bug: If QTabWidget has the current tab index > 0, then QTabWidget hides first tab forever after hide/show iteration.
+        # So we need remove/add all tabs after hide/show to fix this bug.
+        if visible:
+            self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
+            self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
+            self._side_tab_widget.show()
+            QTimer.singleShot(0, lambda: self._side_tab_widget.setCurrentIndex(
+                              int(self._settings.get(Settings.LastActiveDetailsTab))))
+        else:
+            self._settings.set(Settings.MainSplitterState, self._main_splitter.sizes())
+            self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+            self._side_tab_widget.hide()
+            self._side_tab_widget.removeTab(1)
+            self._side_tab_widget.removeTab(0)
 
     def _on_search_clicked(self):
         self._request_text = self._search_line_edit.text()
