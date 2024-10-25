@@ -40,7 +40,7 @@ from chart import (
 
 
 class PixmapLabel(QLabel):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setMinimumSize(1, 1)
         self.setScaledContents(False)
@@ -170,9 +170,11 @@ class VideoDetailsWidget(QWidget):
             return
 
         row_data = self._model.result[index.row()]
-        self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\">" + row_data[ResultFields.VideoTitle] + "</a>")
+        self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\">" +
+                                  row_data[ResultFields.VideoTitle] + "</a>")
         self._duration_label.setText(row_data[ResultFields.VideoDuration])
-        self._channel_title_label.setText("<a href=\"" + row_data[ResultFields.ChannelLink] + "\">" + row_data[ResultFields.ChannelTitle] + "</a>")
+        self._channel_title_label.setText("<a href=\"" + row_data[ResultFields.ChannelLink] + "\">" +
+                                          row_data[ResultFields.ChannelTitle] + "</a>")
         update_subscribers = '{0:,}'.format(row_data[ResultFields.ChannelSubscribers]).replace(',', ' ')
         self._subscribers_label.setText(update_subscribers + self.tr(" subscribers"))
         update_views = '{0:,}'.format(row_data[ResultFields.VideoViews]).replace(',', ' ')
@@ -240,7 +242,7 @@ class AnalyticsWidget(QWidget):
         self._chart_combobox.addItem(self.tr("Channels distribution chart"))
         self._chart_combobox.addItem(self.tr("Video duration chart"))
         self._chart_combobox.addItem(self.tr("Popular title words chart"))
-        
+
         self._chart_combobox.currentIndexChanged.connect(self._on_current_chart_changed)
         main_layout.addWidget(self._chart_combobox)
 
