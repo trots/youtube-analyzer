@@ -319,6 +319,4 @@ class SearchLineEdit(QLineEdit):
         self._autocomplete_downloader.start_download(self.text())
 
     def _on_autocomplete_downloaded(self, autocomplete_list):
-        print("autocomplete")
-        print(autocomplete_list)
         self._autocomplete_model.setStringList(autocomplete_list)
