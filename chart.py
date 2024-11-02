@@ -149,8 +149,13 @@ class VideoDurationChart(QChart):
             return
 
         row = index.row()
-        duration = self._model.get_field_data(row, ResultFields.VideoDurationTimedelta).total_seconds()
-        category_index = self._find_category_for_value(duration)
+        duration = self._model.get_field_data(row, ResultFields.VideoDurationTimedelta)
+
+        if duration is None:
+            return
+
+        duration_seconds = duration.total_seconds()
+        category_index = self._find_category_for_value(duration_seconds)
         self._bar_set.setBarSelected(category_index, True)
 
     def _on_model_reset(self):
