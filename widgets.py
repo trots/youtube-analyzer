@@ -101,7 +101,7 @@ class VideoDetailsWidget(QWidget):
 
         self._title_label = QLabel(main_widget)
         self._title_label.setStyleSheet("font-weight: bold")
-        self._title_label.setToolTip(self._model.header[ResultFields.VideoTitle])
+        self._title_label.setToolTip(self._model.FieldNames[ResultFields.VideoTitle])
         self._title_label.setTextFormat(Qt.TextFormat.RichText)
         self._title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self._title_label.setOpenExternalLinks(True)
@@ -109,7 +109,7 @@ class VideoDetailsWidget(QWidget):
         main_layout.addWidget(self._title_label)
 
         self._duration_label = QLabel(main_widget)
-        self._duration_label.setToolTip(self._model.header[ResultFields.VideoDuration])
+        self._duration_label.setToolTip(self._model.FieldNames[ResultFields.VideoDuration])
         main_layout.addWidget(self._duration_label)
         main_layout.addSpacing(spacing)
 
@@ -119,31 +119,31 @@ class VideoDetailsWidget(QWidget):
         channel_layout.addWidget(self._channel_logo_label, 0, 0, 0, 1)
 
         self._channel_title_label = QLabel(main_widget)
-        self._channel_title_label.setToolTip(self._model.header[ResultFields.ChannelTitle])
+        self._channel_title_label.setToolTip(self._model.FieldNames[ResultFields.ChannelTitle])
         self._channel_title_label.setTextFormat(Qt.TextFormat.RichText)
         self._channel_title_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self._channel_title_label.setOpenExternalLinks(True)
         channel_layout.addWidget(self._channel_title_label, 0, 1)
 
         self._subscribers_label = QLabel(main_widget)
-        self._subscribers_label.setToolTip(self._model.header[ResultFields.ChannelSubscribers])
+        self._subscribers_label.setToolTip(self._model.FieldNames[ResultFields.ChannelSubscribers])
         channel_layout.addWidget(self._subscribers_label, 1, 1)
         main_layout.addLayout(channel_layout)
         main_layout.addSpacing(spacing)
 
         views_layout = QHBoxLayout()
         self._views_label = QLabel(main_widget)
-        self._views_label.setToolTip(self._model.header[ResultFields.VideoViews])
+        self._views_label.setToolTip(self._model.FieldNames[ResultFields.VideoViews])
         views_layout.addWidget(self._views_label)
 
         self._published_time_label = QLabel(main_widget)
-        self._published_time_label.setToolTip(self._model.header[ResultFields.VideoPublishedTime])
+        self._published_time_label.setToolTip(self._model.FieldNames[ResultFields.VideoPublishedTime])
         views_layout.addWidget(self._published_time_label)
         main_layout.addLayout(views_layout)
         main_layout.addSpacing(spacing)
 
         self._views_rate_label = QLabel(main_widget)
-        self._views_rate_label.setToolTip(self._model.header[ResultFields.ViewRate])
+        self._views_rate_label.setToolTip(self._model.FieldNames[ResultFields.ViewRate])
         main_layout.addWidget(self._views_rate_label)
 
         main_layout.addWidget(QLabel(self.tr("Tags:")))
@@ -184,7 +184,7 @@ class VideoDetailsWidget(QWidget):
         update_views = '{0:,}'.format(row_data[ResultFields.VideoViews]).replace(',', ' ')
         self._views_label.setText(update_views + self.tr(" views"))
         self._published_time_label.setText(row_data[ResultFields.VideoPublishedTime])
-        self._views_rate_label.setText(self._model.header[ResultFields.ViewRate] + ": " + row_data[ResultFields.ViewRate])
+        self._views_rate_label.setText(self._model.FieldNames[ResultFields.ViewRate] + ": " + row_data[ResultFields.ViewRate])
         self._preview_label.clear()
         self._channel_logo_label.clear()
 
