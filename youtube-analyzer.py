@@ -304,6 +304,7 @@ class MainWindow(QMainWindow):
             if not table_header_state.isEmpty():
                 self._table_view.horizontalHeader().restoreState(table_header_state)
         self._table_view.resizeColumnsToContents()
+        self._search_line_edit.setFocus()
 
     def closeEvent(self, event):
         global app_need_restart
