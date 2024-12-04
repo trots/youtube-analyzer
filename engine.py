@@ -188,7 +188,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                             video["title"], video["publishedTime"], video_duration,
                             views, video["link"], channel_info["title"], channel_info["url"],
                             channel_subscribers, channel_views, channel_info["joinedDate"], preview_link, channel_logo_link,
-                            video_info["keywords"], video_duration_d))
+                            video_info["keywords"], video_duration_d, counter))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -309,12 +309,12 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
                 video_snippet = video_item["snippet"]
                 tags = video_snippet["tags"] if "tags" in video_snippet else None
-                count = count + 1
                 result.append(
                     make_result_row(video_title, video_published_time, video_duration, views,
                                     video_link, channel_title, channel_url, channel_subscribers,
                                     channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
-                                    video_duration_td))
+                                    video_duration_td, count))
+                count = count + 1
 
             self._model.setData(result)
             return True
