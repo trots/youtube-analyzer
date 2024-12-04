@@ -32,6 +32,7 @@ class ResultFields:
     ChannelLogoLink: int = 12
     VideoTags: int = 13
     VideoDurationTimedelta: int = 14
+    MaxFieldsCount: int = 15  # Add new items before this line
 
 
 class ResultTableModel(QAbstractTableModel):
@@ -40,18 +41,31 @@ class ResultTableModel(QAbstractTableModel):
     def __init__(self, parent, *args):
         QAbstractTableModel.__init__(self, parent, *args)
         self.result = []
-        # TODO: Remove header after export fixing. It's unused in this class.
-        self.header = [self.tr("Title"), self.tr("Published Time"), self.tr("Duration"), self.tr("View Count"),
-                       self.tr("Link"), self.tr("Channel Name"), self.tr("Channel Link"), self.tr("Channel Subscribers"),
-                       self.tr("Channel Views"), self.tr("Channel Joined Date"), self.tr("Views/Subscribers")]
+        self.FieldNames = [
+            self.tr("Title"),
+            self.tr("Published Time"),
+            self.tr("Duration"),
+            self.tr("View Count"),
+            self.tr("Link"),
+            self.tr("Channel Name"),
+            self.tr("Channel Link"),
+            self.tr("Channel Subscribers"),
+            self.tr("Channel Views"),
+            self.tr("Channel Joined Date"),
+            self.tr("Views/Subscribers"),
+            self.tr("Preview Link"),
+            self.tr("Channel Logo Link"),
+            self.tr("Video Tags"),
+            self.tr("Video Duration Timedelta")
+            ]
         self._fields = [
-            (ResultFields.VideoTitle, self.tr("Title")),
-            (ResultFields.VideoPublishedTime, self.tr("Published Time")),
-            (ResultFields.VideoDuration, self.tr("Duration")),
-            (ResultFields.VideoViews, self.tr("View Count")),
-            (ResultFields.ChannelTitle, self.tr("Channel Name")),
-            (ResultFields.ChannelSubscribers, self.tr("Channel Subscribers")),
-            (ResultFields.ViewRate, self.tr("Views/Subscribers")),
+            ResultFields.VideoTitle,
+            ResultFields.VideoPublishedTime,
+            ResultFields.VideoDuration,
+            ResultFields.VideoViews,
+            ResultFields.ChannelTitle,
+            ResultFields.ChannelSubscribers,
+            ResultFields.ViewRate
         ]
         self._sort_cast = {}
 
@@ -74,7 +88,7 @@ class ResultTableModel(QAbstractTableModel):
 
     def get_field_column(self, result_field: ResultFields):
         for i in range(len(self._fields)):
-            if self._fields[i][0] == result_field:
+            if self._fields[i] == result_field:
                 return i
         return -1
 
@@ -93,7 +107,7 @@ class ResultTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
         row = index.row()
-        column = self._fields[index.column()][0]
+        column = self._fields[index.column()]
         if role == ResultTableModel.SortRole:
             if column in self._sort_cast:
                 return self._sort_cast[column](self.result[row][column])
@@ -112,7 +126,7 @@ class ResultTableModel(QAbstractTableModel):
 
     def headerData(self, column, orientation, role):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
-            return self._fields[column][1]
+            return self.FieldNames[self._fields[column]]
         return None
 
     def sort(self, column, order):
