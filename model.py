@@ -9,11 +9,11 @@ def make_result_row(video_title: str, video_published_time: str, video_duration:
                     views: int, video_link: str, channel_title: str, channel_link: str,
                     channel_subscribers: int, channel_views: int, channel_joined_date: str,
                     video_preview_link: str, channel_logo_link: str, video_tags: list[str],
-                    video_duration_timedelta):
+                    video_duration_timedelta, video_relevance_number):
     view_rate = (str(round(views / channel_subscribers * 100, 2)) + "%") if channel_subscribers > 0 else "-"
     return (video_title, video_published_time, video_duration, views, video_link, channel_title,
             channel_link, channel_subscribers, channel_views, channel_joined_date, view_rate, video_preview_link,
-            channel_logo_link, video_tags, video_duration_timedelta)
+            channel_logo_link, video_tags, video_duration_timedelta, video_relevance_number)
 
 
 class ResultFields:
@@ -32,7 +32,8 @@ class ResultFields:
     ChannelLogoLink: int = 12
     VideoTags: int = 13
     VideoDurationTimedelta: int = 14
-    MaxFieldsCount: int = 15  # Add new items before this line
+    VideoRelevanceNumber: int = 15
+    MaxFieldsCount: int = 16  # Add new items before this line
 
 
 class ResultTableModel(QAbstractTableModel):
@@ -56,9 +57,11 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Preview Link"),
             self.tr("Channel Logo Link"),
             self.tr("Video Tags"),
-            self.tr("Video Duration Timedelta")
+            self.tr("Video Duration Timedelta"),
+            self.tr("#")
             ]
         self._fields = [
+            ResultFields.VideoRelevanceNumber,
             ResultFields.VideoTitle,
             ResultFields.VideoPublishedTime,
             ResultFields.VideoDuration,
