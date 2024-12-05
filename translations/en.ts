@@ -229,52 +229,52 @@
         <translation>Click to start searching</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="334"/>
+        <location filename="../youtube-analyzer.py" line="335"/>
         <source>Details</source>
         <translation>Details</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="335"/>
+        <location filename="../youtube-analyzer.py" line="336"/>
         <source>Analytics</source>
         <translation>Analytics</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="311"/>
+        <location filename="../youtube-analyzer.py" line="312"/>
         <source>Exit?</source>
         <translation>Exit?</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="382"/>
+        <location filename="../youtube-analyzer.py" line="383"/>
         <source>Error in the searching process</source>
         <translation>Error in the searching process</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="416"/>
+        <location filename="../youtube-analyzer.py" line="417"/>
         <source>Save XLSX</source>
         <translation>Save XLSX</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="416"/>
+        <location filename="../youtube-analyzer.py" line="417"/>
         <source>Xlsx File (*.xlsx)</source>
         <translation>Xlsx File (*.xlsx)</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="421"/>
+        <location filename="../youtube-analyzer.py" line="422"/>
         <source>Save CSV</source>
         <translation>Save CSV</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="421"/>
+        <location filename="../youtube-analyzer.py" line="422"/>
         <source>Csv File (*.csv)</source>
         <translation>Csv File (*.csv)</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="426"/>
+        <location filename="../youtube-analyzer.py" line="427"/>
         <source>Save HTML</source>
         <translation>Save HTML</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="426"/>
+        <location filename="../youtube-analyzer.py" line="427"/>
         <source>Html File (*.html)</source>
         <translation>Html File (*.html)</translation>
     </message>
@@ -282,66 +282,164 @@
 <context>
     <name>ResultTableModel</name>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="48"/>
+        <location filename="../model.py" line="46"/>
         <source>Title</source>
         <translation>Title</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="49"/>
+        <location filename="../model.py" line="47"/>
         <source>Published Time</source>
         <translation>Published Time</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="50"/>
+        <location filename="../model.py" line="48"/>
         <source>Duration</source>
         <translation>Duration</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="51"/>
+        <location filename="../model.py" line="49"/>
         <source>View Count</source>
         <translation>View Count</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
+        <location filename="../model.py" line="50"/>
         <source>Link</source>
         <translation>Link</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
-        <location filename="../model.py" line="52"/>
+        <location filename="../model.py" line="51"/>
         <source>Channel Name</source>
         <translation>Channel Name</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
+        <location filename="../model.py" line="52"/>
         <source>Channel Link</source>
         <translation>Channel Link</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
         <location filename="../model.py" line="53"/>
         <source>Channel Subscribers</source>
         <translation>Channel Subscribers</translation>
     </message>
     <message>
-        <location filename="../model.py" line="46"/>
+        <location filename="../model.py" line="54"/>
         <source>Channel Views</source>
         <translation>Channel Views</translation>
     </message>
     <message>
-        <location filename="../model.py" line="46"/>
+        <location filename="../model.py" line="55"/>
         <source>Channel Joined Date</source>
         <translation>Channel Joined Date</translation>
     </message>
     <message>
-        <location filename="../model.py" line="47"/>
-        <location filename="../model.py" line="54"/>
+        <location filename="../model.py" line="56"/>
         <source>Views/Subscribers</source>
         <translation>Views/Subscribers</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="57"/>
+        <source>Preview Link</source>
+        <translation>Preview Link</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="58"/>
+        <source>Channel Logo Link</source>
+        <translation>Channel Logo Link</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="59"/>
+        <source>Video Tags</source>
+        <translation>Video Tags</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="60"/>
+        <source>Video Duration Timedelta</source>
+        <translation>Video Duration Timedelta</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="63"/>
+        <source>#</source>
+        <translation>#</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="64"/>
+        <source>Video title</source>
+        <translation>Video title</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="65"/>
+        <source>Video published time</source>
+        <translation>Video published time</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="66"/>
+        <source>Video duration</source>
+        <translation>Video duration</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="67"/>
+        <source>Video view count</source>
+        <translation>Video view count</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="68"/>
+        <source>Video link</source>
+        <translation>Video link</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="69"/>
+        <source>Channel name</source>
+        <translation>Channel name</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="70"/>
+        <source>Channel link</source>
+        <translation>Channel link</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="71"/>
+        <source>Channel subscriber count</source>
+        <translation>Channel subscriber count</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="72"/>
+        <source>Channel view count</source>
+        <translation>Channel view count</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="73"/>
+        <source>Channel registration date</source>
+        <translation>Channel registration date</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="74"/>
+        <source>Video views to channel subscribers ratio in percents</source>
+        <translation>Video views to channel subscribers ratio in percents</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="75"/>
+        <source>Preview image link</source>
+        <translation>Preview image link</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="76"/>
+        <source>Channel logo image link</source>
+        <translation>Channel logo image link</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="77"/>
+        <source>Video tag list</source>
+        <translation>Video tag list</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="78"/>
+        <source>Video duration timedelta</source>
+        <translation>Video duration timedelta</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="81"/>
+        <source>Video relevance in search output (0 is the higest relevance)</source>
+        <translation>Video relevance in search output (0 is the higest relevance)</translation>
     </message>
 </context>
 <context>
