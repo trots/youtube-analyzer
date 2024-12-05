@@ -60,6 +60,24 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Video Duration Timedelta"),
             self.tr("#")
             ]
+        self.FieldTooltips = [
+            self.tr("Video title"),
+            self.tr("Video published time"),
+            self.tr("Video duration"),
+            self.tr("Video view count"),
+            self.tr("Video link"),
+            self.tr("Channel name"),
+            self.tr("Channel link"),
+            self.tr("Channel subscriber count"),
+            self.tr("Channel view count"),
+            self.tr("Channel registration date"),
+            self.tr("Video views to channel subscribers ratio in percents"),
+            self.tr("Preview image link"),
+            self.tr("Channel logo image link"),
+            self.tr("Video tag list"),
+            self.tr("Video duration timedelta"),
+            self.tr("Video relevance in search output (0 is the higest relevance)")
+            ]
         self._fields = [
             ResultFields.VideoRelevanceNumber,
             ResultFields.VideoTitle,
@@ -130,6 +148,8 @@ class ResultTableModel(QAbstractTableModel):
     def headerData(self, column, orientation, role):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             return self.FieldNames[self._fields[column]]
+        if role == Qt.ItemDataRole.ToolTipRole:
+            return self.FieldTooltips[self._fields[column]]
         return None
 
     def sort(self, column, order):
