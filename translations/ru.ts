@@ -229,52 +229,52 @@
         <translation>Начать поиск</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="334"/>
+        <location filename="../youtube-analyzer.py" line="335"/>
         <source>Details</source>
         <translation>Подробности</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="335"/>
+        <location filename="../youtube-analyzer.py" line="336"/>
         <source>Analytics</source>
         <translation>Аналитика</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="311"/>
+        <location filename="../youtube-analyzer.py" line="312"/>
         <source>Exit?</source>
         <translation>Выйти?</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="382"/>
+        <location filename="../youtube-analyzer.py" line="383"/>
         <source>Error in the searching process</source>
         <translation>Поиск завершился с ошибкой</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="416"/>
+        <location filename="../youtube-analyzer.py" line="417"/>
         <source>Save XLSX</source>
         <translation>Сохранить XLSX</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="416"/>
+        <location filename="../youtube-analyzer.py" line="417"/>
         <source>Xlsx File (*.xlsx)</source>
         <translation>Xlsx-файл (*.xlsx)</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="421"/>
+        <location filename="../youtube-analyzer.py" line="422"/>
         <source>Save CSV</source>
         <translation>Сохранить CSV</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="421"/>
+        <location filename="../youtube-analyzer.py" line="422"/>
         <source>Csv File (*.csv)</source>
         <translation>Csv-файл (*.csv)</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="426"/>
+        <location filename="../youtube-analyzer.py" line="427"/>
         <source>Save HTML</source>
         <translation>Сохранить HTML</translation>
     </message>
     <message>
-        <location filename="../youtube-analyzer.py" line="426"/>
+        <location filename="../youtube-analyzer.py" line="427"/>
         <source>Html File (*.html)</source>
         <translation>Html-файл (*.html)</translation>
     </message>
@@ -282,66 +282,164 @@
 <context>
     <name>ResultTableModel</name>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="48"/>
+        <location filename="../model.py" line="46"/>
         <source>Title</source>
         <translation>Название</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="49"/>
+        <location filename="../model.py" line="47"/>
         <source>Published Time</source>
         <translation>Время публикации</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="50"/>
+        <location filename="../model.py" line="48"/>
         <source>Duration</source>
         <translation>Продолжительность</translation>
     </message>
     <message>
-        <location filename="../model.py" line="44"/>
-        <location filename="../model.py" line="51"/>
+        <location filename="../model.py" line="49"/>
         <source>View Count</source>
         <translation>Количество просмотров</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
+        <location filename="../model.py" line="50"/>
         <source>Link</source>
         <translation>Ссылка</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
-        <location filename="../model.py" line="52"/>
+        <location filename="../model.py" line="51"/>
         <source>Channel Name</source>
         <translation>Название канала</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
+        <location filename="../model.py" line="52"/>
         <source>Channel Link</source>
         <translation>Ссылка на канал</translation>
     </message>
     <message>
-        <location filename="../model.py" line="45"/>
         <location filename="../model.py" line="53"/>
         <source>Channel Subscribers</source>
         <translation>Количество подписчиков</translation>
     </message>
     <message>
-        <location filename="../model.py" line="46"/>
+        <location filename="../model.py" line="54"/>
         <source>Channel Views</source>
         <translation>Количество просмотров на канале</translation>
     </message>
     <message>
-        <location filename="../model.py" line="46"/>
+        <location filename="../model.py" line="55"/>
         <source>Channel Joined Date</source>
         <translation>Дата создания канала</translation>
     </message>
     <message>
-        <location filename="../model.py" line="47"/>
-        <location filename="../model.py" line="54"/>
+        <location filename="../model.py" line="56"/>
         <source>Views/Subscribers</source>
         <translation>Просмотры/Подписчики</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="57"/>
+        <source>Preview Link</source>
+        <translation>Ссылка на превью</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="58"/>
+        <source>Channel Logo Link</source>
+        <translation>Ссылка на логотип канала</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="59"/>
+        <source>Video Tags</source>
+        <translation>Теги видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="60"/>
+        <source>Video Duration Timedelta</source>
+        <translation>Дельта продолжительности видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="63"/>
+        <source>#</source>
+        <translation>#</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="64"/>
+        <source>Video title</source>
+        <translation>Название видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="65"/>
+        <source>Video published time</source>
+        <translation>Время публикации видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="66"/>
+        <source>Video duration</source>
+        <translation>Продолжительность видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="67"/>
+        <source>Video view count</source>
+        <translation>Количество просмотров видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="68"/>
+        <source>Video link</source>
+        <translation>Ссылка на видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="69"/>
+        <source>Channel name</source>
+        <translation>Название канала</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="70"/>
+        <source>Channel link</source>
+        <translation>Ссылка на канал</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="71"/>
+        <source>Channel subscriber count</source>
+        <translation>Количество подписчиков на канале</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="72"/>
+        <source>Channel view count</source>
+        <translation>Количество просмотров на канале</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="73"/>
+        <source>Channel registration date</source>
+        <translation>Дата регистрации канала</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="74"/>
+        <source>Video views to channel subscribers ratio in percents</source>
+        <translation>Отношение количества просмотров видео к количеству подписчиков канала в процентах</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="75"/>
+        <source>Preview image link</source>
+        <translation>Ссылка на изображение превью</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="76"/>
+        <source>Channel logo image link</source>
+        <translation>Ссылка на изображение логотипа канала</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="77"/>
+        <source>Video tag list</source>
+        <translation>Список тегов видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="78"/>
+        <source>Video duration timedelta</source>
+        <translation>Дельта продолжительности видео</translation>
+    </message>
+    <message>
+        <location filename="../model.py" line="81"/>
+        <source>Video relevance in search output (0 is the higest relevance)</source>
+        <translation>Релевантность видео в поисковой выдаче (0 обозначает наивысшую релевантность)</translation>
     </message>
 </context>
 <context>
