@@ -102,11 +102,12 @@ class ImageDownloader(QObject):
             return
         image = QImage()
         image.loadFromData(reply.readAll())
+        url = reply.url()
         if image.isNull() and self._try_again:
-            self._manager.get(QNetworkRequest(reply.url()))
+            self._manager.get(QNetworkRequest(url))
             self._try_again = False
         self._try_again = True
-        self._data_cache.cache_image(reply.url().toString(), image)
+        self._data_cache.cache_image(url.toString(), image)
         self.finished.emit(image)
 
 

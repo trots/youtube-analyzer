@@ -34,15 +34,20 @@ class Settings:
     Language = SettingsKey("language", "")
     Theme = SettingsKey("theme", 0)
     MainSplitterState = SettingsKey("main_splitter_state", [0, 0])
-    DetailsVisible = SettingsKey("details", True)
+    DetailsVisible = SettingsKey("details", True)  # Not used
     LastActiveDetailsTab = SettingsKey("last_active_details_tab", 0)
     AnalyticsFollowTableSelect = SettingsKey("analytics_follow_table_select", True)
     LastActiveChartIndex = SettingsKey("last_active_chart_index", 0)
     RequestTimeoutSec = SettingsKey("request_timeout_sec", 10)
     MainTableHeaderState = SettingsKey("main_table_header_state", QByteArray())
+    MainTabsArray = SettingsKey("main_tabs", 0)
+    TabWorkspaceIndex = SettingsKey("tab_workspace_index", -1)
+    ActiveTabIndex = SettingsKey("active_tab_index", 0)
 
     def __init__(self, app_name: str):
         self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
+        print(self._impl.fileName())
+        # TODO: add settings converter for a new version on the first run
 
     def get(self, key: SettingsKey):
         if type(key.default_value) is bool:
@@ -51,6 +56,18 @@ class Settings:
 
     def set(self, key: SettingsKey, value: any):
         self._impl.setValue(key.key, value)
+
+    def begin_read_array(self, key: SettingsKey):
+        return self._impl.beginReadArray(key.key)
+
+    def begin_write_array(self, key: SettingsKey):
+        self._impl.beginWriteArray(key.key)
+
+    def set_array_index(self, index: int):
+        self._impl.setArrayIndex(index)
+
+    def end_array(self):
+        self._impl.endArray()
 
 
 class GeneralTab(QWidget):

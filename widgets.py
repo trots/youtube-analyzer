@@ -23,10 +23,15 @@ from PySide6.QtWidgets import (
     QStackedLayout,
     QComboBox,
     QLineEdit,
-    QCompleter
+    QCompleter,
+    QPushButton,
+    QTabWidget
 )
 from PySide6.QtCharts import (
     QChartView
+)
+from settings import (
+    Settings
 )
 from engine import (
     ImageDownloader,
@@ -161,7 +166,7 @@ class VideoDetailsWidget(QWidget):
 
         self._stacked_layout = QStackedLayout()
         self._stacked_layout.setContentsMargins(0, 0, 0, 0)
-        no_video_selected_label = QLabel(self.tr("Select a video to see its details"))
+        no_video_selected_label = QLabel(self.tr("Select a video to see its details"), self)
         no_video_selected_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._stacked_layout.addWidget(no_video_selected_label)
         self._stacked_layout.addWidget(scroll_area)
@@ -320,3 +325,79 @@ class SearchLineEdit(QLineEdit):
 
     def _on_autocomplete_downloaded(self, autocomplete_list):
         self._autocomplete_model.setStringList(autocomplete_list)
+
+
+class TabWorkspaceFactory(QWidget):
+    def __init__(self, parent: QWidget = None):
+        super().__init__(parent)
+
+    def get_workspace_name(self) -> str:
+        raise "Not implemented"
+
+    def create_workspace_button(self) -> QPushButton:
+        raise "Not implemented"
+
+    def create_workspace_widget(self, settings, parent) -> QWidget:
+        raise "Not implemented"
+
+
+class TabWidget(QWidget):
+    workspace_factories = []
+
+    def __init__(self, settings: Settings, parent_tab_widget: QTabWidget, parent: QWidget = None):
+        super().__init__(parent)
+        self._settings = settings
+        self._parent_tab_widget = parent_tab_widget
+        self._current_workspace_index = -1
+
+        self._main_stacked_layout = QStackedLayout()
+
+        self._main_layout = QVBoxLayout()
+        self._main_layout.setContentsMargins(0, 0, 0, 0)
+        container = QWidget()
+        container.setLayout(self._main_layout)
+        self._main_stacked_layout.addWidget(container)
+        self._main_stacked_layout.setCurrentIndex(0)
+        self.setLayout(self._main_stacked_layout)
+
+        for workspace_factory in TabWidget.workspace_factories:
+            workspace_button = workspace_factory.create_workspace_button()
+            workspace_button.clicked.connect(self._create_workspace)
+            self._main_layout.addWidget(workspace_button, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def current_workspace(self):
+        return self._main_stacked_layout.currentWidget() if self._main_stacked_layout.currentIndex() == 1 else None
+
+    def load_state(self):
+        workspace_index = int(self._settings.get(Settings.TabWorkspaceIndex))
+        if workspace_index >= 0:
+            workspace_widget = self.create_workspace(workspace_index)
+            workspace_widget.load_state()
+
+    def save_state(self):
+        self._settings.set(Settings.TabWorkspaceIndex, self._current_workspace_index)
+        if self._current_workspace_index >= 0:
+            workspace_widget = self._main_stacked_layout.currentWidget()
+            workspace_widget.save_state()
+    
+    def handle_preferences_change(self):
+        workspace = self.current_workspace()
+        if workspace:
+            workspace.handle_preferences_change()
+
+    def create_workspace(self, workspace_index):
+        if workspace_index < 0 or workspace_index >= len(TabWidget.workspace_factories):
+            return
+        factory = TabWidget.workspace_factories[workspace_index]
+        workspace_widget = factory.create_workspace_widget(self._settings, self)
+        self._main_stacked_layout.addWidget(workspace_widget)
+        self._main_stacked_layout.setCurrentIndex(1)
+        tab_index = self._parent_tab_widget.indexOf(self)
+        self._parent_tab_widget.setTabText(tab_index, factory.get_workspace_name())
+        self._current_workspace_index = workspace_index
+        return workspace_widget
+
+    def _create_workspace(self):
+        workspace_button = self.sender()
+        workspace_index = self._main_layout.indexOf(workspace_button)
+        self.create_workspace(workspace_index)
