@@ -20,21 +20,21 @@ from PySide6.QtWidgets import (
 from PySide6.QtCharts import (
     QChart
 )
-from theme import (
+from youtubeanalyzer.theme import (
     Theme
 )
-from settings import (
+from youtubeanalyzer.settings import (
     Settings
 )
-from engine import (
+from youtubeanalyzer.engine import (
     YoutubeApiEngine,
     YoutubeGrepEngine
 )
-from model import (
+from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
 )
-from widgets import (
+from youtubeanalyzer.widgets import (
     SearchLineEdit,
     TabWorkspaceFactory,
     VideoDetailsWidget,

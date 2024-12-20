@@ -1,6 +1,6 @@
 import xlsxwriter
 import csv
-from model import (
+from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
 )

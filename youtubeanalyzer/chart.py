@@ -14,7 +14,7 @@ from PySide6.QtCharts import (
     QBarCategoryAxis,
     QChart
 )
-from model import (
+from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
 )

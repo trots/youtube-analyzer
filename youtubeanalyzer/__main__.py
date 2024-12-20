@@ -29,24 +29,24 @@ from PySide6.QtWidgets import (
     QTabWidget,
     QToolButton
 )
-from defines import (
+from youtubeanalyzer.defines import (
     app_name,
     version
 )
-from theme import (
+from youtubeanalyzer.theme import (
     Theme
 )
-from settings import (
+from youtubeanalyzer.settings import (
     Settings,
     SettingsDialog
 )
-from widgets import (
+from youtubeanalyzer.widgets import (
     TabWidget
 )
-from search import (
+from youtubeanalyzer.search import (
     SearchWorkspaceFactory
 )
-from export import (
+from youtubeanalyzer.export import (
     export_to_xlsx,
     export_to_csv,
     export_to_html
