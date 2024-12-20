@@ -21,7 +21,7 @@ from youtubesearchpython import (
     Video
 )
 import googleapiclient.discovery
-from model import (
+from youtubeanalyzer.model import (
     make_result_row,
     ResultFields,
     ResultTableModel,

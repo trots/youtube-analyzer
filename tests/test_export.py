@@ -1,11 +1,11 @@
 import os
 import unittest
 from datetime import timedelta
-from model import (
+from youtubeanalyzer.model import (
     ResultTableModel,
     make_result_row
 )
-from export import (
+from youtubeanalyzer.export import (
     export_to_xlsx,
     export_to_csv,
     export_to_html

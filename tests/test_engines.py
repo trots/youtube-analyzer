@@ -1,7 +1,7 @@
 import unittest
 from datetime import timedelta
-from model import (ResultFields, ResultTableModel)
-from engine import (
+from youtubeanalyzer.model import (ResultFields, ResultTableModel)
+from youtubeanalyzer.engine import (
     timedelta_to_str, view_count_to_int, subcriber_count_to_int,
     YoutubeGrepEngine, YoutubeApiEngine)
 

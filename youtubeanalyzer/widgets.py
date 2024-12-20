@@ -30,18 +30,18 @@ from PySide6.QtWidgets import (
 from PySide6.QtCharts import (
     QChartView
 )
-from settings import (
+from youtubeanalyzer.settings import (
     Settings
 )
-from engine import (
+from youtubeanalyzer.engine import (
     ImageDownloader,
     SearchAutocompleteDownloader
 )
-from model import (
+from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
 )
-from chart import (
+from youtubeanalyzer.chart import (
     ChannelsPieChart,
     VideoDurationChart,
     WordsPieChart
