@@ -379,7 +379,7 @@ class TabWidget(QWidget):
         if self._current_workspace_index >= 0:
             workspace_widget = self._main_stacked_layout.currentWidget()
             workspace_widget.save_state()
-    
+
     def handle_preferences_change(self):
         workspace = self.current_workspace()
         if workspace:

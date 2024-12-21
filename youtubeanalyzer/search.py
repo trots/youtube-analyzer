@@ -95,6 +95,8 @@ class SearchWorkspace(QWidget):
         self._main_splitter.addWidget(self._table_view)
         self._main_splitter.addWidget(self._side_tab_widget)
         self._main_splitter.setCollapsible(0, False)
+        self._main_splitter.setStretchFactor(0, 3)
+        self._main_splitter.setStretchFactor(1, 1)
 
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
@@ -104,7 +106,7 @@ class SearchWorkspace(QWidget):
     def load_state(self):
         # Restore main splitter
         splitter_state = self._settings.get(Settings.MainSplitterState)
-        if not splitter_state.isEmpty():
+        if splitter_state and not splitter_state.isEmpty():
             self._main_splitter.restoreState(splitter_state)
         # Restore main table
         table_header_state = self._settings.get(Settings.MainTableHeaderState)
