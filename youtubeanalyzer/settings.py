@@ -19,6 +19,9 @@ from PySide6.QtWidgets import (
 )
 
 
+CurrentSettingsVersion = 1
+
+
 @dataclass
 class SettingsKey:
     key: str
@@ -33,7 +36,7 @@ class Settings:
     YouTubeApiKey = SettingsKey("youtube_api_key", "")
     Language = SettingsKey("language", "")
     Theme = SettingsKey("theme", 0)
-    MainSplitterState = SettingsKey("main_splitter_state", [0, 0])
+    MainSplitterState = SettingsKey("main_splitter_state", QByteArray())
     DetailsVisible = SettingsKey("details", True)  # Not used
     LastActiveDetailsTab = SettingsKey("last_active_details_tab", 0)
     AnalyticsFollowTableSelect = SettingsKey("analytics_follow_table_select", True)
@@ -43,11 +46,15 @@ class Settings:
     MainTabsArray = SettingsKey("main_tabs", 0)
     TabWorkspaceIndex = SettingsKey("tab_workspace_index", -1)
     ActiveTabIndex = SettingsKey("active_tab_index", 0)
+    Version = SettingsKey("version", CurrentSettingsVersion)
 
-    def __init__(self, app_name: str):
-        self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
+    def __init__(self, app_name: str, filename: str = None):
+        if filename:
+            self._impl = QSettings(filename, QSettings.Format.IniFormat)
+        else:
+            self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
         print(self._impl.fileName())
-        # TODO: add settings converter for a new version on the first run
+        self._upgrade_settings()
 
     def get(self, key: SettingsKey):
         if type(key.default_value) is bool:
@@ -68,6 +75,31 @@ class Settings:
 
     def end_array(self):
         self._impl.endArray()
+
+    def _upgrade_settings(self):
+        if self._impl.contains(Settings.RequestLimit.key) and not self._impl.contains(Settings.Version.key):
+            # Need to upgrade to version 1
+            request_limit = self.get(Settings.RequestLimit)
+            self._impl.remove(Settings.RequestLimit.key)
+            last_active_chart_index = self.get(Settings.LastActiveChartIndex)
+            self._impl.remove(Settings.LastActiveChartIndex.key)
+            last_active_details_tab = self.get(Settings.LastActiveDetailsTab)
+            self._impl.remove(Settings.LastActiveDetailsTab.key)
+            main_table_header_state = self.get(Settings.MainTableHeaderState)
+            self._impl.remove(Settings.MainTableHeaderState.key)
+            self._impl.remove(Settings.MainSplitterState.key)
+
+            self.begin_write_array(Settings.MainTabsArray)
+            self.set_array_index(0)
+            self.set(Settings.TabWorkspaceIndex, 0)
+            self.set(Settings.RequestLimit, request_limit)
+            self.set(Settings.LastActiveChartIndex, last_active_chart_index)
+            self.set(Settings.MainTableHeaderState, main_table_header_state)
+            self.set(Settings.LastActiveDetailsTab, last_active_details_tab)
+            self.end_array()
+            self.set(Settings.ActiveTabIndex, 0)
+
+        self.set(Settings.Version, CurrentSettingsVersion)
 
 
 class GeneralTab(QWidget):
