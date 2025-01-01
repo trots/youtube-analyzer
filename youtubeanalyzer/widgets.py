@@ -4,7 +4,9 @@ from PySide6.QtCore import (
     QModelIndex,
     QUrl,
     QTimer,
-    QStringListModel
+    QStringListModel,
+    QSortFilterProxyModel,
+    QItemSelection
 )
 from PySide6.QtGui import (
     QImage,
@@ -27,10 +29,17 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTabWidget,
     QSizePolicy,
-    QMessageBox
+    QMessageBox,
+    QSpinBox,
+    QTableView,
+    QSplitter
 )
 from PySide6.QtCharts import (
-    QChartView
+    QChartView,
+    QChart
+)
+from youtubeanalyzer.theme import (
+    Theme
 )
 from youtubeanalyzer.settings import (
     Settings
@@ -424,3 +433,108 @@ class TabWidget(QWidget):
         workspace_button = self.sender()
         workspace_index = self._main_layout.indexOf(workspace_button) - 1
         self.create_workspace(workspace_index)
+
+
+class AbstractVideoTableWorkspace(QWidget):
+    def __init__(self, settings: Settings, parent: QWidget = None):
+        super().__init__(parent)
+
+        self._settings = settings
+
+        h_layout = QHBoxLayout()
+        self._create_toolbar(h_layout)
+
+        self._search_limit_spin_box = QSpinBox()
+        self._search_limit_spin_box.setToolTip(self.tr("Set the search result limit"))
+        self._search_limit_spin_box.setMinimumWidth(50)
+        self._search_limit_spin_box.setRange(2, 30)
+        self._search_limit_spin_box.setValue(10)
+        h_layout.addWidget(self._search_limit_spin_box)
+        self._search_button = QPushButton(self.tr("Search"))
+        self._search_button.setToolTip(self.tr("Click to start searching"))
+        self._search_button.clicked.connect(self._on_search_clicked)
+        h_layout.addWidget(self._search_button)
+
+        self.model = ResultTableModel(self)
+        self._sort_model = QSortFilterProxyModel(self)
+        self._sort_model.setSortRole(ResultTableModel.SortRole)
+        self._sort_model.setSourceModel(self.model)
+        self._table_view = QTableView(self)
+        self._table_view.setModel(self._sort_model)
+        self._table_view.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+        self._table_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self._table_view.setSortingEnabled(True)
+        self._table_view.horizontalHeader().setSectionsMovable(True)
+        self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
+
+        self._side_tab_widget = QTabWidget()
+
+        self._details_widget = VideoDetailsWidget(self.model, self)
+        self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
+
+        self._analytics_widget = AnalyticsWidget(self.model, self)
+        self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
+        self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
+        if int(self._settings.get(Settings.Theme)) == Theme.Dark:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
+        else:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
+        self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
+
+        self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self._main_splitter.addWidget(self._table_view)
+        self._main_splitter.addWidget(self._side_tab_widget)
+        self._main_splitter.setCollapsible(0, False)
+        self._main_splitter.setStretchFactor(0, 3)
+        self._main_splitter.setStretchFactor(1, 1)
+
+        v_layout = QVBoxLayout()
+        v_layout.addLayout(h_layout)
+        v_layout.addWidget(self._main_splitter)
+        self.setLayout(v_layout)
+
+    def load_state(self):
+        request_limit = int(self._settings.get(Settings.RequestLimit))
+        self._search_limit_spin_box.setValue(request_limit)
+        # Restore main splitter
+        splitter_state = self._settings.get(Settings.MainSplitterState)
+        if splitter_state and not splitter_state.isEmpty():
+            self._main_splitter.restoreState(splitter_state)
+        # Restore main table
+        table_header_state = self._settings.get(Settings.MainTableHeaderState)
+        if not table_header_state.isEmpty():
+            self._table_view.horizontalHeader().restoreState(table_header_state)
+        self._table_view.resizeColumnsToContents()
+
+    def save_state(self):
+        self._settings.set(Settings.RequestLimit, self._search_limit_spin_box.value())
+        self._settings.set(Settings.LastActiveChartIndex, self._analytics_widget.get_current_chart_index())
+        self._settings.set(Settings.MainTableHeaderState, self._table_view.horizontalHeader().saveState())
+        self._settings.set(Settings.MainSplitterState, self._main_splitter.saveState())
+        self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+
+    def handle_preferences_change(self):
+        if int(self._settings.get(Settings.Theme)) == Theme.Dark:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
+        else:
+            self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
+
+        self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
+        if self._settings.get(Settings.AnalyticsFollowTableSelect):
+            self._analytics_widget.set_current_index(self._table_view.currentIndex())
+
+    def _create_toolbar(self, h_layout: QHBoxLayout):
+        raise "AbstractVideoTableWorkspace._create_toolbar is not implemented"
+
+    def _on_search_clicked(self):
+        raise "AbstractVideoTableWorkspace._on_search_clicked is not implemented"
+
+    def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
+        indexes = current.indexes()
+        if len(indexes) > 0:
+            index = self._sort_model.mapToSource(indexes[0])
+            self._details_widget.set_current_index(index)
+            self._analytics_widget.set_current_index(index)
+        else:
+            self._details_widget.set_current_index(None)
+            self._analytics_widget.set_current_index(None)
