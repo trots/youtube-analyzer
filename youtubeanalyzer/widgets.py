@@ -25,7 +25,9 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QCompleter,
     QPushButton,
-    QTabWidget
+    QTabWidget,
+    QSizePolicy,
+    QMessageBox
 )
 from PySide6.QtCharts import (
     QChartView
@@ -46,6 +48,25 @@ from youtubeanalyzer.chart import (
     VideoDurationChart,
     WordsPieChart
 )
+
+
+def create_link_label(link: str, text: str):
+    label = QLabel("<a href=\"" + link + "\">" + text + "</a>")
+    label_size_policy = label.sizePolicy()
+    label_size_policy.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+    label.setSizePolicy(label_size_policy)
+    label.setTextFormat(Qt.TextFormat.RichText)
+    label.setOpenExternalLinks(True)
+    return label
+
+
+def critial_detailed_message(parent, title, text, details_text):
+    dialog = QMessageBox(parent)
+    dialog.setIcon(QMessageBox.Critical)
+    dialog.setWindowTitle(title)
+    dialog.setText(text)
+    dialog.setDetailedText(details_text)
+    return dialog.exec()
 
 
 class PixmapLabel(QLabel):
@@ -360,10 +381,12 @@ class TabWidget(QWidget):
         self._main_stacked_layout.setCurrentIndex(0)
         self.setLayout(self._main_stacked_layout)
 
+        self._main_layout.addStretch()
         for workspace_factory in TabWidget.workspace_factories:
             workspace_button = workspace_factory.create_workspace_button()
             workspace_button.clicked.connect(self._create_workspace)
             self._main_layout.addWidget(workspace_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        self._main_layout.addStretch()
 
     def current_workspace(self):
         return self._main_stacked_layout.currentWidget() if self._main_stacked_layout.currentIndex() == 1 else None
@@ -399,5 +422,5 @@ class TabWidget(QWidget):
 
     def _create_workspace(self):
         workspace_button = self.sender()
-        workspace_index = self._main_layout.indexOf(workspace_button)
+        workspace_index = self._main_layout.indexOf(workspace_button) - 1
         self.create_workspace(workspace_index)

@@ -47,6 +47,8 @@ class Settings:
     TabWorkspaceIndex = SettingsKey("tab_workspace_index", -1)
     ActiveTabIndex = SettingsKey("active_tab_index", 0)
     Version = SettingsKey("version", CurrentSettingsVersion)
+    TrendsRegion = SettingsKey("trends_region", "US")
+    TrendsVideoCategoryId = SettingsKey("trends_video_category_id", 0)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:

@@ -171,3 +171,9 @@ class DataCache:
 
     def clear(self):
         self._images.clear()
+
+
+class VideoCategory:
+    def __init__(self, id: int, text: str):
+        self.id = id
+        self.text = text

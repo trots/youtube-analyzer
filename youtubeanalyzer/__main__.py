@@ -46,6 +46,9 @@ from youtubeanalyzer.widgets import (
 from youtubeanalyzer.search import (
     SearchWorkspaceFactory
 )
+from youtubeanalyzer.trends import (
+    TrendsWorkspaceFactory
+)
 from youtubeanalyzer.export import (
     export_to_xlsx,
     export_to_csv,
@@ -329,6 +332,7 @@ settings = Settings(app_name)
 Theme.apply(app, int(settings.get(Settings.Theme)))
 
 TabWidget.workspace_factories.append(SearchWorkspaceFactory())
+TabWidget.workspace_factories.append(TrendsWorkspaceFactory())
 # ^^^ Don't change the factories order. Append new factories to the end of list
 
 while True:

@@ -25,7 +25,8 @@ from youtubeanalyzer.model import (
     make_result_row,
     ResultFields,
     ResultTableModel,
-    DataCache
+    DataCache,
+    VideoCategory
 )
 
 
@@ -149,7 +150,8 @@ class SearchAutocompleteDownloader(QObject):
 
 class AbstractYoutubeEngine:
     def __init__(self, model: ResultTableModel, request_limit: int, request_timeout_sec: int = 10):
-        self.error = ""
+        self.errorDetails = None
+        self.errorReason = None
         self._model = model
         self._request_limit = request_limit
         self._request_timeout_sec = request_timeout_sec
@@ -160,14 +162,18 @@ class AbstractYoutubeEngine:
     def search(self, request_text: str):
         pass
 
+    def get_video_categories(self):
+        pass
+
 
 class YoutubeGrepEngine(AbstractYoutubeEngine):
     def __init__(self, model: ResultTableModel, request_limit: int):
         super().__init__(model, request_limit)
 
     def search(self, request_text: str):
+        self.errorDetails = None
+        self.errorReason = None
         try:
-            self.error = ""
             videos_search = self._create_video_searcher(request_text)
             result = []
             has_next_page = True
@@ -201,7 +207,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
             return True
         except Exception as exc:
             print(exc)
-            self.error = traceback.format_exc()
+            self.errorDetails = traceback.format_exc()
             return False
 
     @staticmethod
@@ -264,6 +270,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         self._api_key = api_key
 
     def search(self, request_text: str):
+        self.errorDetails = None
+        self.errorReason = None
         try:
             youtube = self._create_youtube_client()
             search_response = self._search_videos(youtube, request_text)
@@ -320,7 +328,114 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             self._model.setData(result)
             return True
         except Exception as e:
-            self.error = str(e)
+            self.errorDetails = str(e)
+            return False
+
+    def get_video_categories(self, region_code: str = "US", output_language="en_US"):
+        self.errorDetails = None
+        self.errorReason = None
+        try:
+            youtube = self._create_youtube_client()
+            request = youtube.videoCategories().list(
+                part="snippet",
+                regionCode=region_code,
+                hl=output_language
+            )
+            response = request.execute()
+            categories = []
+            for item in response["items"]:
+                snippet = item["snippet"]
+                categories.append(VideoCategory(item["id"], snippet["title"]))
+            return categories
+        except Exception as e:
+            self.errorDetails = str(e)
+            return []
+
+    def search_trends(self, category_id: int, request_limit: int, region_code: str = "US", results_per_page: int = 10):
+        self.errorDetails = None
+        self.errorReason = None
+        try:
+            results_per_page = min(request_limit, results_per_page)
+            youtube = self._create_youtube_client()
+            page_token = ""
+            total_count = 0
+            result = []
+
+            while True:
+                request = youtube.videos().list(
+                    part="snippet,contentDetails,statistics",
+                    chart="mostPopular",
+                    regionCode=region_code,
+                    videoCategoryId=category_id,
+                    maxResults=results_per_page,
+                    pageToken=page_token
+                )
+                response = request.execute()
+
+                video_ids = ""
+                channel_ids = ""
+                for search_item in response["items"]:
+                    video_ids = video_ids + "," + search_item["id"]
+                    channel_id = search_item["snippet"]["channelId"]
+                    if channel_id in channel_ids:
+                        continue
+                    channel_ids = channel_ids + "," + channel_id
+                video_ids = video_ids[1:]  # Remove first comma
+                channel_ids = channel_ids[1:]  # Remove first comma
+
+                video_response = self._get_video_details(youtube, video_ids)
+                channel_response = self._get_channel_details(youtube, channel_ids)
+                channels = {}
+                for channel_item in channel_response["items"]:
+                    channels[channel_item["id"]] = channel_item
+
+                count = 0
+                for search_item in response["items"]:
+                    video_item = video_response["items"][count]
+                    search_snippet = search_item["snippet"]
+                    content_details = search_item["contentDetails"]
+                    statistics = search_item["statistics"]
+                    video_title = search_snippet["title"]
+                    video_published_time = str(datetime.strptime(search_snippet["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"))
+                    video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
+                    video_duration = timedelta_to_str(video_duration_td)
+                    views = int(statistics["viewCount"])
+                    video_link = "https://www.youtube.com/watch?v=" + search_item["id"]
+                    channel_title = search_snippet["channelTitle"]
+                    channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
+                    channel_item = channels[search_snippet["channelId"]]
+                    channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
+                    channel_views = int(channel_item["statistics"]["viewCount"])
+                    channel_joined_date = ""
+                    video_preview_link = search_snippet["thumbnails"]["high"]["url"]
+                    channel_snippet = channel_item["snippet"]
+                    channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
+                    channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
+                    video_snippet = video_item["snippet"]
+                    tags = video_snippet["tags"] if "tags" in video_snippet else None
+                    result.append(
+                        make_result_row(video_title, video_published_time, video_duration, views,
+                                        video_link, channel_title, channel_url, channel_subscribers,
+                                        channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
+                                        video_duration_td, total_count))
+                    count = count + 1
+                    total_count = total_count + 1
+
+                    if total_count >= request_limit:
+                        break
+
+                if total_count >= request_limit:
+                    break
+
+                if response["nextPageToken"]:
+                    page_token = response["nextPageToken"]
+
+            self._model.setData(result)
+            return True
+        except Exception as e:
+            if hasattr(e, "reason"):
+                self.errorReason = e.reason
+            self.errorDetails = str(e)
             return False
 
     def _create_youtube_client(self):
