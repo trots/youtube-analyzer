@@ -49,6 +49,7 @@ class Settings:
     Version = SettingsKey("version", CurrentSettingsVersion)
     TrendsRegion = SettingsKey("trends_region", "US")
     TrendsVideoCategoryId = SettingsKey("trends_video_category_id", 0)
+    RequestPageLimit = SettingsKey("request_page_limit", 25)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
@@ -181,8 +182,15 @@ class AdvancedTab(QWidget):
         self._settings = settings
         layout = QVBoxLayout()
 
-        timeout_label = QLabel(self.tr("Request timeout in seconds:"))
-        layout.addWidget(timeout_label)
+        layout.addWidget(QLabel(self.tr("Request page limit:")))
+        self._request_page_limit_edit = QSpinBox()
+        self._request_page_limit_edit.setMinimum(5)
+        self._request_page_limit_edit.setMaximum(200)
+        self._request_page_limit_edit.setToolTip(self.tr("Set the maximum page size for YouTube requests"))
+        self._request_page_limit_edit.setValue(int(self._settings.get(Settings.RequestPageLimit)))
+        layout.addWidget(self._request_page_limit_edit)
+
+        layout.addWidget(QLabel(self.tr("Request timeout in seconds:")))
         self._request_timeout_sec_edit = QSpinBox()
         self._request_timeout_sec_edit.setMinimum(2)
         self._request_timeout_sec_edit.setMaximum(1000)
@@ -194,6 +202,7 @@ class AdvancedTab(QWidget):
         self.setLayout(layout)
 
     def save_settings(self):
+        self._settings.set(Settings.RequestPageLimit, self._request_page_limit_edit.value())
         self._settings.set(Settings.RequestTimeoutSec, self._request_timeout_sec_edit.value())
 
 
