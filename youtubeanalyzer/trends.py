@@ -1,6 +1,7 @@
 import pycountry
 from PySide6.QtCore import (
     Qt,
+    QObject,
     QTimer
 )
 from PySide6.QtWidgets import (
@@ -42,6 +43,34 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
 
         QTimer.singleShot(0, self, self._update_categories)
 
+    def load_state(self):
+        super().load_state()
+        index = self._region_combo_box.findData(self._settings.get(Settings.TrendsRegion))
+        if index >= 0:
+            self._region_combo_box.setCurrentIndex(index)
+        self._loaded_category_id = int(self._settings.get(Settings.TrendsVideoCategoryId))
+
+    def save_state(self):
+        super().save_state()
+        self._settings.set(Settings.TrendsRegion, self._region_combo_box.currentData())
+        if self._category_combo_box.currentData():
+            self._settings.set(Settings.TrendsVideoCategoryId, int(self._category_combo_box.currentData()))
+
+    def _create_toolbar(self, h_layout: QHBoxLayout):
+        h_layout.addWidget(QLabel(self.tr("Category:")))
+        self._category_combo_box = QComboBox()
+        self._category_combo_box.setToolTip(self.tr("Select the video category to search trends"))
+        h_layout.addWidget(self._category_combo_box, 1)
+        h_layout.addSpacing(10)
+        h_layout.addWidget(QLabel(self.tr("Region:")))
+        self._region_combo_box = QComboBox()
+        self._region_combo_box.setToolTip(self.tr("Select the region to search trends"))
+        for country in pycountry.countries:
+            self._region_combo_box.addItem(country.name, country.alpha_2)
+        h_layout.addWidget(self._region_combo_box)
+        self._region_combo_box.currentIndexChanged.connect(self._update_categories)
+        h_layout.addStretch(2)
+
     def _update_categories(self):
         self._category_combo_box.clear()
         api_key = self._settings.get(Settings.YouTubeApiKey)
@@ -63,32 +92,6 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
             if index >= 0:
                 self._category_combo_box.setCurrentIndex(index)
             self._loaded_category_id = None
-
-    def load_state(self):
-        super().load_state()
-        index = self._region_combo_box.findData(self._settings.get(Settings.TrendsRegion))
-        if index >= 0:
-            self._region_combo_box.setCurrentIndex(index)
-        self._loaded_category_id = int(self._settings.get(Settings.TrendsVideoCategoryId))
-
-    def save_state(self):
-        super().save_state()
-        self._settings.set(Settings.TrendsRegion, self._region_combo_box.currentData())
-        if self._category_combo_box.currentData():
-            self._settings.set(Settings.TrendsVideoCategoryId, int(self._category_combo_box.currentData()))
-
-    def _create_toolbar(self, h_layout: QHBoxLayout):
-        h_layout.addWidget(QLabel(self.tr("Category:")))
-        self._category_combo_box = QComboBox()
-        h_layout.addWidget(self._category_combo_box, 1)
-        h_layout.addSpacing(10)
-        h_layout.addWidget(QLabel(self.tr("Region:")))
-        self._region_combo_box = QComboBox()
-        for country in pycountry.countries:
-            self._region_combo_box.addItem(country.name, country.alpha_2)
-        h_layout.addWidget(self._region_combo_box)
-        self._region_combo_box.currentIndexChanged.connect(self._update_categories)
-        h_layout.addStretch(2)
 
     def _on_search_clicked(self):
         self.setDisabled(True)
@@ -153,14 +156,14 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
 
 
 class TrendsWorkspaceFactory(TabWorkspaceFactory):
-    def __init__(self, parent: QWidget = None):
+    def __init__(self, parent: QObject = None):
         super().__init__(parent)
 
     def get_workspace_name(self) -> str:
-        return "Trends"
+        return self.tr("Trends")
 
     def create_workspace_button(self) -> QPushButton:
-        button = QPushButton("Show trends...")
+        button = QPushButton(self.tr("Search trends..."))
         return button
 
     def create_workspace_widget(self, settings: Settings, parent: QWidget) -> QWidget:
