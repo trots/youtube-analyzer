@@ -1,4 +1,5 @@
 from PySide6.QtCore import (
+    QObject,
     QSize,
     Qt,
     QModelIndex,
@@ -357,8 +358,8 @@ class SearchLineEdit(QLineEdit):
         self._autocomplete_model.setStringList(autocomplete_list)
 
 
-class TabWorkspaceFactory(QWidget):
-    def __init__(self, parent: QWidget = None):
+class TabWorkspaceFactory(QObject):
+    def __init__(self, parent: QObject = None):
         super().__init__(parent)
 
     def get_workspace_name(self) -> str:

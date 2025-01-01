@@ -341,13 +341,10 @@ while True:
     if settings.get(Settings.Language) == "Ru":
         my_lang = "translations/ru.qm"
         qt_lang = "qtbase_ru.qm"
-    else:
-        my_lang = "translations/en.qm"
-        qt_lang = "qtbase_en.qm"
-    if my_translator.load(my_lang):
-        app.installTranslator(my_translator)
-    if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
-        app.installTranslator(qt_translator)
+        if my_translator.load(my_lang):
+            app.installTranslator(my_translator)
+        if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+            app.installTranslator(qt_translator)
 
     window = MainWindow(settings)
     window.resize(app.screens()[0].size() * 0.7)
@@ -356,5 +353,7 @@ while True:
 
     if app_need_restart:
         app_need_restart = False
+        app.removeTranslator(my_translator)
+        app.removeTranslator(qt_translator)
     else:
         break

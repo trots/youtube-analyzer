@@ -93,10 +93,10 @@ class SearchWorkspaceFactory(TabWorkspaceFactory):
         super().__init__(parent)
 
     def get_workspace_name(self) -> str:
-        return "Search"
+        return self.tr("Search")
 
     def create_workspace_button(self) -> QPushButton:
-        button = QPushButton("Search video...")
+        button = QPushButton(self.tr("Search video..."))
         return button
 
     def create_workspace_widget(self, settings: Settings, parent: QWidget) -> QWidget:
