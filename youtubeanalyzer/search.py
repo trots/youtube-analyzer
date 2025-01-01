@@ -192,7 +192,7 @@ class SearchWorkspace(QWidget):
         if not api_key:
             return YoutubeGrepEngine(self.model, request_limit)
         else:
-            return YoutubeApiEngine(self.model, request_limit, api_key)
+            return YoutubeApiEngine(api_key, self.model, request_limit)
 
 
 class SearchWorkspaceFactory(TabWorkspaceFactory):

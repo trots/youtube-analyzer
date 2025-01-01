@@ -149,21 +149,26 @@ class SearchAutocompleteDownloader(QObject):
 
 
 class AbstractYoutubeEngine:
-    def __init__(self, model: ResultTableModel, request_limit: int, request_timeout_sec: int = 10):
+    def __init__(self, model: ResultTableModel = None, request_limit: int = 10, results_per_page: int = 10,
+                 request_timeout_sec: int = 10):
         self.errorDetails = None
         self.errorReason = None
         self._model = model
         self._request_limit = request_limit
+        self._results_per_page = min(request_limit, results_per_page)
         self._request_timeout_sec = request_timeout_sec
 
     def set_request_timeout_sec(self, value_sec: int):
         self._request_timeout_sec = value_sec
 
     def search(self, request_text: str):
-        pass
+        raise "AbstractYoutubeEngine.search is not implemented"
 
     def get_video_categories(self):
-        pass
+        raise "AbstractYoutubeEngine.get_video_categories is not implemented"
+
+    def trends(self, category_id: int, region_code: str = "US"):
+        raise "AbstractYoutubeEngine.trends is not implemented"
 
 
 class YoutubeGrepEngine(AbstractYoutubeEngine):
@@ -209,6 +214,16 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
             print(exc)
             self.errorDetails = traceback.format_exc()
             return False
+
+    def get_video_categories(self, region_code: str = "US", output_language="en_US"):
+        self.errorDetails = "YoutubeGrepEngine doesn't support video categories"
+        self.errorReason = "Not supported"
+        return []
+
+    def trends(self, category_id: int, region_code: str = "US"):
+        self.errorDetails = "YoutubeGrepEngine doesn't support trends"
+        self.errorReason = "Not supported"
+        return False
 
     @staticmethod
     def duration_to_timedelta(duration: str):
@@ -265,8 +280,8 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
 
 
 class YoutubeApiEngine(AbstractYoutubeEngine):
-    def __init__(self, model: ResultTableModel, request_limit: int, api_key: str):
-        super().__init__(model, request_limit)
+    def __init__(self, api_key: str, model: ResultTableModel = None, request_limit: int = 10, results_per_page: int = 10):
+        super().__init__(model, request_limit, results_per_page)
         self._api_key = api_key
 
     def search(self, request_text: str):
@@ -274,55 +289,16 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         self.errorReason = None
         try:
             youtube = self._create_youtube_client()
-            search_response = self._search_videos(youtube, request_text)
+            response = self._search_videos(youtube, request_text)
 
-            video_ids = ""
-            channel_ids = ""
-            for search_item in search_response["items"]:
-                video_ids = video_ids + "," + search_item["id"]["videoId"]
-                channel_id = search_item["snippet"]["channelId"]
-                if channel_id in channel_ids:
-                    continue
-                channel_ids = channel_ids + "," + channel_id
-            video_ids = video_ids[1:]  # Remove first comma
-            channel_ids = channel_ids[1:]  # Remove first comma
-
-            video_response = self._get_video_details(youtube, video_ids)
-            channel_response = self._get_channel_details(youtube, channel_ids)
-            channels = {}
-            for channel_item in channel_response["items"]:
-                channels[channel_item["id"]] = channel_item
+            def video_id_getter(item): return item["id"]["videoId"]
+            video_response, channels = self._get_response_details(youtube, response, video_id_getter)
 
             result = []
             count = 0
-            for search_item in search_response["items"]:
-                video_item = video_response["items"][count]
-                search_snippet = search_item["snippet"]
-                content_details = video_item["contentDetails"]
-                statistics = video_item["statistics"]
-                video_title = search_snippet["title"]
-                video_published_time = str(datetime.strptime(search_snippet["publishTime"], "%Y-%m-%dT%H:%M:%SZ"))
-                video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
-                video_duration = timedelta_to_str(video_duration_td)
-                views = int(statistics["viewCount"])
-                video_link = "https://www.youtube.com/watch?v=" + search_item["id"]["videoId"]
-                channel_title = search_snippet["channelTitle"]
-                channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
-                channel_item = channels[search_snippet["channelId"]]
-                channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
-                channel_views = int(channel_item["statistics"]["viewCount"])
-                channel_joined_date = ""
-                video_preview_link = search_snippet["thumbnails"]["high"]["url"]
-                channel_snippet = channel_item["snippet"]
-                channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
-                channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
-                video_snippet = video_item["snippet"]
-                tags = video_snippet["tags"] if "tags" in video_snippet else None
-                result.append(
-                    make_result_row(video_title, video_published_time, video_duration, views,
-                                    video_link, channel_title, channel_url, channel_subscribers,
-                                    channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
-                                    video_duration_td, count))
+            for responce_item in response["items"]:
+                result.append(self._responce_item_to_result(responce_item, video_response["items"][count], count, channels,
+                                                            "publishTime", video_id_getter))
                 count = count + 1
 
             self._model.setData(result)
@@ -351,11 +327,10 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             self.errorDetails = str(e)
             return []
 
-    def search_trends(self, category_id: int, request_limit: int, region_code: str = "US", results_per_page: int = 10):
+    def trends(self, category_id: int, region_code: str = "US"):
         self.errorDetails = None
         self.errorReason = None
         try:
-            results_per_page = min(request_limit, results_per_page)
             youtube = self._create_youtube_client()
             page_token = ""
             total_count = 0
@@ -367,64 +342,25 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                     chart="mostPopular",
                     regionCode=region_code,
                     videoCategoryId=category_id,
-                    maxResults=results_per_page,
+                    maxResults=self._results_per_page,
                     pageToken=page_token
                 )
                 response = request.execute()
 
-                video_ids = ""
-                channel_ids = ""
-                for search_item in response["items"]:
-                    video_ids = video_ids + "," + search_item["id"]
-                    channel_id = search_item["snippet"]["channelId"]
-                    if channel_id in channel_ids:
-                        continue
-                    channel_ids = channel_ids + "," + channel_id
-                video_ids = video_ids[1:]  # Remove first comma
-                channel_ids = channel_ids[1:]  # Remove first comma
-
-                video_response = self._get_video_details(youtube, video_ids)
-                channel_response = self._get_channel_details(youtube, channel_ids)
-                channels = {}
-                for channel_item in channel_response["items"]:
-                    channels[channel_item["id"]] = channel_item
+                def video_id_getter(item): return item["id"]
+                video_response, channels = self._get_response_details(youtube, response, video_id_getter)
 
                 count = 0
-                for search_item in response["items"]:
-                    video_item = video_response["items"][count]
-                    search_snippet = search_item["snippet"]
-                    content_details = search_item["contentDetails"]
-                    statistics = search_item["statistics"]
-                    video_title = search_snippet["title"]
-                    video_published_time = str(datetime.strptime(search_snippet["publishedAt"], "%Y-%m-%dT%H:%M:%SZ"))
-                    video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
-                    video_duration = timedelta_to_str(video_duration_td)
-                    views = int(statistics["viewCount"])
-                    video_link = "https://www.youtube.com/watch?v=" + search_item["id"]
-                    channel_title = search_snippet["channelTitle"]
-                    channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
-                    channel_item = channels[search_snippet["channelId"]]
-                    channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
-                    channel_views = int(channel_item["statistics"]["viewCount"])
-                    channel_joined_date = ""
-                    video_preview_link = search_snippet["thumbnails"]["high"]["url"]
-                    channel_snippet = channel_item["snippet"]
-                    channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
-                    channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
-                    video_snippet = video_item["snippet"]
-                    tags = video_snippet["tags"] if "tags" in video_snippet else None
-                    result.append(
-                        make_result_row(video_title, video_published_time, video_duration, views,
-                                        video_link, channel_title, channel_url, channel_subscribers,
-                                        channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
-                                        video_duration_td, total_count))
+                for responce_item in response["items"]:
+                    result.append(self._responce_item_to_result(responce_item, video_response["items"][count], total_count,
+                                                                channels, "publishedAt", video_id_getter))
                     count = count + 1
                     total_count = total_count + 1
 
-                    if total_count >= request_limit:
+                    if total_count >= self._request_limit:
                         break
 
-                if total_count >= request_limit:
+                if total_count >= self._request_limit:
                     break
                 if "nextPageToken" not in response:
                     break
@@ -466,3 +402,50 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             id=channel_ids
         )
         return channel_request.execute()
+
+    def _get_response_details(self, youtube, response, video_id_getter):
+        video_ids = ""
+        channel_ids = ""
+        for item in response["items"]:
+            video_ids = video_ids + "," + video_id_getter(item)
+            channel_id = item["snippet"]["channelId"]
+            if channel_id in channel_ids:
+                continue
+            channel_ids = channel_ids + "," + channel_id
+        video_ids = video_ids[1:]  # Removing of the first comma
+        channel_ids = channel_ids[1:]  # Removing of the first comma
+
+        video_response = self._get_video_details(youtube, video_ids)
+        channel_response = self._get_channel_details(youtube, channel_ids)
+        channels = {}
+        for channel_item in channel_response["items"]:
+            channels[channel_item["id"]] = channel_item
+
+        return video_response, channels
+
+    def _responce_item_to_result(self, responce_item, video_item, result_index, channels, publish_time_key, video_id_getter):
+        search_snippet = responce_item["snippet"]
+        content_details = video_item["contentDetails"]
+        statistics = video_item["statistics"]
+        video_title = search_snippet["title"]
+        video_published_time = str(datetime.strptime(search_snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ"))
+        video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
+        video_duration = timedelta_to_str(video_duration_td)
+        views = int(statistics["viewCount"])
+        video_link = "https://www.youtube.com/watch?v=" + video_id_getter(responce_item)
+        channel_title = search_snippet["channelTitle"]
+        channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
+        channel_item = channels[search_snippet["channelId"]]
+        channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
+        channel_views = int(channel_item["statistics"]["viewCount"])
+        channel_joined_date = ""
+        video_preview_link = search_snippet["thumbnails"]["high"]["url"]
+        channel_snippet = channel_item["snippet"]
+        channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
+        channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
+        video_snippet = video_item["snippet"]
+        tags = video_snippet["tags"] if "tags" in video_snippet else None
+        return make_result_row(video_title, video_published_time, video_duration, views,
+                               video_link, channel_title, channel_url, channel_subscribers,
+                               channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
+                               video_duration_td, result_index)

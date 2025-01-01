@@ -122,7 +122,7 @@ class MockGrepEngine(YoutubeGrepEngine):
 
 class MockApiEngine(YoutubeApiEngine):
     def __init__(self, empty=False, exception=False):
-        super().__init__(ResultTableModel(None), 1, "")
+        super().__init__("", ResultTableModel(None), 1)
         self._exception = exception
         self._search_responce = {
             "items": []
