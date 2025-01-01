@@ -214,8 +214,13 @@ class TrendsWorkspace(QWidget):
             request_limit = 10
             print("Request limit is not set. Using '10' by default")
 
+        request_page_limit = int(self._settings.get(Settings.RequestPageLimit))
+        if not request_page_limit:
+            request_page_limit = 25
+            print("Request page limit is not set. Using '25' by default")
+
         engine = YoutubeApiEngine(self.model, 0, api_key)
-        if engine.search_trends(category_id, request_limit, region_code):
+        if engine.search_trends(category_id, request_limit, region_code, request_page_limit):
             for i in range(len(self.model.result)):
                 video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
                 video_item = self.model.result[i]
