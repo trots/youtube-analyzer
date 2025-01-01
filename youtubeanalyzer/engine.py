@@ -426,7 +426,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
 
                 if total_count >= request_limit:
                     break
-
+                if "nextPageToken" not in response:
+                    break
                 if response["nextPageToken"]:
                     page_token = response["nextPageToken"]
 
