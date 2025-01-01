@@ -126,7 +126,7 @@ class TrendsWorkspace(QWidget):
         if not api_key:
             return
 
-        engine = YoutubeApiEngine(None, 0, api_key)
+        engine = YoutubeApiEngine(api_key)
         region_code = self._region_combo_box.currentData()
         if not region_code:
             region_code = "US"
@@ -219,8 +219,8 @@ class TrendsWorkspace(QWidget):
             request_page_limit = 25
             print("Request page limit is not set. Using '25' by default")
 
-        engine = YoutubeApiEngine(self.model, 0, api_key)
-        if engine.search_trends(category_id, request_limit, region_code, request_page_limit):
+        engine = YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
+        if engine.trends(category_id, region_code):
             for i in range(len(self.model.result)):
                 video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
                 video_item = self.model.result[i]
