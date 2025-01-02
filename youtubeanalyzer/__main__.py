@@ -5,10 +5,10 @@ from PySide6.QtCore import (
     Qt,
     QFileInfo,
     QTranslator,
-    QLibraryInfo
+    QLibraryInfo,
+    QKeyCombination
 )
 from PySide6.QtGui import (
-    QKeySequence,
     QIcon,
     QShowEvent
 )
@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
 
         file_menu.addSeparator()
         exit_action = file_menu.addAction(self.tr("Exit"))
-        exit_action.setShortcut(QKeySequence(Qt.Modifier.CTRL | Qt.Key.Key_Q))
+        exit_action.setShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Q))
         exit_action.triggered.connect(self.close)
 
         edit_menu = self.menuBar().addMenu(self.tr("Edit"))

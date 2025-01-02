@@ -1,12 +1,10 @@
-build
-dist
+*build
+*dist
 .vscode
 .venv
-youtube-analyzer.spec
+*.spec
 __pycache__
 translations/*.qm
-youtube-analyzer.build
-youtube-analyzer.dist
 Output
 .coverage*
 unit_test_*
