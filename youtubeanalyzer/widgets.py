@@ -13,7 +13,8 @@ from PySide6.QtGui import (
     QImage,
     QPixmap,
     QResizeEvent,
-    QPainter
+    QPainter,
+    QGuiApplication
 )
 from PySide6.QtWidgets import (
     QWidget,
@@ -145,6 +146,7 @@ class VideoDetailsWidget(QWidget):
         main_layout.addWidget(self._title_label)
 
         self._duration_label = QLabel(main_widget)
+        self._duration_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._duration_label.setToolTip(self._model.FieldNames[ResultFields.VideoDuration])
         main_layout.addWidget(self._duration_label)
         main_layout.addSpacing(spacing)
@@ -162,6 +164,7 @@ class VideoDetailsWidget(QWidget):
         channel_layout.addWidget(self._channel_title_label, 0, 1)
 
         self._subscribers_label = QLabel(main_widget)
+        self._subscribers_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._subscribers_label.setToolTip(self._model.FieldNames[ResultFields.ChannelSubscribers])
         channel_layout.addWidget(self._subscribers_label, 1, 1)
         main_layout.addLayout(channel_layout)
@@ -169,16 +172,19 @@ class VideoDetailsWidget(QWidget):
 
         views_layout = QHBoxLayout()
         self._views_label = QLabel(main_widget)
+        self._views_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._views_label.setToolTip(self._model.FieldNames[ResultFields.VideoViews])
         views_layout.addWidget(self._views_label)
 
         self._published_time_label = QLabel(main_widget)
+        self._published_time_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._published_time_label.setToolTip(self._model.FieldNames[ResultFields.VideoPublishedTime])
         views_layout.addWidget(self._published_time_label)
         main_layout.addLayout(views_layout)
         main_layout.addSpacing(spacing)
 
         self._views_rate_label = QLabel(main_widget)
+        self._views_rate_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._views_rate_label.setToolTip(self._model.FieldNames[ResultFields.ViewRate])
         main_layout.addWidget(self._views_rate_label)
 
@@ -460,13 +466,43 @@ class AbstractVideoTableWorkspace(QWidget):
         self._sort_model = QSortFilterProxyModel(self)
         self._sort_model.setSortRole(ResultTableModel.SortRole)
         self._sort_model.setSourceModel(self.model)
+
         self._table_view = QTableView(self)
         self._table_view.setModel(self._sort_model)
         self._table_view.setSelectionMode(QTableView.SelectionMode.SingleSelection)
         self._table_view.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self._table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
+
+        copy_video_title_action = self._table_view.addAction(self.tr("Copy video title"))
+        copy_video_title_action.setData(ResultFields.VideoTitle)
+        copy_video_title_action.triggered.connect(self._on_copy_action)
+        copy_video_link_action = self._table_view.addAction(self.tr("Copy video link"))
+        copy_video_link_action.setData(ResultFields.VideoLink)
+        copy_video_link_action.triggered.connect(self._on_copy_action)
+        copy_channel_title_action = self._table_view.addAction(self.tr("Copy channel title"))
+        copy_channel_title_action.setData(ResultFields.ChannelTitle)
+        copy_channel_title_action.triggered.connect(self._on_copy_action)
+        copy_channel_link_action = self._table_view.addAction(self.tr("Copy channel link"))
+        copy_channel_link_action.setData(ResultFields.ChannelLink)
+        copy_channel_link_action.triggered.connect(self._on_copy_action)
+        copy_published_time_action = self._table_view.addAction(self.tr("Copy published time"))
+        copy_published_time_action.setData(ResultFields.VideoPublishedTime)
+        copy_published_time_action.triggered.connect(self._on_copy_action)
+        copy_video_duration_action = self._table_view.addAction(self.tr("Copy duration"))
+        copy_video_duration_action.setData(ResultFields.VideoDuration)
+        copy_video_duration_action.triggered.connect(self._on_copy_action)
+        copy_video_views_action = self._table_view.addAction(self.tr("Copy views"))
+        copy_video_views_action.setData(ResultFields.VideoViews)
+        copy_video_views_action.triggered.connect(self._on_copy_action)
+        copy_channel_subscribers_action = self._table_view.addAction(self.tr("Copy subscribers"))
+        copy_channel_subscribers_action.setData(ResultFields.ChannelSubscribers)
+        copy_channel_subscribers_action.triggered.connect(self._on_copy_action)
+        copy_view_subscribers_action = self._table_view.addAction(self.tr("Copy views/subscribers"))
+        copy_view_subscribers_action.setData(ResultFields.ViewRate)
+        copy_view_subscribers_action.triggered.connect(self._on_copy_action)
 
         self._side_tab_widget = QTabWidget()
 
@@ -542,3 +578,10 @@ class AbstractVideoTableWorkspace(QWidget):
         else:
             self._details_widget.set_current_index(None)
             self._analytics_widget.set_current_index(None)
+
+    def _on_copy_action(self):
+        field = self.sender().data()
+        index = self._table_view.currentIndex()
+        if index:
+            clipboard = QGuiApplication.clipboard()
+            clipboard.setText(str(self.model.get_field_data(index.row(), field)))
