@@ -288,19 +288,19 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         self.errorDetails = None
         self.errorReason = None
         try:
-            youtube = self._create_youtube_client()
-            response = self._search_videos(youtube, request_text)
+            def request_handler(youtube, page_token):
+                request = youtube.search().list(
+                    part="snippet",
+                    maxResults=self._results_per_page,
+                    q=request_text,
+                    type="video",
+                    pageToken=page_token
+                )
+                return request.execute()
 
             def video_id_getter(item): return item["id"]["videoId"]
-            video_response, channels = self._get_response_details(youtube, response, video_id_getter)
 
-            result = []
-            count = 0
-            for responce_item in response["items"]:
-                result.append(self._responce_item_to_result(responce_item, video_response["items"][count], count, channels,
-                                                            "publishTime", video_id_getter))
-                count = count + 1
-
+            result = self._request_videos(request_handler, video_id_getter, "publishTime")
             self._model.setData(result)
             return True
         except Exception as e:
@@ -331,12 +331,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         self.errorDetails = None
         self.errorReason = None
         try:
-            youtube = self._create_youtube_client()
-            page_token = ""
-            total_count = 0
-            result = []
-
-            while True:
+            def request_handler(youtube, page_token):
                 request = youtube.videos().list(
                     part="snippet,contentDetails,statistics",
                     chart="mostPopular",
@@ -345,28 +340,11 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                     maxResults=self._results_per_page,
                     pageToken=page_token
                 )
-                response = request.execute()
+                return request.execute()
 
-                def video_id_getter(item): return item["id"]
-                video_response, channels = self._get_response_details(youtube, response, video_id_getter)
+            def video_id_getter(item): return item["id"]
 
-                count = 0
-                for responce_item in response["items"]:
-                    result.append(self._responce_item_to_result(responce_item, video_response["items"][count], total_count,
-                                                                channels, "publishedAt", video_id_getter))
-                    count = count + 1
-                    total_count = total_count + 1
-
-                    if total_count >= self._request_limit:
-                        break
-
-                if total_count >= self._request_limit:
-                    break
-                if "nextPageToken" not in response:
-                    break
-                if response["nextPageToken"]:
-                    page_token = response["nextPageToken"]
-
+            result = self._request_videos(request_handler, video_id_getter, "publishedAt")
             self._model.setData(result)
             return True
         except Exception as e:
@@ -380,14 +358,35 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         api_version = "v3"
         return googleapiclient.discovery.build(api_service_name, api_version, developerKey=self._api_key)
 
-    def _search_videos(self, youtube, request_text: str):
-        request = youtube.search().list(
-            part="snippet",
-            maxResults=self._request_limit,
-            q=request_text,
-            type="video"
-        )
-        return request.execute()
+    def _request_videos(self, request_handler, video_id_getter, published_time_key):
+        youtube = self._create_youtube_client()
+        page_token = ""
+        total_count = 0
+        result = []
+
+        while True:
+            response = request_handler(youtube, page_token)
+
+            video_response, channels = self._get_response_details(youtube, response, video_id_getter)
+
+            count = 0
+            for responce_item in response["items"]:
+                result.append(self._responce_item_to_result(responce_item, video_response["items"][count], total_count,
+                                                            channels, published_time_key, video_id_getter))
+                count = count + 1
+                total_count = total_count + 1
+
+                if total_count >= self._request_limit:
+                    break
+
+            if total_count >= self._request_limit:
+                break
+            if "nextPageToken" not in response:
+                break
+            if response["nextPageToken"]:
+                page_token = response["nextPageToken"]
+
+        return result
 
     def _get_video_details(self, youtube, video_ids):
         video_request = youtube.videos().list(

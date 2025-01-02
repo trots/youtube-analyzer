@@ -36,7 +36,6 @@ from youtubeanalyzer.widgets import (
 class TrendsWorkspace(AbstractVideoTableWorkspace):
     def __init__(self, settings: Settings, parent: QWidget = None):
         super().__init__(settings, parent)
-        self._search_limit_spin_box.setMaximum(200)
 
         self._selected_category = None
         self._loaded_category_id = None

@@ -454,7 +454,7 @@ class AbstractVideoTableWorkspace(QWidget):
         self._search_limit_spin_box = QSpinBox()
         self._search_limit_spin_box.setToolTip(self.tr("Set the search result limit"))
         self._search_limit_spin_box.setMinimumWidth(50)
-        self._search_limit_spin_box.setRange(2, 30)
+        self._search_limit_spin_box.setRange(2, 200)
         self._search_limit_spin_box.setValue(10)
         h_layout.addWidget(self._search_limit_spin_box)
         self._search_button = QPushButton(self.tr("Search"))

@@ -122,7 +122,7 @@ class MockGrepEngine(YoutubeGrepEngine):
 
 class MockApiEngine(YoutubeApiEngine):
     def __init__(self, empty=False, exception=False):
-        super().__init__("", ResultTableModel(None), 1)
+        super().__init__("", ResultTableModel(None), 2)
         self._exception = exception
         self._search_responce = {
             "items": []
@@ -224,10 +224,13 @@ class MockApiEngine(YoutubeApiEngine):
     def _create_youtube_client(self):
         return None
 
-    def _search_videos(self, _youtube, _request_text: str):
+    def _request_videos(self, request_handler, video_id_getter, published_time_key):
         if self._exception:
             raise "Exception"
-        return self._search_responce
+
+        def mock_request_handler(youtube, page_token):
+            return self._search_responce
+        return super()._request_videos(mock_request_handler, video_id_getter, published_time_key)
 
     def _get_video_details(self, _youtube, _video_ids):
         return self._video_responce
