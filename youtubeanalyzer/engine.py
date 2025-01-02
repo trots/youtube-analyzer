@@ -448,4 +448,4 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         return make_result_row(video_title, video_published_time, video_duration, views,
                                video_link, channel_title, channel_url, channel_subscribers,
                                channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
-                               video_duration_td, result_index)
+                               video_duration_td, result_index + 1)
