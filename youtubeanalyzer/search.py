@@ -38,6 +38,9 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
         super().load_state()
         self._search_line_edit.setFocus()
 
+    def get_data_name(self):
+        return self.request_text
+
     def _create_toolbar(self, h_layout: QHBoxLayout):
         self._search_line_edit = SearchLineEdit()
         self._search_line_edit.returnPressed.connect(self._on_search_clicked)
