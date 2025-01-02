@@ -103,6 +103,9 @@ class VideoDurationChart(QChart):
         self._model.modelReset.connect(self._on_model_reset)
         self._bar_set = None
         self._categories = [
+            [30, self.tr("30s"), 0],
+            [60, self.tr("1m"), 0],
+            [180, self.tr("3m"), 0],
             [300, self.tr("5m"), 0],
             [600, self.tr("10m"), 0],
             [900, self.tr("15m"), 0],
@@ -112,8 +115,7 @@ class VideoDurationChart(QChart):
             [3600, self.tr("1h"), 0],
             [5400, self.tr("1,5h"), 0],
             [7200, self.tr("2h"), 0],
-            [10800, self.tr("3h"), 0],
-            [None, self.tr("3+h"), 0]
+            [None, self.tr("2+h"), 0]
         ]
         self._axis_x = QBarCategoryAxis()
         self._axis_x.append([category[1] for category in self._categories])
