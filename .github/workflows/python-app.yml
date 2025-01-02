@@ -19,13 +19,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up Python 3.10
+    - name: Set up Python 3.12
       uses: actions/setup-python@v3
       with:
-        python-version: "3.10"
+        python-version: "3.12"
     - name: Install dependencies
       run: |
-        sudo apt install -y freeglut3 freeglut3-dev
+        sudo apt install -y libegl1
         python -m pip install --upgrade pip
         pip install flake8
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -39,3 +39,4 @@ jobs:
       run: |
         python -m unittest tests.test_engines
         python -m unittest tests.test_export
+        python -m unittest tests.test_settings
