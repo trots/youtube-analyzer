@@ -61,6 +61,12 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         region = self._region_combo_box.currentData()
         return (category + " " + region + " trends") if category and region else ""
 
+    def handle_preferences_change(self):
+        super().handle_preferences_change()
+        api_key = self._settings.get(Settings.YouTubeApiKey)
+        if api_key and self._category_combo_box.count() == 0:
+            self._update_categories()
+
     def _create_toolbar(self, h_layout: QHBoxLayout):
         h_layout.addWidget(QLabel(self.tr("Category:")))
         self._category_combo_box = QComboBox()
@@ -72,6 +78,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         self._region_combo_box.setToolTip(self.tr("Select the region to search trends"))
         for country in pycountry.countries:
             self._region_combo_box.addItem(country.name, country.alpha_2)
+        self._region_combo_box.setCurrentText("United States")
         h_layout.addWidget(self._region_combo_box)
         self._region_combo_box.currentIndexChanged.connect(self._update_categories)
         h_layout.addStretch(2)
@@ -107,7 +114,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         self._details_widget.clear()
         QApplication.instance().processEvents()
 
-        category_id = int(self._category_combo_box.currentData())
+        category_id = self._category_combo_box.currentData()
         if not category_id:
             QApplication.restoreOverrideCursor()
             self.setDisabled(False)
@@ -138,7 +145,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
             print("Request page limit is not set. Using '25' by default")
 
         engine = YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
-        if engine.trends(category_id, region_code):
+        if engine.trends(int(category_id), region_code):
             for i in range(len(self.model.result)):
                 video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
                 video_item = self.model.result[i]
