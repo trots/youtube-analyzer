@@ -623,18 +623,23 @@
         <translation>Выберите регион для поиска трендов</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="121"/>
+        <location filename="../youtubeanalyzer/trends.py" line="100"/>
+        <source>All</source>
+        <translation>Все</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/trends.py" line="122"/>
         <source>Unable to show trends. Video category is not selected.</source>
         <translation>Не удалось показать тренды. Не задана категория видео.</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="134"/>
+        <location filename="../youtubeanalyzer/trends.py" line="135"/>
         <source>Unable to show trends. YouTube API key is not set. 
                                                          Please set it in the preferences</source>
         <translation>Не удалось показать тренды. Не установлен ключ YouTube API. Пожалуйста, установите его в настройках</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="162"/>
+        <location filename="../youtubeanalyzer/trends.py" line="163"/>
         <source>Trends searching failed</source>
         <translation>Поиск по трендам завершился с ошибкой</translation>
     </message>
@@ -642,12 +647,12 @@
 <context>
     <name>TrendsWorkspaceFactory</name>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="177"/>
+        <location filename="../youtubeanalyzer/trends.py" line="178"/>
         <source>Trends</source>
         <translation>Тренды</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="178"/>
+        <location filename="../youtubeanalyzer/trends.py" line="179"/>
         <source>Search trends...</source>
         <translation>Поиск трендов...</translation>
     </message>
@@ -694,58 +699,76 @@
     <name>VideoDurationChart</name>
     <message>
         <location filename="../youtubeanalyzer/chart.py" line="106"/>
+        <source>30s</source>
+        <translation>30с</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/chart.py" line="107"/>
+        <source>1m</source>
+        <translation>1м</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/chart.py" line="108"/>
+        <source>3m</source>
+        <translation>3м</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/chart.py" line="109"/>
         <source>5m</source>
         <translation>5м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="107"/>
+        <location filename="../youtubeanalyzer/chart.py" line="110"/>
         <source>10m</source>
         <translation>10м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="108"/>
+        <location filename="../youtubeanalyzer/chart.py" line="111"/>
         <source>15m</source>
         <translation>15м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="109"/>
+        <location filename="../youtubeanalyzer/chart.py" line="112"/>
         <source>20m</source>
         <translation>20м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="110"/>
+        <location filename="../youtubeanalyzer/chart.py" line="113"/>
         <source>30m</source>
         <translation>30м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="111"/>
+        <location filename="../youtubeanalyzer/chart.py" line="114"/>
         <source>45m</source>
         <translation>45м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="112"/>
+        <location filename="../youtubeanalyzer/chart.py" line="115"/>
         <source>1h</source>
         <translation>1ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="113"/>
+        <location filename="../youtubeanalyzer/chart.py" line="116"/>
         <source>1,5h</source>
         <translation>1,5ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="114"/>
+        <location filename="../youtubeanalyzer/chart.py" line="117"/>
         <source>2h</source>
         <translation>2ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="115"/>
-        <source>3h</source>
-        <translation>3ч</translation>
+        <location filename="../youtubeanalyzer/chart.py" line="118"/>
+        <source>2+h</source>
+        <translation>2+ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="116"/>
+        <source>3h</source>
+        <translation type="vanished">3ч</translation>
+    </message>
+    <message>
         <source>3+h</source>
-        <translation>3+ч</translation>
+        <translation type="vanished">3+ч</translation>
     </message>
 </context>
 </TS>
