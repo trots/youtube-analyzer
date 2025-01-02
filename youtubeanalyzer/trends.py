@@ -53,7 +53,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
     def save_state(self):
         super().save_state()
         self._settings.set(Settings.TrendsRegion, self._region_combo_box.currentData())
-        if self._category_combo_box.currentData():
+        if self._category_combo_box.currentData() is not None:
             self._settings.set(Settings.TrendsVideoCategoryId, int(self._category_combo_box.currentData()))
 
     def get_data_name(self):
@@ -97,6 +97,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         categories = engine.get_video_categories(region_code, categories_lang)
         if len(categories) == 0:
             critial_detailed_message(self, app_name, self.tr("Unable to get video categories"), engine.errorDetails)
+        self._category_combo_box.addItem(self.tr("All"), 0)
         for category in categories:
             self._category_combo_box.addItem(category.text, category.id)
         if self._loaded_category_id is not None:
@@ -115,7 +116,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         QApplication.instance().processEvents()
 
         category_id = self._category_combo_box.currentData()
-        if not category_id:
+        if category_id is None:
             QApplication.restoreOverrideCursor()
             self.setDisabled(False)
             QMessageBox.critical(self, app_name, self.tr("Unable to show trends. Video category is not selected."))
