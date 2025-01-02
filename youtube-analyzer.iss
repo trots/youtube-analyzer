@@ -6,7 +6,7 @@
 #define MyAppPublisher "Alexander Trotsenko"
 #define MyAppURL "https://github.com/trots/youtube-analyzer"
 #define MyAppExeName "youtube-analyzer.exe"
-#define MyAppDistDir "youtube-analyzer.dist"
+#define MyAppDistDir "__main__.dist"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.

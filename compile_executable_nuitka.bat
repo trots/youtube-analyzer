@@ -1,8 +1,7 @@
-.venv\Scripts\python.exe -m nuitka --standalone --disable-console --include-package-data=googleapiclient --enable-plugin=pyside6 --windows-icon-from-ico=logo.png youtube-analyzer.py
+.venv\Scripts\python.exe -m nuitka --standalone --windows-console-mode=disable --include-package-data=googleapiclient --enable-plugin=pyside6 --include-module=PySide6.support.deprecated --windows-icon-from-ico=logo.png --output-filename=youtube-analyzer youtubeanalyzer/__main__.py
 
-copy logo.png youtube-analyzer.dist\logo.png
+copy logo.png __main__.dist\logo.png
 
 call compile_translations.bat
-mkdir youtube-analyzer.dist\translations
-copy translations\en.qm youtube-analyzer.dist\translations\en.qm
-copy translations\ru.qm youtube-analyzer.dist\translations\ru.qm
+mkdir __main__.dist\translations
+copy translations\ru.qm __main__.dist\translations\ru.qm
