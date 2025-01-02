@@ -56,6 +56,11 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         if self._category_combo_box.currentData():
             self._settings.set(Settings.TrendsVideoCategoryId, int(self._category_combo_box.currentData()))
 
+    def get_data_name(self):
+        category = self._category_combo_box.currentText()
+        region = self._region_combo_box.currentData()
+        return (category + " " + region + " trends") if category and region else ""
+
     def _create_toolbar(self, h_layout: QHBoxLayout):
         h_layout.addWidget(QLabel(self.tr("Category:")))
         self._category_combo_box = QComboBox()

@@ -147,7 +147,6 @@ class MainWindow(QMainWindow):
     def __init__(self, settings: Settings):
         super().__init__()
 
-        self._request_text = ""
         self._settings = settings
         self._restore_geometry_on_show = True
 
@@ -251,14 +250,16 @@ class MainWindow(QMainWindow):
 
     def _get_file_path_to_export(self, caption: str, filter: str, file_suffix: str):
         current_workspace = self._main_tab_widget.currentWidget().current_workspace()
-        request_text = current_workspace.request_text if current_workspace.request_text else "export"
+        data_name = current_workspace.get_data_name()
+        if not data_name:
+            data_name = "export"
         if not current_workspace or len(current_workspace.model.result) == 0:
             QMessageBox.warning(self, app_name, self.tr("There is no data to export"))
             return ""
 
         last_save_dir = self._settings.get(Settings.LastSaveDir)
         file_name = QFileDialog.getSaveFileName(self, caption=caption, filter=filter,
-                                                dir=(last_save_dir + "/" + request_text + file_suffix))
+                                                dir=(last_save_dir + "/" + data_name + file_suffix))
         if not file_name[0]:
             return ""
         self._settings.set(Settings.LastSaveDir, QFileInfo(file_name[0]).dir().absolutePath())

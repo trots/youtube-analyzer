@@ -494,6 +494,9 @@ class AbstractVideoTableWorkspace(QWidget):
         v_layout.addWidget(self._main_splitter)
         self.setLayout(v_layout)
 
+    def get_data_name(self):
+        raise "AbstractVideoTableWorkspace.get_data_name is not implemented"
+
     def load_state(self):
         request_limit = int(self._settings.get(Settings.RequestLimit))
         self._search_limit_spin_box.setValue(request_limit)
