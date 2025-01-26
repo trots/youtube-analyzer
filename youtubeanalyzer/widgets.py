@@ -583,5 +583,6 @@ class AbstractVideoTableWorkspace(QWidget):
         field = self.sender().data()
         index = self._table_view.currentIndex()
         if index:
+            source_index = self._sort_model.mapToSource(index)
             clipboard = QGuiApplication.clipboard()
-            clipboard.setText(str(self.model.get_field_data(index.row(), field)))
+            clipboard.setText(str(self.model.get_field_data(source_index.row(), field)))
