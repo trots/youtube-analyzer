@@ -340,6 +340,7 @@ class SearchLineEdit(QLineEdit):
         self.setToolTip(self.placeholderText())
         self.setClearButtonEnabled(True)
         self.textEdited.connect(self._on_text_changed)
+        self.returnPressed.connect(self._on_return_pressed)
 
         self._autocomplete_timer = QTimer()
         self._autocomplete_timer.setSingleShot(True)
@@ -356,6 +357,11 @@ class SearchLineEdit(QLineEdit):
 
     def _on_text_changed(self):
         self._autocomplete_timer.start()
+
+    def _on_return_pressed(self):
+        popup = self.completer().popup()
+        if popup:
+            popup.hide()
 
     def _on_editing_timeout(self):
         self._autocomplete_downloader.start_download(self.text())
