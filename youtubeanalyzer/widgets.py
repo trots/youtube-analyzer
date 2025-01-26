@@ -567,7 +567,8 @@ class AbstractVideoTableWorkspace(QWidget):
 
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if self._settings.get(Settings.AnalyticsFollowTableSelect):
-            self._analytics_widget.set_current_index(self._table_view.currentIndex())
+            index = self._sort_model.mapToSource(self._table_view.currentIndex())
+            self._analytics_widget.set_current_index(index)
 
     def _create_toolbar(self, h_layout: QHBoxLayout):
         raise "AbstractVideoTableWorkspace._create_toolbar is not implemented"
