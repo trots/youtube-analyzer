@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import traceback
 import isodate
+import requests
 from PySide6.QtCore import (
     QObject,
     Signal,
@@ -200,7 +201,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                             video["title"], video["publishedTime"], video_duration,
                             views, video["link"], channel_info["title"], channel_info["url"],
                             channel_subscribers, channel_views, channel_info["joinedDate"], preview_link, channel_logo_link,
-                            video_info["keywords"], video_duration_d, counter))
+                            video_info["keywords"], video_duration_d, counter, video["type"]))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -422,6 +423,17 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
 
         return video_response, channels
 
+    def _type(self, vid):
+        url = 'http://www.youtube.com/shorts/' + vid
+        ret = requests.get(url, timeout=100)
+        text = ret.text
+        urlshorts = "//www.youtube.com/shorts/"
+        if (text.find(urlshorts) > 0):
+            type = "shorts"
+        else:
+            type = "longs"
+        return type
+
     def _responce_item_to_result(self, responce_item, video_item, result_index, channels, publish_time_key, video_id_getter):
         search_snippet = responce_item["snippet"]
         content_details = video_item["contentDetails"]
@@ -444,7 +456,9 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
         video_snippet = video_item["snippet"]
         tags = video_snippet["tags"] if "tags" in video_snippet else None
+        video_type = self._type(video_id_getter(responce_item))
+
         return make_result_row(video_title, video_published_time, video_duration, views,
                                video_link, channel_title, channel_url, channel_subscribers,
                                channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
-                               video_duration_td, result_index + 1)
+                               video_duration_td, result_index + 1, video_type)

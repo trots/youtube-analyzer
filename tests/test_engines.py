@@ -30,7 +30,8 @@ class MockVideosSearch:
                     {
                         "url": "https://thumb_1.png"
                     }
-                ]
+                ],
+                "type": "shorts"
             })
         if request_limit > 1:
             self._result["result"].append({
@@ -49,7 +50,8 @@ class MockVideosSearch:
                     {
                         "url": "https://thumb_2.png"
                     }
-                ]
+                ],
+                "type": "shorts"
             })
 
     def next(self):
@@ -75,7 +77,8 @@ class MockVideosSearch:
                             {
                                 "url": "https://thumb_3.png"
                             }
-                        ]
+                        ],
+                        "type": "shorts"
                     }
                 ]
             }
@@ -116,7 +119,8 @@ class MockGrepEngine(YoutubeGrepEngine):
                 {
                     "url": "https://logo_1.png"
                 }
-            ]
+            ],
+            "type": "shorts"
         }
 
 
