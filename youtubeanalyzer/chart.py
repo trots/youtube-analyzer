@@ -234,8 +234,4 @@ class WordsPieChart(QChart):
         self.rebuild()
 
     def _on_slice_hovered(self, pie_slice, state):
-        row = self._current_index.row() if self._current_index is not None else None
-        channel_name = self._model.get_field_data(row, ResultFields.VideoTitle)
-        if pie_slice.label() == channel_name:
-            return
         pie_slice.setLabelVisible(state)
