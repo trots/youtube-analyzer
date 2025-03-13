@@ -235,3 +235,44 @@ class WordsPieChart(QChart):
 
     def _on_slice_hovered(self, pie_slice, state):
         pie_slice.setLabelVisible(state)
+
+
+class VideoTypeChart(QChart):
+    def __init__(self, model: ResultTableModel):
+        super().__init__()
+        self._current_index = None
+        self._model = model
+        self._model.modelReset.connect(self._on_model_reset)
+        self._series = QPieSeries()
+        self._series.setHoleSize(0.3)
+        self._series.hovered.connect(self._on_slice_hovered)
+        self.addSeries(self._series)
+        self._last_pen = None
+        self._last_brush = None
+        self.legend().setAlignment(Qt.AlignmentFlag.AlignLeft)
+
+    def rebuild(self):
+        self._series.clear()
+        if len(self._model.result) == 0:
+            return
+        count_result = len(self._model.result)
+        count_shorts = 0
+
+        for row in range(len(self._model.result)):
+            if (str(self._model.result[row][16]) == 'shorts'):
+                count_shorts += 1
+
+        count_longs = count_result - count_shorts
+        percent_shorts = round(count_shorts/count_result*100, 2)
+        percent_longs = 100 - percent_shorts
+        self._series.append('shorts' + ' (' + str(percent_shorts) + '%' + ')', count_shorts)
+        self._series.append('longs' + ' (' + str(percent_longs) + '%' + ')', count_longs)
+
+    def set_current_index(self, _index):
+        pass
+
+    def _on_model_reset(self):
+        self.rebuild()
+
+    def _on_slice_hovered(self, pie_slice, state):
+        pie_slice.setLabelVisible(state)
