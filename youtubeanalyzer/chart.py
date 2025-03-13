@@ -259,7 +259,7 @@ class VideoTypeChart(QChart):
         count_shorts = 0
 
         for row in range(len(self._model.result)):
-            if (str(self._model.result[row][16]) == 'shorts'):
+            if (str(self._model.result[row][ResultFields.VideoType]) == 'shorts'):
                 count_shorts += 1
 
         count_longs = count_result - count_shorts
