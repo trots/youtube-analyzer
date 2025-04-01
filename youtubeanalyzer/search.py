@@ -17,12 +17,8 @@ from youtubeanalyzer.engine import (
     YoutubeApiEngine,
     YoutubeGrepEngine
 )
-from youtubeanalyzer.model import (
-    ResultFields
-)
 from youtubeanalyzer.widgets import (
     critial_detailed_message,
-    create_link_label,
     SearchLineEdit,
     TabWorkspaceFactory,
     AbstractVideoTableWorkspace
@@ -62,16 +58,7 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
 
         engine = self._create_engine()
         if engine.search(self.request_text):
-            for i in range(len(self.model.result)):
-                video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
-                video_item = self.model.result[i]
-                video_label = create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
-                self._table_view.setIndexWidget(video_idx, video_label)
-
-                channel_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.ChannelTitle))
-                channel_label = create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
-                self._table_view.setIndexWidget(channel_idx, channel_label)
-
+            self._on_insert_widgets()
             self._table_view.resizeColumnsToContents()
         else:
             text = self.tr("Error in the searching process")

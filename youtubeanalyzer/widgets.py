@@ -6,7 +6,6 @@ from PySide6.QtCore import (
     QUrl,
     QTimer,
     QStringListModel,
-    QSortFilterProxyModel,
     QItemSelection
 )
 from PySide6.QtGui import (
@@ -34,7 +33,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QSpinBox,
     QTableView,
-    QSplitter
+    QSplitter,
+    QFrame
 )
 from PySide6.QtCharts import (
     QChartView,
@@ -53,6 +53,10 @@ from youtubeanalyzer.engine import (
 from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
+)
+from youtubeanalyzer.filters import (
+    ResultSortFilterProxyModel,
+    FiltersPanel
 )
 from youtubeanalyzer.chart import (
     ChannelsPieChart,
@@ -474,9 +478,28 @@ class AbstractVideoTableWorkspace(QWidget):
         h_layout.addWidget(self._search_button)
 
         self.model = ResultTableModel(self)
-        self._sort_model = QSortFilterProxyModel(self)
-        self._sort_model.setSortRole(ResultTableModel.SortRole)
+        self._sort_model = ResultSortFilterProxyModel(self)
         self._sort_model.setSourceModel(self.model)
+        self._sort_model.rowsInserted.connect(self._on_insert_widgets)
+        self._sort_model.rowsRemoved.connect(self._on_insert_widgets)
+
+        central_widget = QWidget()
+        central_widget.setLayout(QVBoxLayout())
+        central_widget.layout().setContentsMargins(0, 0, 0, 0)
+
+        tools_panel = QWidget()
+        tools_panel.setLayout(QHBoxLayout())
+        tools_panel.layout().setContentsMargins(0, 0, 0, 0)
+        filters_button = QPushButton(self.tr("Filters"))
+        filters_button.setCheckable(True)
+        filters_button.setChecked(True)
+        tools_panel.layout().addWidget(filters_button)
+        tools_panel.layout().addStretch()
+        central_widget.layout().addWidget(tools_panel)
+
+        filters_panel = FiltersPanel(self._sort_model)
+        filters_button.toggled.connect(filters_panel.setVisible)
+        central_widget.layout().addWidget(filters_panel)
 
         self._table_view = QTableView(self)
         self._table_view.setModel(self._sort_model)
@@ -515,6 +538,8 @@ class AbstractVideoTableWorkspace(QWidget):
         copy_view_subscribers_action.setData(ResultFields.ViewRate)
         copy_view_subscribers_action.triggered.connect(self._on_copy_action)
 
+        central_widget.layout().addWidget(self._table_view)
+
         self._side_tab_widget = QTabWidget()
 
         self._details_widget = VideoDetailsWidget(self.model, self)
@@ -530,7 +555,7 @@ class AbstractVideoTableWorkspace(QWidget):
         self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
 
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
-        self._main_splitter.addWidget(self._table_view)
+        self._main_splitter.addWidget(central_widget)
         self._main_splitter.addWidget(self._side_tab_widget)
         self._main_splitter.setCollapsible(0, False)
         self._main_splitter.setStretchFactor(0, 3)
@@ -538,6 +563,10 @@ class AbstractVideoTableWorkspace(QWidget):
 
         v_layout = QVBoxLayout()
         v_layout.addLayout(h_layout)
+        h_line = QFrame()
+        h_line.setFrameShape(QFrame.Shape.HLine)
+        h_line.setFrameShadow(QFrame.Shadow.Sunken)
+        v_layout.addWidget(h_line)
         v_layout.addWidget(self._main_splitter)
         self.setLayout(v_layout)
 
@@ -598,3 +627,16 @@ class AbstractVideoTableWorkspace(QWidget):
             source_index = self._sort_model.mapToSource(index)
             clipboard = QGuiApplication.clipboard()
             clipboard.setText(str(self.model.get_field_data(source_index.row(), field)))
+
+    def _on_insert_widgets(self):
+        for i in range(len(self.model.result)):
+            video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
+            widget = self._table_view.indexWidget(video_idx)
+            if not widget:
+                video_item = self.model.result[i]
+                video_label = create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
+                self._table_view.setIndexWidget(video_idx, video_label)
+
+                channel_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.ChannelTitle))
+                channel_label = create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
+                self._table_view.setIndexWidget(channel_idx, channel_label)

@@ -22,11 +22,7 @@ from youtubeanalyzer.settings import (
 from youtubeanalyzer.engine import (
     YoutubeApiEngine
 )
-from youtubeanalyzer.model import (
-    ResultFields
-)
 from youtubeanalyzer.widgets import (
-    create_link_label,
     critial_detailed_message,
     TabWorkspaceFactory,
     AbstractVideoTableWorkspace
@@ -146,16 +142,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
 
         engine = YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
         if engine.trends(int(category_id), region_code):
-            for i in range(len(self.model.result)):
-                video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
-                video_item = self.model.result[i]
-                video_label = create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
-                self._table_view.setIndexWidget(video_idx, video_label)
-
-                channel_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.ChannelTitle))
-                channel_label = create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
-                self._table_view.setIndexWidget(channel_idx, channel_label)
-
+            self._on_insert_widgets()
             self._table_view.resizeColumnsToContents()
         else:
             text = self.tr("Trends searching failed")

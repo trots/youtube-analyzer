@@ -439,7 +439,8 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         content_details = video_item["contentDetails"]
         statistics = video_item["statistics"]
         video_title = search_snippet["title"]
-        video_published_time = str(datetime.strptime(search_snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ"))
+        video_published_time = datetime.strptime(search_snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ")
+        video_published_time_str = video_published_time.strftime("%Y-%m-%d %H:%M:%S")
         video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
         video_duration = timedelta_to_str(video_duration_td)
         views = int(statistics["viewCount"])
@@ -458,7 +459,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         tags = video_snippet["tags"] if "tags" in video_snippet else None
         video_type = self._type(video_id_getter(responce_item))
 
-        return make_result_row(video_title, video_published_time, video_duration, views,
+        return make_result_row(video_title, video_published_time_str, video_duration, views,
                                video_link, channel_title, channel_url, channel_subscribers,
                                channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
                                video_duration_td, result_index + 1, video_type)
