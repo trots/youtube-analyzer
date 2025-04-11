@@ -47,6 +47,16 @@ class ResultSortFilterProxyModel(QSortFilterProxyModel):
                 return False
         return super().filterAcceptsRow(source_row, source_parent)
 
+    def has_data(self):
+        return self.rowCount() > 0
+
+    def get_field_data(self, proxy_row: int, result_field: ResultFields):
+        if proxy_row is None or proxy_row < 0 or proxy_row >= self.rowCount():
+            return None
+        proxy_index = self.index(proxy_row, 0)
+        source_index = self.mapToSource(proxy_index)
+        return self.sourceModel().result[source_index.row()][result_field] if source_index else None
+
 
 class AbstractFilterWidget(QWidget, AbstractFilter):
     def __init__(self, parent=None):

@@ -15,19 +15,23 @@ from PySide6.QtCharts import (
     QChart
 )
 from youtubeanalyzer.model import (
-    ResultFields,
-    ResultTableModel
+    ResultFields
+)
+from youtubeanalyzer.filters import (
+    ResultSortFilterProxyModel
 )
 import string
 import re
 
 
 class ChannelsPieChart(QChart):
-    def __init__(self, model: ResultTableModel):
+    def __init__(self, proxy_model: ResultSortFilterProxyModel):
         super().__init__()
         self._current_index = None
-        self._model = model
-        self._model.modelReset.connect(self._on_model_reset)
+        self._proxy_model = proxy_model
+        self._proxy_model.modelReset.connect(self._on_model_reset)
+        self._proxy_model.rowsRemoved.connect(self._on_model_reset)
+        self._proxy_model.rowsInserted.connect(self._on_model_reset)
         self._series = QPieSeries()
         self._series.setHoleSize(0.3)
         self._series.hovered.connect(self._on_slice_hovered)
@@ -38,10 +42,12 @@ class ChannelsPieChart(QChart):
 
     def rebuild(self):
         self._series.clear()
-        if len(self._model.result) == 0:
+        if self._proxy_model.rowCount() == 0:
             return
 
-        channel_names = [row[ResultFields.ChannelTitle] for row in self._model.result]
+        channel_names = [
+            self._proxy_model.get_field_data(row, ResultFields.ChannelTitle) for row in range(self._proxy_model.rowCount())
+        ]
         counter = Counter(channel_names)
         for name in counter:
             self._series.append(name, counter[name])
@@ -57,7 +63,7 @@ class ChannelsPieChart(QChart):
         if current_row == row:
             return
 
-        current_channel_name = self._model.get_field_data(current_row, ResultFields.ChannelTitle)
+        current_channel_name = self._proxy_model.get_field_data(current_row, ResultFields.ChannelTitle)
 
         if current_channel_name is not None:
             for slice in self._series.slices():
@@ -68,7 +74,7 @@ class ChannelsPieChart(QChart):
                     slice.setBrush(self._last_brush)
                     break
 
-        channel_name = self._model.get_field_data(row, ResultFields.ChannelTitle)
+        channel_name = self._proxy_model.get_field_data(row, ResultFields.ChannelTitle)
 
         if channel_name is not None:
             for slice in self._series.slices():
@@ -89,18 +95,20 @@ class ChannelsPieChart(QChart):
 
     def _on_slice_hovered(self, pie_slice, state):
         row = self._current_index.row() if self._current_index is not None else None
-        channel_name = self._model.get_field_data(row, ResultFields.ChannelTitle)
+        channel_name = self._proxy_model.get_field_data(row, ResultFields.ChannelTitle)
         if pie_slice.label() == channel_name:
             return
         pie_slice.setLabelVisible(state)
 
 
 class VideoDurationChart(QChart):
-    def __init__(self, model: ResultTableModel):
+    def __init__(self, proxy_model: ResultSortFilterProxyModel):
         super().__init__()
         self._current_index = None
-        self._model = model
-        self._model.modelReset.connect(self._on_model_reset)
+        self._proxy_model = proxy_model
+        self._proxy_model.modelReset.connect(self._on_model_reset)
+        self._proxy_model.rowsInserted.connect(self._on_model_reset)
+        self._proxy_model.rowsRemoved.connect(self._on_model_reset)
         self._bar_set = None
         self._categories = [
             [30, self.tr("30s"), 0],
@@ -125,12 +133,15 @@ class VideoDurationChart(QChart):
     def rebuild(self):
         self.removeAllSeries()
         self._bar_set = QBarSet("")
-        if len(self._model.result) == 0:
+        if self._proxy_model.rowCount() == 0:
             return
 
         for category in self._categories:
             category[2] = 0
-        durations_secs = [row[ResultFields.VideoDurationTimedelta].total_seconds() for row in self._model.result]
+        durations_secs = [
+            self._proxy_model.get_field_data(row, ResultFields.VideoDurationTimedelta).total_seconds()
+            for row in range(self._proxy_model.rowCount())
+        ]
 
         for i in range(len(durations_secs)):
             category_index = self._find_category_for_value(durations_secs[i])
@@ -147,11 +158,11 @@ class VideoDurationChart(QChart):
         if self._bar_set is not None:
             self._bar_set.deselectAllBars()
 
-        if index is None or not self._model.has_data():
+        if index is None or not self._proxy_model.has_data():
             return
 
         row = index.row()
-        duration = self._model.get_field_data(row, ResultFields.VideoDurationTimedelta)
+        duration = self._proxy_model.get_field_data(row, ResultFields.VideoDurationTimedelta)
 
         if duration is None:
             return
@@ -173,11 +184,13 @@ class VideoDurationChart(QChart):
 
 
 class WordsPieChart(QChart):
-    def __init__(self, model: ResultTableModel):
+    def __init__(self, proxy_model: ResultSortFilterProxyModel):
         super().__init__()
         self._current_index = None
-        self._model = model
-        self._model.modelReset.connect(self._on_model_reset)
+        self._proxy_model = proxy_model
+        self._proxy_model.modelReset.connect(self._on_model_reset)
+        self._proxy_model.rowsInserted.connect(self._on_model_reset)
+        self._proxy_model.rowsRemoved.connect(self._on_model_reset)
         self._series = QPieSeries()
         self._series.setHoleSize(0.3)
         self._series.hovered.connect(self._on_slice_hovered)
@@ -188,11 +201,11 @@ class WordsPieChart(QChart):
 
     def rebuild(self):
         self._series.clear()
-        if len(self._model.result) == 0:
+        if self._proxy_model.rowCount() == 0:
             return
         text_title = str('')
-        for row in range(len(self._model.result)):
-            text_title += str(self._model.result[row][0]) + ' '
+        for row in range(self._proxy_model.rowCount()):
+            text_title += str(self._proxy_model.get_field_data(row, ResultFields.VideoTitle)) + ' '
 
         for p in string.punctuation + '\n':
             if p in text_title:
@@ -238,11 +251,13 @@ class WordsPieChart(QChart):
 
 
 class VideoTypeChart(QChart):
-    def __init__(self, model: ResultTableModel):
+    def __init__(self, proxy_model: ResultSortFilterProxyModel):
         super().__init__()
         self._current_index = None
-        self._model = model
-        self._model.modelReset.connect(self._on_model_reset)
+        self._proxy_model = proxy_model
+        self._proxy_model.modelReset.connect(self._on_model_reset)
+        self._proxy_model.rowsInserted.connect(self._on_model_reset)
+        self._proxy_model.rowsRemoved.connect(self._on_model_reset)
         self._series = QPieSeries()
         self._series.setHoleSize(0.3)
         self._series.hovered.connect(self._on_slice_hovered)
@@ -253,13 +268,13 @@ class VideoTypeChart(QChart):
 
     def rebuild(self):
         self._series.clear()
-        if len(self._model.result) == 0:
+        count_result = self._proxy_model.rowCount()
+        if count_result == 0:
             return
-        count_result = len(self._model.result)
         count_shorts = 0
 
-        for row in range(len(self._model.result)):
-            if (str(self._model.result[row][ResultFields.VideoType]) == 'shorts'):
+        for row in range(self._proxy_model.rowCount()):
+            if (str(self._proxy_model.get_field_data(row, ResultFields.VideoType)) == 'shorts'):
                 count_shorts += 1
 
         count_longs = count_result - count_shorts

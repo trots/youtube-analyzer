@@ -280,9 +280,8 @@ class VideoDetailsWidget(QWidget):
 
 
 class AnalyticsWidget(QWidget):
-    def __init__(self, model: ResultTableModel, parent: QWidget = None):
+    def __init__(self, proxy_model: ResultSortFilterProxyModel, parent: QWidget = None):
         super().__init__(parent)
-        self._model = model
         self._current_index_following = True
         self._charts = []
 
@@ -302,16 +301,16 @@ class AnalyticsWidget(QWidget):
         self._chart_view.setRenderHint(QPainter.Antialiasing)
         main_layout.addWidget(self._chart_view)
 
-        channels_pie_chart = ChannelsPieChart(model)
+        channels_pie_chart = ChannelsPieChart(proxy_model)
         self._charts.append(channels_pie_chart)
 
-        video_duration_chart = VideoDurationChart(model)
+        video_duration_chart = VideoDurationChart(proxy_model)
         self._charts.append(video_duration_chart)
 
-        words_pie_chart = WordsPieChart(model)
+        words_pie_chart = WordsPieChart(proxy_model)
         self._charts.append(words_pie_chart)
 
-        video_type_chart = VideoTypeChart(model)
+        video_type_chart = VideoTypeChart(proxy_model)
         self._charts.append(video_type_chart)
 
         self._chart_view.setChart(channels_pie_chart)
@@ -545,7 +544,7 @@ class AbstractVideoTableWorkspace(QWidget):
         self._details_widget = VideoDetailsWidget(self.model, self)
         self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
 
-        self._analytics_widget = AnalyticsWidget(self.model, self)
+        self._analytics_widget = AnalyticsWidget(self._sort_model, self)
         self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if int(self._settings.get(Settings.Theme)) == Theme.Dark:
@@ -601,8 +600,7 @@ class AbstractVideoTableWorkspace(QWidget):
 
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if self._settings.get(Settings.AnalyticsFollowTableSelect):
-            index = self._sort_model.mapToSource(self._table_view.currentIndex())
-            self._analytics_widget.set_current_index(index)
+            self._analytics_widget.set_current_index(self._table_view.currentIndex())
 
     def _create_toolbar(self, h_layout: QHBoxLayout):
         raise "AbstractVideoTableWorkspace._create_toolbar is not implemented"
@@ -611,11 +609,11 @@ class AbstractVideoTableWorkspace(QWidget):
         raise "AbstractVideoTableWorkspace._on_search_clicked is not implemented"
 
     def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
-        indexes = current.indexes()
-        if len(indexes) > 0:
-            index = self._sort_model.mapToSource(indexes[0])
-            self._details_widget.set_current_index(index)
-            self._analytics_widget.set_current_index(index)
+        proxy_indexes = current.indexes()
+        if len(proxy_indexes) > 0:
+            source_index = self._sort_model.mapToSource(proxy_indexes[0])
+            self._details_widget.set_current_index(source_index)
+            self._analytics_widget.set_current_index(proxy_indexes[0])
         else:
             self._details_widget.set_current_index(None)
             self._analytics_widget.set_current_index(None)
