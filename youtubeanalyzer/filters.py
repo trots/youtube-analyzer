@@ -3,6 +3,7 @@ from datetime import (
     timedelta
 )
 from PySide6.QtCore import (
+    QModelIndex,
     QSortFilterProxyModel
 )
 from PySide6.QtWidgets import (
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout
 )
 from youtubeanalyzer.model import (
+    PublishedDateFormat,
     ResultFields,
     ResultTableModel
 )
@@ -41,7 +43,7 @@ class ResultSortFilterProxyModel(QSortFilterProxyModel):
         self._filters.append(filter)
         self.invalidateFilter()
 
-    def filterAcceptsRow(self, source_row, source_parent):
+    def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex):
         for filter in self._filters:
             if not filter.filter_accepts_row(source_row, source_parent):
                 return False
@@ -64,12 +66,13 @@ class AbstractFilterWidget(QWidget, AbstractFilter):
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
-        self._clear_button = QToolButton()
-        self._clear_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarCloseButton))
-        self._clear_button.setAutoRaise(True)
-        self.layout().addWidget(self._clear_button)
+        self._reset_button = QToolButton()
+        self._reset_button.setToolTip(self.tr("Reset the filter"))
+        self._reset_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_TitleBarCloseButton))
+        self._reset_button.setAutoRaise(True)
+        self.layout().addWidget(self._reset_button)
 
-    def _set_control(self, control_widget):
+    def _set_control(self, control_widget: QWidget):
         self.layout().insertWidget(0, control_widget)
 
 
@@ -85,6 +88,7 @@ class PublishedDateFilterWidget(AbstractFilterWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._published_date_filter_combo = QComboBox()
+        self._published_date_filter_combo.setToolTip(self.tr("Select table filtering by video publication time"))
         self._published_date_filter_combo.setPlaceholderText(self.tr("Any published time"))
         self._published_date_filter_combo.addItem(self.tr("Last day"))
         self._published_date_filter_combo.addItem(self.tr("Last week"))
@@ -95,16 +99,19 @@ class PublishedDateFilterWidget(AbstractFilterWidget):
         self._published_date_filter_combo.addItem(self.tr("Last 3 years"))
         self._published_date_filter_combo.currentIndexChanged.connect(self._on_current_index_changed)
         self._set_control(self._published_date_filter_combo)
-        self._clear_button.clicked.connect(lambda: self._published_date_filter_combo.setCurrentIndex(-1))
+        self._reset_button.clicked.connect(lambda: self._published_date_filter_combo.setCurrentIndex(-1))
 
-    def filter_accepts_row(self, source_row, source_parent):
+    def filter_accepts_row(self, source_row: int, source_parent: QModelIndex):
         filter_type = self._published_date_filter_combo.currentIndex()
         if filter_type < 0:
             return True
 
         source_model: ResultTableModel = self._model.sourceModel()
         published_date_str = source_model.get_field_data(source_row, ResultFields.VideoPublishedTime)
-        published_date = datetime.strptime(published_date_str, "%Y-%m-%d %H:%M:%S")
+        if not published_date_str:
+            return True
+
+        published_date = datetime.strptime(published_date_str, PublishedDateFormat)
         if filter_type == PublishedDateFilterWidget.LastDay:
             past_date = datetime.now() - timedelta(days=1)
         elif filter_type == PublishedDateFilterWidget.LastWeek:
