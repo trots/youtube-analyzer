@@ -5,6 +5,9 @@ from PySide6.QtCore import (
 )
 
 
+PublishedDateFormat: str = "%Y-%m-%d %H:%M:%S"
+
+
 def make_result_row(video_title: str, video_published_time: str, video_duration: str,
                     views: int, video_link: str, channel_title: str, channel_link: str,
                     channel_subscribers: int, channel_views: int, channel_joined_date: str,

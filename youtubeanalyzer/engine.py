@@ -23,6 +23,7 @@ from youtubesearchpython import (
 )
 import googleapiclient.discovery
 from youtubeanalyzer.model import (
+    PublishedDateFormat,
     make_result_row,
     ResultFields,
     ResultTableModel,
@@ -440,7 +441,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         statistics = video_item["statistics"]
         video_title = search_snippet["title"]
         video_published_time = datetime.strptime(search_snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ")
-        video_published_time_str = video_published_time.strftime("%Y-%m-%d %H:%M:%S")
+        video_published_time_str = video_published_time.strftime(PublishedDateFormat)
         video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
         video_duration = timedelta_to_str(video_duration_td)
         views = int(statistics["viewCount"])

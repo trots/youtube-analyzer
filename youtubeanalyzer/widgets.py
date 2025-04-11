@@ -490,6 +490,9 @@ class AbstractVideoTableWorkspace(QWidget):
         tools_panel.setLayout(QHBoxLayout())
         tools_panel.layout().setContentsMargins(0, 0, 0, 0)
         filters_button = QPushButton(self.tr("Filters"))
+        filters_button.toggled.connect(lambda checked:
+                                       filters_button.setToolTip(self.tr("Hide filters panel")) if checked else
+                                       filters_button.setToolTip(self.tr("Show filters panel")))
         filters_button.setCheckable(True)
         filters_button.setChecked(True)
         tools_panel.layout().addWidget(filters_button)
