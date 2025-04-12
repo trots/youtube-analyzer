@@ -19,6 +19,10 @@ from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
 )
+from youtubeanalyzer.settings import (
+    Settings,
+    StateSaveable
+)
 
 
 class AbstractFilter:
@@ -60,9 +64,10 @@ class ResultSortFilterProxyModel(QSortFilterProxyModel):
         return self.sourceModel().result[source_index.row()][result_field] if source_index else None
 
 
-class AbstractFilterWidget(QWidget, AbstractFilter):
-    def __init__(self, parent=None):
+class AbstractFilterWidget(QWidget, AbstractFilter, StateSaveable):
+    def __init__(self, settings: Settings, parent=None):
         super().__init__(parent)
+        self._settings = settings
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
@@ -77,33 +82,33 @@ class AbstractFilterWidget(QWidget, AbstractFilter):
 
 
 class PublishedDateFilterWidget(AbstractFilterWidget):
-    LastDay = 0
-    LastWeek = 1
-    LastMonth = 2
-    LastHalfYear = 3
-    LastYear = 4
-    LastTwoYears = 5
-    LastThreeYears = 6
+    LastDay = "d"
+    LastWeek = "w"
+    LastMonth = "m"
+    LastHalfYear = "hy"
+    LastYear = "y"
+    LastTwoYears = "y2"
+    LastThreeYears = "y3"
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, settings: Settings, parent=None):
+        super().__init__(settings, parent)
         self._published_date_filter_combo = QComboBox()
         self._published_date_filter_combo.setToolTip(self.tr("Select table filtering by video publication time"))
         self._published_date_filter_combo.setPlaceholderText(self.tr("Any published time"))
-        self._published_date_filter_combo.addItem(self.tr("Last day"))
-        self._published_date_filter_combo.addItem(self.tr("Last week"))
-        self._published_date_filter_combo.addItem(self.tr("Last month"))
-        self._published_date_filter_combo.addItem(self.tr("Last 6 months"))
-        self._published_date_filter_combo.addItem(self.tr("Last year"))
-        self._published_date_filter_combo.addItem(self.tr("Last 2 years"))
-        self._published_date_filter_combo.addItem(self.tr("Last 3 years"))
+        self._published_date_filter_combo.addItem(self.tr("Last day"), PublishedDateFilterWidget.LastDay)
+        self._published_date_filter_combo.addItem(self.tr("Last week"), PublishedDateFilterWidget.LastWeek)
+        self._published_date_filter_combo.addItem(self.tr("Last month"), PublishedDateFilterWidget.LastMonth)
+        self._published_date_filter_combo.addItem(self.tr("Last 6 months"), PublishedDateFilterWidget.LastHalfYear)
+        self._published_date_filter_combo.addItem(self.tr("Last year"), PublishedDateFilterWidget.LastYear)
+        self._published_date_filter_combo.addItem(self.tr("Last 2 years"), PublishedDateFilterWidget.LastTwoYears)
+        self._published_date_filter_combo.addItem(self.tr("Last 3 years"), PublishedDateFilterWidget.LastThreeYears)
         self._published_date_filter_combo.currentIndexChanged.connect(self._on_current_index_changed)
         self._set_control(self._published_date_filter_combo)
         self._reset_button.clicked.connect(lambda: self._published_date_filter_combo.setCurrentIndex(-1))
 
     def filter_accepts_row(self, source_row: int, source_parent: QModelIndex):
-        filter_type = self._published_date_filter_combo.currentIndex()
-        if filter_type < 0:
+        filter_type = self._published_date_filter_combo.currentData()
+        if not filter_type:
             return True
 
         source_model: ResultTableModel = self._model.sourceModel()
@@ -128,17 +133,36 @@ class PublishedDateFilterWidget(AbstractFilterWidget):
             past_date = datetime.now() - timedelta(days=1095)
         return published_date > past_date
 
+    def load_state(self):
+        index = self._published_date_filter_combo.findData(self._settings.get(Settings.PublishedTimeFilter))
+        self._published_date_filter_combo.setCurrentIndex(index)
+
+    def save_state(self):
+        self._settings.set(Settings.PublishedTimeFilter, self._published_date_filter_combo.currentData())
+
     def _on_current_index_changed(self, _):
         self._model.invalidateFilter()
 
 
-class FiltersPanel(QGroupBox):
-    def __init__(self, model: ResultSortFilterProxyModel, parent=None):
+class FiltersPanel(QGroupBox, StateSaveable):
+    def __init__(self, settings: Settings, model: ResultSortFilterProxyModel, parent=None):
         super().__init__(parent)
+        self._filter_widgets: list[AbstractFilterWidget] = []
+
         filters_layout = QHBoxLayout()
 
-        publised_date_filter = PublishedDateFilterWidget()
+        publised_date_filter = PublishedDateFilterWidget(settings)
         model.add_filter(publised_date_filter)
         filters_layout.addWidget(publised_date_filter)
+        self._filter_widgets.append(publised_date_filter)
+
         filters_layout.addStretch()
         self.setLayout(filters_layout)
+
+    def load_state(self):
+        for filter_widget in self._filter_widgets:
+            filter_widget.load_state()
+
+    def save_state(self):
+        for filter_widget in self._filter_widgets:
+            filter_widget.save_state()
