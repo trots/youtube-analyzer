@@ -205,7 +205,6 @@ class MainWindow(QMainWindow, StateSaveable):
             self.load_state()
 
     def closeEvent(self, event):
-        global app_need_restart
         if not app_need_restart and not int(self._settings.get(Settings.DontAskAgainExit)):
             question = DontAskAgainQuestionDialog(app_name, self.tr("Exit?"))
             if question.exec() == QMessageBox.StandardButton.No:
