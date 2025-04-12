@@ -50,6 +50,8 @@ class Settings:
     TrendsRegion = SettingsKey("trends_region", "US")
     TrendsVideoCategoryId = SettingsKey("trends_video_category_id", 0)
     RequestPageLimit = SettingsKey("request_page_limit", 25)
+    FiltersVisible = SettingsKey("filters", True)
+    PublishedTimeFilter = SettingsKey("published_time_filter", "")
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
@@ -103,6 +105,14 @@ class Settings:
             self.set(Settings.ActiveTabIndex, 0)
 
         self.set(Settings.Version, CurrentSettingsVersion)
+
+
+class StateSaveable():
+    def load_state(self):
+        raise "StateSaveable.load_state not implemented"
+
+    def save_state(self):
+        raise "StateSaveable.save_state not implemented"
 
 
 class GeneralTab(QWidget):

@@ -38,6 +38,7 @@ from youtubeanalyzer.theme import (
 )
 from youtubeanalyzer.settings import (
     Settings,
+    StateSaveable,
     SettingsDialog
 )
 from youtubeanalyzer.widgets import (
@@ -143,7 +144,7 @@ class AuthorsDialog(QDialog):
         self.setLayout(layout)
 
 
-class MainWindow(QMainWindow):
+class MainWindow(QMainWindow, StateSaveable):
     def __init__(self, settings: Settings):
         super().__init__()
 
@@ -201,20 +202,7 @@ class MainWindow(QMainWindow):
 
     def showEvent(self, _event: QShowEvent):
         if self._restore_geometry_on_show:
-            # Restore window geometry
-            geometry = self._settings.get(Settings.MainWindowGeometry)
-            if not geometry.isEmpty():
-                self.restoreGeometry(geometry)
-
-            tabs_count = self._settings.begin_read_array(Settings.MainTabsArray)
-            for tab_index in range(tabs_count):
-                self._settings.set_array_index(tab_index)
-                tab_widget = self._main_tab_widget.widget(0) if tab_index == 0 else self._create_new_tab()
-                tab_widget.load_state()
-            self._settings.end_array()
-            current_tab_index = int(self._settings.get(Settings.ActiveTabIndex))
-            self._main_tab_widget.setCurrentIndex(current_tab_index)
-            self._restore_geometry_on_show = False
+            self.load_state()
 
     def closeEvent(self, event):
         global app_need_restart
@@ -227,6 +215,21 @@ class MainWindow(QMainWindow):
 
         event.accept()
         self.save_state()
+
+    def load_state(self):
+        geometry = self._settings.get(Settings.MainWindowGeometry)
+        if not geometry.isEmpty():
+            self.restoreGeometry(geometry)
+
+        tabs_count = self._settings.begin_read_array(Settings.MainTabsArray)
+        for tab_index in range(tabs_count):
+            self._settings.set_array_index(tab_index)
+            tab_widget = self._main_tab_widget.widget(0) if tab_index == 0 else self._create_new_tab()
+            tab_widget.load_state()
+        self._settings.end_array()
+        current_tab_index = int(self._settings.get(Settings.ActiveTabIndex))
+        self._main_tab_widget.setCurrentIndex(current_tab_index)
+        self._restore_geometry_on_show = False
 
     def save_state(self):
         self._settings.set(Settings.MainWindowGeometry, self.saveGeometry())

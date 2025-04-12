@@ -44,7 +44,8 @@ from youtubeanalyzer.theme import (
     Theme
 )
 from youtubeanalyzer.settings import (
-    Settings
+    Settings,
+    StateSaveable
 )
 from youtubeanalyzer.engine import (
     ImageDownloader,
@@ -392,7 +393,7 @@ class TabWorkspaceFactory(QObject):
         raise "Not implemented"
 
 
-class TabWidget(QWidget):
+class TabWidget(QWidget, StateSaveable):
     workspace_factories = []
 
     def __init__(self, settings: Settings, parent_tab_widget: QTabWidget, parent: QWidget = None):
@@ -456,7 +457,7 @@ class TabWidget(QWidget):
         self.create_workspace(workspace_index)
 
 
-class AbstractVideoTableWorkspace(QWidget):
+class AbstractVideoTableWorkspace(QWidget, StateSaveable):
     def __init__(self, settings: Settings, parent: QWidget = None):
         super().__init__(parent)
 
@@ -489,19 +490,20 @@ class AbstractVideoTableWorkspace(QWidget):
         tools_panel = QWidget()
         tools_panel.setLayout(QHBoxLayout())
         tools_panel.layout().setContentsMargins(0, 0, 0, 0)
-        filters_button = QPushButton(self.tr("Filters"))
-        filters_button.toggled.connect(lambda checked:
-                                       filters_button.setToolTip(self.tr("Hide filters panel")) if checked else
-                                       filters_button.setToolTip(self.tr("Show filters panel")))
-        filters_button.setCheckable(True)
-        filters_button.setChecked(True)
-        tools_panel.layout().addWidget(filters_button)
+        self._filters_button = QPushButton(self.tr("Filters"))
+        self._filters_button.toggled.connect(lambda checked:
+                                             self._filters_button.setToolTip(self.tr("Hide filters panel")) if checked else
+                                             self._filters_button.setToolTip(self.tr("Show filters panel")))
+        self._filters_button.setCheckable(True)
+        self._filters_button.setChecked(self._settings.get(Settings.FiltersVisible))
+        tools_panel.layout().addWidget(self._filters_button)
         tools_panel.layout().addStretch()
         central_widget.layout().addWidget(tools_panel)
 
-        filters_panel = FiltersPanel(self._sort_model)
-        filters_button.toggled.connect(filters_panel.setVisible)
-        central_widget.layout().addWidget(filters_panel)
+        self._filters_panel = FiltersPanel(self._settings, self._sort_model)
+        self._filters_panel.setVisible(self._filters_button.isChecked())
+        self._filters_button.toggled.connect(self._filters_panel.setVisible)
+        central_widget.layout().addWidget(self._filters_panel)
 
         self._table_view = QTableView(self)
         self._table_view.setModel(self._sort_model)
@@ -578,15 +580,19 @@ class AbstractVideoTableWorkspace(QWidget):
     def load_state(self):
         request_limit = int(self._settings.get(Settings.RequestLimit))
         self._search_limit_spin_box.setValue(request_limit)
+
         # Restore main splitter
         splitter_state = self._settings.get(Settings.MainSplitterState)
         if splitter_state and not splitter_state.isEmpty():
             self._main_splitter.restoreState(splitter_state)
+
         # Restore main table
         table_header_state = self._settings.get(Settings.MainTableHeaderState)
         if not table_header_state.isEmpty():
             self._table_view.horizontalHeader().restoreState(table_header_state)
         self._table_view.resizeColumnsToContents()
+
+        self._filters_panel.load_state()
 
     def save_state(self):
         self._settings.set(Settings.RequestLimit, self._search_limit_spin_box.value())
@@ -594,6 +600,8 @@ class AbstractVideoTableWorkspace(QWidget):
         self._settings.set(Settings.MainTableHeaderState, self._table_view.horizontalHeader().saveState())
         self._settings.set(Settings.MainSplitterState, self._main_splitter.saveState())
         self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+        self._settings.set(Settings.FiltersVisible, self._filters_button.isChecked())
+        self._filters_panel.save_state()
 
     def handle_preferences_change(self):
         if int(self._settings.get(Settings.Theme)) == Theme.Dark:
