@@ -10,7 +10,8 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QIcon,
-    QShowEvent
+    QShowEvent,
+    QShortcut
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -172,6 +173,7 @@ class MainWindow(QMainWindow, StateSaveable):
 
         window_menu = self.menuBar().addMenu(self.tr("Window"))
         add_new_tab_action = window_menu.addAction(self.tr("Create a new tab"))
+        add_new_tab_action.setShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_N))
         add_new_tab_action.triggered.connect(self._create_new_tab)
 
         help_menu = self.menuBar().addMenu(self.tr("Help"))
@@ -186,6 +188,7 @@ class MainWindow(QMainWindow, StateSaveable):
         self._main_tab_widget.setTabsClosable(True)
         self._main_tab_widget.tabCloseRequested.connect(self._on_close_tab_requested)
         v_layout.addWidget(self._main_tab_widget)
+        self._close_tab_shortcut = QShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_W), self, self._on_close_tab_action)
 
         add_new_tab_button = QToolButton()
         add_new_tab_button.setFixedHeight(20)
@@ -249,6 +252,10 @@ class MainWindow(QMainWindow, StateSaveable):
     def _on_close_tab_requested(self, index):
         if self._main_tab_widget.count() > 1:
             self._main_tab_widget.removeTab(index)
+
+    def _on_close_tab_action(self):
+        if self._main_tab_widget.count() > 1:
+            self._main_tab_widget.removeTab(self._main_tab_widget.currentIndex())
 
     def _get_file_path_to_export(self, caption: str, filter: str, file_suffix: str):
         current_workspace = self._main_tab_widget.currentWidget().current_workspace()
