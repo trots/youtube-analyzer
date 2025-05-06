@@ -56,6 +56,9 @@ from youtubeanalyzer.export import (
     export_to_csv,
     export_to_html
 )
+from youtubeanalyzer.plugins import (
+    PluginManager
+)
 
 
 app_need_restart = False
@@ -345,16 +348,28 @@ TabWidget.workspace_factories.append(SearchWorkspaceFactory())
 TabWidget.workspace_factories.append(TrendsWorkspaceFactory())
 # ^^^ Don't change the factories order. Append new factories to the end of list
 
+plugin_manager = PluginManager()
+plugin_manager.load_plugins()
+for plugin in plugin_manager.get_plugins():
+    plugin.initialize()
+
 while True:
-    my_translator = QTranslator()
-    qt_translator = QTranslator()
+    app_translator: QTranslator = QTranslator()
+    qt_translator: QTranslator = QTranslator()
+    plugin_translators: list[QTranslator] = []
     if settings.get(Settings.Language) == "Ru":
         my_lang = "translations/ru.qm"
         qt_lang = "qtbase_ru.qm"
-        if my_translator.load(my_lang):
-            app.installTranslator(my_translator)
+        if app_translator.load(my_lang):
+            app.installTranslator(app_translator)
         if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
             app.installTranslator(qt_translator)
+        for plugin in plugin_manager.get_plugins():
+            plugin_lang = "translations/" + plugin.name() + "_ru.qm"
+            plugin_translator = QTranslator()
+            if plugin_translator.load(plugin_lang):
+                app.installTranslator(plugin_translator)
+                plugin_translators.append(plugin_translator)
 
     window = MainWindow(settings)
     window.resize(app.screens()[0].size() * 0.7)
@@ -363,7 +378,9 @@ while True:
 
     if app_need_restart:
         app_need_restart = False
-        app.removeTranslator(my_translator)
+        app.removeTranslator(app_translator)
         app.removeTranslator(qt_translator)
+        for plugin_translator in plugin_translators:
+            app.removeTranslator(plugin_translator)
     else:
         break

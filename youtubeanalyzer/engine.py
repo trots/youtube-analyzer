@@ -6,7 +6,8 @@ from PySide6.QtCore import (
     QObject,
     Signal,
     QUrl,
-    QJsonDocument
+    QJsonDocument,
+    QTimer
 )
 from PySide6.QtGui import (
     QImage
@@ -123,12 +124,21 @@ class SearchAutocompleteDownloader(QObject):
         self._manager = QNetworkAccessManager()
         self._manager.finished.connect(self._handle_finished)
         self._data = []
+        self._delay_timer = QTimer()
+        self._delay_timer.setSingleShot(True)
+        self._delay_timer.setInterval(200)
+        self._delay_timer.timeout.connect(lambda: self.start_download(self._delayed_query))
+        self._delayed_query = ""
 
     def start_download(self, query: str):
         url = "http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=" + query
         self._data.clear()
         self._manager.clearConnectionCache()
         self._manager.get(QNetworkRequest(url))
+
+    def start_download_delayed(self, query: str):
+        self._delayed_query = query
+        self._delay_timer.start()
 
     def _handle_finished(self, reply: QNetworkReply):
         if reply.error() != QNetworkReply.NoError:
