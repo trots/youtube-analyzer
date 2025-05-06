@@ -351,11 +351,6 @@ class SearchLineEdit(QLineEdit):
         self.textEdited.connect(self._on_text_changed)
         self.returnPressed.connect(self._on_return_pressed)
 
-        self._autocomplete_timer = QTimer()
-        self._autocomplete_timer.setSingleShot(True)
-        self._autocomplete_timer.setInterval(200)
-        self._autocomplete_timer.timeout.connect(self._on_editing_timeout)
-
         self._autocomplete_model = QStringListModel()
         completer = QCompleter(self._autocomplete_model)
         completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
@@ -365,15 +360,12 @@ class SearchLineEdit(QLineEdit):
         self._autocomplete_downloader.finished.connect(self._on_autocomplete_downloaded)
 
     def _on_text_changed(self):
-        self._autocomplete_timer.start()
+        self._autocomplete_downloader.start_download_delayed(self.text())
 
     def _on_return_pressed(self):
         popup = self.completer().popup()
         if popup:
             popup.hide()
-
-    def _on_editing_timeout(self):
-        self._autocomplete_downloader.start_download(self.text())
 
     def _on_autocomplete_downloaded(self, autocomplete_list):
         self._autocomplete_model.setStringList(autocomplete_list)
@@ -426,7 +418,8 @@ class TabWidget(QWidget, StateSaveable):
         workspace_index = int(self._settings.get(Settings.TabWorkspaceIndex))
         if workspace_index >= 0:
             workspace_widget = self.create_workspace(workspace_index)
-            workspace_widget.load_state()
+            if workspace_widget:
+                workspace_widget.load_state()
 
     def save_state(self):
         self._settings.set(Settings.TabWorkspaceIndex, self._current_workspace_index)
@@ -441,7 +434,7 @@ class TabWidget(QWidget, StateSaveable):
 
     def create_workspace(self, workspace_index):
         if workspace_index < 0 or workspace_index >= len(TabWidget.workspace_factories):
-            return
+            return None
         factory = TabWidget.workspace_factories[workspace_index]
         workspace_widget = factory.create_workspace_widget(self._settings, self)
         self._main_stacked_layout.addWidget(workspace_widget)

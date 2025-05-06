@@ -61,7 +61,7 @@ Source: "{#MyAppDistDir}\msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\pyexpat.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\pyside6.abi3.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\python3.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyAppDistDir}\python311.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyAppDistDir}\python312.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\qt6charts.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\qt6core.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\qt6gui.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -76,6 +76,7 @@ Source: "{#MyAppDistDir}\shiboken6.abi3.dll"; DestDir: "{app}"; Flags: ignorever
 Source: "{#MyAppDistDir}\unicodedata.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyAppDistDir}\plugins\*.pyd"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\certifi\*"; DestDir: "{app}\certifi"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\charset_normalizer\*"; DestDir: "{app}\charset_normalizer"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\googleapiclient\*"; DestDir: "{app}\googleapiclient"; Flags: ignoreversion recursesubdirs createallsubdirs
