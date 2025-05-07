@@ -222,6 +222,7 @@ class MainWindow(QMainWindow, StateSaveable):
         v_layout = QVBoxLayout()
 
         self._main_tab_widget = QTabWidget()
+        self._main_tab_widget.setMovable(True)
         self._main_tab_widget.setTabsClosable(True)
         self._main_tab_widget.tabCloseRequested.connect(self._on_close_tab_requested)
         v_layout.addWidget(self._main_tab_widget)
