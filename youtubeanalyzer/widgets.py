@@ -375,6 +375,9 @@ class TabWorkspaceFactory(QObject):
     def __init__(self, parent: QObject = None):
         super().__init__(parent)
 
+    def get_uid(self) -> str:
+        raise "Not implemented"
+
     def get_workspace_name(self) -> str:
         raise "Not implemented"
 
@@ -386,13 +389,17 @@ class TabWorkspaceFactory(QObject):
 
 
 class TabWidget(QWidget, StateSaveable):
-    workspace_factories = []
+    workspace_factories: dict[str, TabWorkspaceFactory] = {}
+
+    @staticmethod
+    def add_workspace_factory(factory: TabWorkspaceFactory):
+        TabWidget.workspace_factories[factory.get_uid()] = factory
 
     def __init__(self, settings: Settings, parent_tab_widget: QTabWidget, parent: QWidget = None):
         super().__init__(parent)
         self._settings = settings
         self._parent_tab_widget = parent_tab_widget
-        self._current_workspace_index = -1
+        self._current_workspace_uid = None
 
         self._main_stacked_layout = QStackedLayout()
 
@@ -405,9 +412,9 @@ class TabWidget(QWidget, StateSaveable):
         self.setLayout(self._main_stacked_layout)
 
         self._main_layout.addStretch()
-        for workspace_factory in TabWidget.workspace_factories:
-            workspace_button = workspace_factory.create_workspace_button()
-            workspace_button.clicked.connect(self._create_workspace)
+        for uid, factory in TabWidget.workspace_factories.items():
+            workspace_button = factory.create_workspace_button()
+            workspace_button.clicked.connect(lambda state=None, uid=uid: self.create_workspace(uid))
             self._main_layout.addWidget(workspace_button, alignment=Qt.AlignmentFlag.AlignCenter)
         self._main_layout.addStretch()
 
@@ -415,15 +422,15 @@ class TabWidget(QWidget, StateSaveable):
         return self._main_stacked_layout.currentWidget() if self._main_stacked_layout.currentIndex() == 1 else None
 
     def load_state(self):
-        workspace_index = int(self._settings.get(Settings.TabWorkspaceIndex))
-        if workspace_index >= 0:
-            workspace_widget = self.create_workspace(workspace_index)
+        workspace_uid = self._settings.get(Settings.TabWorkspaceUid)
+        if workspace_uid:
+            workspace_widget = self.create_workspace(workspace_uid)
             if workspace_widget:
                 workspace_widget.load_state()
 
     def save_state(self):
-        self._settings.set(Settings.TabWorkspaceIndex, self._current_workspace_index)
-        if self._current_workspace_index >= 0:
+        self._settings.set(Settings.TabWorkspaceUid, self._current_workspace_uid)
+        if self._current_workspace_uid:
             workspace_widget = self._main_stacked_layout.currentWidget()
             workspace_widget.save_state()
 
@@ -432,16 +439,16 @@ class TabWidget(QWidget, StateSaveable):
         if workspace:
             workspace.handle_preferences_change()
 
-    def create_workspace(self, workspace_index):
-        if workspace_index < 0 or workspace_index >= len(TabWidget.workspace_factories):
+    def create_workspace(self, workspace_uid: str):
+        if workspace_uid not in TabWidget.workspace_factories:
             return None
-        factory = TabWidget.workspace_factories[workspace_index]
+        factory = TabWidget.workspace_factories[workspace_uid]
         workspace_widget = factory.create_workspace_widget(self._settings, self)
         self._main_stacked_layout.addWidget(workspace_widget)
         self._main_stacked_layout.setCurrentIndex(1)
         tab_index = self._parent_tab_widget.indexOf(self)
         self._parent_tab_widget.setTabText(tab_index, factory.get_workspace_name())
-        self._current_workspace_index = workspace_index
+        self._current_workspace_uid = workspace_uid
         return workspace_widget
 
     def _create_workspace(self):
