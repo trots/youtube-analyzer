@@ -28,7 +28,9 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QTextEdit,
     QTabWidget,
-    QToolButton
+    QToolButton,
+    QTableWidget,
+    QTableWidgetItem
 )
 from youtubeanalyzer.defines import (
     app_name,
@@ -148,6 +150,35 @@ class AuthorsDialog(QDialog):
         self.setLayout(layout)
 
 
+class AboutPluginsDialog(QDialog):
+    def __init__(self, plugin_manager: PluginManager, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(self.tr("Installed plugins"))
+        layout = QVBoxLayout()
+
+        plugins = plugin_manager.get_plugins()
+        plugins_table = QTableWidget()
+        plugins_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        plugins_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        plugins_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
+        plugins_table.setRowCount(len(plugins))
+        plugins_table.setColumnCount(3)
+        plugins_table.verticalHeader().setVisible(False)
+        plugins_table.setHorizontalHeaderLabels([self.tr("Name"), self.tr("Version"), self.tr("Description")])
+        plugins_table.horizontalHeader().setStretchLastSection(True)
+
+        for row in range(len(plugins)):
+            plugin = plugins[row]
+            plugins_table.setItem(row, 0, QTableWidgetItem(plugin.get_human_readable_name()))
+            plugins_table.setItem(row, 1, QTableWidgetItem(plugin.get_version()))
+            plugins_table.setItem(row, 2, QTableWidgetItem(plugin.get_description()))
+
+        plugins_table.resizeColumnsToContents()
+        layout.addWidget(plugins_table)
+
+        self.setLayout(layout)
+
+
 class MainWindow(QMainWindow, StateSaveable):
     def __init__(self, settings: Settings):
         super().__init__()
@@ -182,6 +213,9 @@ class MainWindow(QMainWindow, StateSaveable):
         help_menu = self.menuBar().addMenu(self.tr("Help"))
         authors_action = help_menu.addAction(self.tr("Authors..."))
         authors_action.triggered.connect(self._on_authors)
+        help_menu.addSeparator()
+        about_plugins_action = help_menu.addAction(self.tr("About plugins..."))
+        about_plugins_action.triggered.connect(self._on_about_plugins)
         about_action = help_menu.addAction(self.tr("About..."))
         about_action.triggered.connect(self._on_about)
 
@@ -322,6 +356,11 @@ class MainWindow(QMainWindow, StateSaveable):
         dialog = AuthorsDialog(self)
         dialog.exec()
 
+    def _on_about_plugins(self):
+        dialog = AboutPluginsDialog(plugin_manager, self)
+        dialog.resize(640, 480)
+        dialog.exec()
+
 
 def top_exception_handler(_exctype, value, tb):
     dialog = QMessageBox(QMessageBox.Critical, app_name, str(value))
@@ -364,7 +403,7 @@ while True:
         if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
             app.installTranslator(qt_translator)
         for plugin in plugin_manager.get_plugins():
-            plugin_lang = "translations/" + plugin.name() + "_ru.qm"
+            plugin_lang = "translations/" + plugin.get_name() + "_ru.qm"
             plugin_translator = QTranslator()
             if plugin_translator.load(plugin_lang):
                 app.installTranslator(plugin_translator)
