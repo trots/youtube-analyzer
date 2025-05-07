@@ -403,7 +403,7 @@ class TabWidget(QWidget, StateSaveable):
 
         self._main_stacked_layout = QStackedLayout()
 
-        self._main_layout = QVBoxLayout()
+        self._main_layout = QGridLayout()
         self._main_layout.setContentsMargins(0, 0, 0, 0)
         container = QWidget()
         container.setLayout(self._main_layout)
@@ -411,12 +411,17 @@ class TabWidget(QWidget, StateSaveable):
         self._main_stacked_layout.setCurrentIndex(0)
         self.setLayout(self._main_stacked_layout)
 
-        self._main_layout.addStretch()
+        row = 1
         for uid, factory in TabWidget.workspace_factories.items():
             workspace_button = factory.create_workspace_button()
             workspace_button.clicked.connect(lambda state=None, uid=uid: self.create_workspace(uid))
-            self._main_layout.addWidget(workspace_button, alignment=Qt.AlignmentFlag.AlignCenter)
-        self._main_layout.addStretch()
+            self._main_layout.addWidget(workspace_button, row, 1)
+            row = row + 1
+
+        self._main_layout.setRowStretch(0, 1)
+        self._main_layout.setRowStretch(row, 1)
+        self._main_layout.setColumnStretch(0, 1)
+        self._main_layout.setColumnStretch(2, 1)
 
     def current_workspace(self):
         return self._main_stacked_layout.currentWidget() if self._main_stacked_layout.currentIndex() == 1 else None
