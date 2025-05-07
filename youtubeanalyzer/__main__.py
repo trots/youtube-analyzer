@@ -344,9 +344,8 @@ app.setStyle("Fusion")
 settings = Settings(app_name)
 Theme.apply(app, int(settings.get(Settings.Theme)))
 
-TabWidget.workspace_factories.append(SearchWorkspaceFactory())
-TabWidget.workspace_factories.append(TrendsWorkspaceFactory())
-# ^^^ Don't change the factories order. Append new factories to the end of list
+TabWidget.add_workspace_factory(SearchWorkspaceFactory())
+TabWidget.add_workspace_factory(TrendsWorkspaceFactory())
 
 plugin_manager = PluginManager()
 plugin_manager.load_plugins()

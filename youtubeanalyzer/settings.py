@@ -44,7 +44,7 @@ class Settings:
     RequestTimeoutSec = SettingsKey("request_timeout_sec", 10)
     MainTableHeaderState = SettingsKey("main_table_header_state", QByteArray())
     MainTabsArray = SettingsKey("main_tabs", 0)
-    TabWorkspaceIndex = SettingsKey("tab_workspace_index", -1)
+    TabWorkspaceUid = SettingsKey("tab_workspace_uid", None)
     ActiveTabIndex = SettingsKey("active_tab_index", 0)
     Version = SettingsKey("version", CurrentSettingsVersion)
     TrendsRegion = SettingsKey("trends_region", "US")
@@ -96,7 +96,7 @@ class Settings:
 
             self.begin_write_array(Settings.MainTabsArray)
             self.set_array_index(0)
-            self.set(Settings.TabWorkspaceIndex, 0)
+            self.set(Settings.TabWorkspaceUid, "cd8288f5-d985-48de-9730-359a010db967")
             self.set(Settings.RequestLimit, request_limit)
             self.set(Settings.LastActiveChartIndex, last_active_chart_index)
             self.set(Settings.MainTableHeaderState, main_table_header_state)

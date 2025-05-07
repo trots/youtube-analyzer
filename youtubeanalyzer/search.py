@@ -82,6 +82,9 @@ class SearchWorkspaceFactory(TabWorkspaceFactory):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
 
+    def get_uid(self) -> str:
+        return "cd8288f5-d985-48de-9730-359a010db967"
+
     def get_workspace_name(self) -> str:
         return self.tr("Search")
 

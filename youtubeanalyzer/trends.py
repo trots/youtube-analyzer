@@ -158,6 +158,9 @@ class TrendsWorkspaceFactory(TabWorkspaceFactory):
     def __init__(self, parent: QObject = None):
         super().__init__(parent)
 
+    def get_uid(self) -> str:
+        return "6ae85ee6-2712-430f-92e6-103b30cb4054"
+
     def get_workspace_name(self) -> str:
         return self.tr("Trends")
 

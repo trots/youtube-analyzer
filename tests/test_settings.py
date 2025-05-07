@@ -25,7 +25,7 @@ class TestSettingsModule(unittest.TestCase):
         self.assertEqual(Settings.RequestTimeoutSec.key, "request_timeout_sec")
         self.assertEqual(Settings.MainTableHeaderState.key, "main_table_header_state")
         self.assertEqual(Settings.MainTabsArray.key, "main_tabs")
-        self.assertEqual(Settings.TabWorkspaceIndex.key, "tab_workspace_index")
+        self.assertEqual(Settings.TabWorkspaceUid.key, "tab_workspace_uid")
         self.assertEqual(Settings.ActiveTabIndex.key, "active_tab_index")
         self.assertEqual(Settings.Version.key, "version")
         self.assertEqual(Settings.TrendsRegion.key, "trends_region")

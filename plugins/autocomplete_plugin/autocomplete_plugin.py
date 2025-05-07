@@ -113,6 +113,9 @@ class AutocompleteWorkspaceFactory(TabWorkspaceFactory):
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
 
+    def get_uid(self):
+        return "2d5c4888-89ff-4b55-ac56-5f411338d807"
+
     def get_workspace_name(self) -> str:
         return self.tr("Search autocomplete")
 
@@ -129,7 +132,7 @@ class AutocompletePlugin(AbstractPlugin):
         return "autocomplete_plugin"
 
     def initialize(self):
-        TabWidget.workspace_factories.append(AutocompleteWorkspaceFactory())
+        TabWidget.add_workspace_factory(AutocompleteWorkspaceFactory())
 
     def get_translator(self, language):
         translator = QTranslator()
