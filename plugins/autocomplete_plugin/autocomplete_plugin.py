@@ -1,8 +1,6 @@
-import sys
-from pathlib import Path
 from PySide6.QtCore import (
     Qt,
-    QTranslator
+    QObject
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -128,17 +126,17 @@ class AutocompleteWorkspaceFactory(TabWorkspaceFactory):
 
 
 class AutocompletePlugin(AbstractPlugin):
-    def name(self) -> str:
+    def get_name(self) -> str:
         return "autocomplete_plugin"
+
+    def get_human_readable_name(self) -> str:
+        return QObject.tr("Autocomplete plugin")
+
+    def get_description(self) -> str:
+        return QObject.tr("Adds a new tab to work with YouTube search autocomplete")
+
+    def get_version(self) -> str:
+        return "1.0"
 
     def initialize(self):
         TabWidget.add_workspace_factory(AutocompleteWorkspaceFactory())
-
-    def get_translator(self, language):
-        translator = QTranslator()
-        if language == "Ru":
-            if getattr(sys, 'frozen', False):
-                base_dir = Path(sys.executable).parent
-            else:
-                base_dir = Path(__file__).parent
-            translator.load(base_dir / "translations/ru.qm")

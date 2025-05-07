@@ -6,7 +6,16 @@ from PySide6.QtWidgets import QWidget
 
 
 class AbstractPlugin:
-    def name(self) -> str:
+    def get_name(self) -> str:
+        pass
+
+    def get_human_readable_name(self) -> str:
+        pass
+
+    def get_description(self) -> str:
+        pass
+
+    def get_version(self) -> str:
         pass
 
     def initialize(self, parent: QWidget):
