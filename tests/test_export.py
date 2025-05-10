@@ -24,7 +24,7 @@ def create_test_model():
                                   125, 12347, "2020-05-20", "https://preview3.jpg", "https://logo3.jpg",
                                   ["word3", "word4"], timedelta(seconds=36), 2, "shorts"))
     model = ResultTableModel(None)
-    model.setData(result)
+    model.set_data(result)
     return model
 
 

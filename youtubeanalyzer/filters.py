@@ -61,7 +61,7 @@ class ResultSortFilterProxyModel(QSortFilterProxyModel):
             return None
         proxy_index = self.index(proxy_row, 0)
         source_index = self.mapToSource(proxy_index)
-        return self.sourceModel().result[source_index.row()][result_field] if source_index else None
+        return self.sourceModel().get_field_data(source_index.row(), result_field) if source_index else None
 
 
 class AbstractFilterWidget(QWidget, AbstractFilter, StateSaveable):

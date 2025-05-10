@@ -219,7 +219,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                 if counter == self._request_limit:
                     break
                 has_next_page = videos_search.next()
-            self._model.setData(result)
+            self._model.set_data(result)
             self._model.set_sort_cast(ResultFields.VideoPublishedTime, YoutubeGrepEngine.published_time_sort_cast)
             return True
         except Exception as exc:
@@ -313,7 +313,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             def video_id_getter(item): return item["id"]["videoId"]
 
             result = self._request_videos(request_handler, video_id_getter, "publishTime")
-            self._model.setData(result)
+            self._model.set_data(result)
             return True
         except Exception as e:
             self.errorDetails = str(e)
@@ -357,7 +357,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             def video_id_getter(item): return item["id"]
 
             result = self._request_videos(request_handler, video_id_getter, "publishedAt")
-            self._model.setData(result)
+            self._model.set_data(result)
             return True
         except Exception as e:
             if hasattr(e, "reason"):
