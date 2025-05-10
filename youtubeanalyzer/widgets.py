@@ -34,7 +34,10 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QTableView,
     QSplitter,
-    QFrame
+    QFrame,
+    QButtonGroup,
+    QRadioButton,
+    QListView
 )
 from PySide6.QtCharts import (
     QChartView,
@@ -126,10 +129,9 @@ class PixmapLabel(QLabel):
 class VideoDetailsWidget(QWidget):
     def __init__(self, model: ResultTableModel, parent: QWidget = None):
         super().__init__(parent)
-        self._model = model
-        self._preview_downloader = ImageDownloader()
-        self._preview_downloader.finished.connect(self._on_preview_download_finished)
-        self._preview_downloader.error.connect(self._on_download_error)
+        self._model: ResultTableModel = model
+        self._model.dataChanged.connect(self._on_model_data_changed)
+        self._current_index: QModelIndex = None
         self._logo_downloader = ImageDownloader()
         self._logo_downloader.finished.connect(self._on_logo_download_finished)
         self._logo_downloader.error.connect(self._on_download_error)
@@ -217,11 +219,16 @@ class VideoDetailsWidget(QWidget):
         self.setLayout(self._stacked_layout)
 
     def set_current_index(self, index: QModelIndex):
-        if index is None or index.row() < 0 or index.row() >= len(self._model.result):
+        self._current_index = index
+        if index is None:
             self.clear()
             return
 
-        row_data = self._model.result[index.row()]
+        row_data = self._model.get_row_data(index.row())
+        if row_data is None:
+            self.clear()
+            return
+
         self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\">" +
                                   row_data[ResultFields.VideoTitle] + "</a>")
         self._duration_label.setText(row_data[ResultFields.VideoDuration])
@@ -236,8 +243,9 @@ class VideoDetailsWidget(QWidget):
         self._preview_label.clear()
         self._channel_logo_label.clear()
 
-        preview_url = QUrl.fromUserInput(row_data[ResultFields.VideoPreviewLink])
-        self._preview_downloader.start_download(preview_url)
+        preview_image = self._model.get_video_preview_image(index.row())
+        if preview_image:
+            self._preview_label.setPixmap(QPixmap.fromImage(preview_image))
         logo_url = QUrl.fromUserInput(row_data[ResultFields.ChannelLogoLink])
         self._logo_downloader.start_download(logo_url)
 
@@ -250,7 +258,7 @@ class VideoDetailsWidget(QWidget):
         self._stacked_layout.setCurrentIndex(1)
 
     def clear(self):
-        self._preview_downloader.clear_cache()
+        self._current_index = None
         self._logo_downloader.clear_cache()
         self._title_label.clear()
         self._duration_label.clear()
@@ -266,10 +274,13 @@ class VideoDetailsWidget(QWidget):
         self._tags_edit.clear()
         self._stacked_layout.setCurrentIndex(0)
 
-    def _on_preview_download_finished(self, image):
-        preview_pixmap = QPixmap.fromImage(image)
-        if not preview_pixmap.isNull():
-            self._preview_label.setPixmap(preview_pixmap)
+    def _on_model_data_changed(self, from_index, to_index, roles):
+        if self._current_index is None:
+            return
+        if from_index.row() == self._current_index.row() and Qt.ItemDataRole.DecorationRole in roles:
+            preview_image = self._model.get_video_preview_image(self._current_index.row())
+            if preview_image:
+                self._preview_label.setPixmap(QPixmap.fromImage(preview_image))
 
     def _on_logo_download_finished(self, image):
         logo_pixmap = QPixmap.fromImage(image)
@@ -489,26 +500,57 @@ class AbstractVideoTableWorkspace(QWidget, StateSaveable):
         self._sort_model.rowsRemoved.connect(self._on_insert_widgets)
 
         central_widget = QWidget()
-        central_widget.setLayout(QVBoxLayout())
-        central_widget.layout().setContentsMargins(0, 0, 0, 0)
+        central_layout = QVBoxLayout()
+        central_widget.setLayout(central_layout)
+        central_layout.setContentsMargins(0, 0, 0, 0)
 
         tools_panel = QWidget()
         tools_panel.setLayout(QHBoxLayout())
         tools_panel.layout().setContentsMargins(0, 0, 0, 0)
+        self._tools_button_group = QButtonGroup()
+
         self._filters_button = QPushButton(self.tr("Filters"))
         self._filters_button.toggled.connect(lambda checked:
                                              self._filters_button.setToolTip(self.tr("Hide filters panel")) if checked else
                                              self._filters_button.setToolTip(self.tr("Show filters panel")))
         self._filters_button.setCheckable(True)
         self._filters_button.setChecked(self._settings.get(Settings.FiltersVisible))
+        self._tools_button_group.addButton(self._filters_button)
         tools_panel.layout().addWidget(self._filters_button)
+
+        self._views_button = QPushButton(self.tr("Views"))
+        self._views_button.toggled.connect(lambda checked:
+                                           self._views_button.setToolTip(self.tr("Hide views panel")) if checked else
+                                           self._views_button.setToolTip(self.tr("Show views panel")))
+        self._views_button.setCheckable(True)
+        self._views_button.setChecked(False)
+        self._tools_button_group.addButton(self._views_button)
+        tools_panel.layout().addWidget(self._views_button)
+
         tools_panel.layout().addStretch()
-        central_widget.layout().addWidget(tools_panel)
+        central_layout.addWidget(tools_panel)
 
         self._filters_panel = FiltersPanel(self._settings, self._sort_model)
         self._filters_panel.setVisible(self._filters_button.isChecked())
         self._filters_button.toggled.connect(self._filters_panel.setVisible)
-        central_widget.layout().addWidget(self._filters_panel)
+        central_layout.addWidget(self._filters_panel)
+
+        self._stacked_layout = QStackedLayout()
+
+        views_panel = QWidget()
+        views_panel.setVisible(self._views_button.isChecked())
+        self._views_button.toggled.connect(views_panel.setVisible)
+        central_layout.addWidget(views_panel)
+        views_panel_layout = QHBoxLayout()
+        table_view_radio = QRadioButton(self.tr("Table"))
+        table_view_radio.setChecked(True)
+        table_view_radio.toggled.connect(lambda: self._on_view_mode_changed(ResultTableModel.Mode.Normal))
+        views_panel_layout.addWidget(table_view_radio)
+        gallery_view_radio = QRadioButton(self.tr("Gallery"))
+        gallery_view_radio.toggled.connect(lambda: self._on_view_mode_changed(ResultTableModel.Mode.Image))
+        views_panel_layout.addWidget(gallery_view_radio)
+        views_panel_layout.addStretch()
+        views_panel.setLayout(views_panel_layout)
 
         self._table_view = QTableView(self)
         self._table_view.setModel(self._sort_model)
@@ -518,6 +560,8 @@ class AbstractVideoTableWorkspace(QWidget, StateSaveable):
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
+
+        self._stacked_layout.addWidget(self._table_view)
 
         copy_video_title_action = self._table_view.addAction(self.tr("Copy video title"))
         copy_video_title_action.setData(ResultFields.VideoTitle)
@@ -547,7 +591,22 @@ class AbstractVideoTableWorkspace(QWidget, StateSaveable):
         copy_view_subscribers_action.setData(ResultFields.ViewRate)
         copy_view_subscribers_action.triggered.connect(self._on_copy_action)
 
-        central_widget.layout().addWidget(self._table_view)
+        self._list_vew = QListView()
+        self._list_vew.setViewMode(QListView.ViewMode.IconMode)
+        self._list_vew.setResizeMode(QListView.ResizeMode.Adjust)
+        self._list_vew.setIconSize(QSize(100, 100))
+        self._list_vew.setUniformItemSizes(True)
+        self._list_vew.setModel(self._sort_model)
+        self._list_vew.setModelColumn(1)
+        self._list_vew.setSelectionModel(self._table_view.selectionModel())
+        self.model.dataChanged.connect(
+            lambda s_index, e_index, roles:
+                self._list_vew.viewport().update() if Qt.ItemDataRole.DecorationRole in roles else None)
+        self._stacked_layout.addWidget(self._list_vew)
+
+        self._stacked_layout.setCurrentIndex(0)
+
+        central_layout.addLayout(self._stacked_layout)
 
         self._side_tab_widget = QTabWidget()
 
@@ -624,6 +683,14 @@ class AbstractVideoTableWorkspace(QWidget, StateSaveable):
     def _on_search_clicked(self):
         raise "AbstractVideoTableWorkspace._on_search_clicked is not implemented"
 
+    def _on_view_mode_changed(self, mode: ResultTableModel.Mode):
+        self.model.set_mode(mode)
+        if mode == ResultTableModel.Mode.Normal:
+            self._stacked_layout.setCurrentIndex(0)
+            self._on_insert_widgets()
+        else:
+            self._stacked_layout.setCurrentIndex(1)
+
     def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
         proxy_indexes = current.indexes()
         if len(proxy_indexes) > 0:
@@ -643,14 +710,14 @@ class AbstractVideoTableWorkspace(QWidget, StateSaveable):
             clipboard.setText(str(self.model.get_field_data(source_index.row(), field)))
 
     def _on_insert_widgets(self):
-        for i in range(len(self.model.result)):
-            video_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.VideoTitle))
+        for i in range(self.model.rowCount()):
+            video_idx = self._sort_model.index(i, self.model.map_field_to_table_column(ResultFields.VideoTitle))
             widget = self._table_view.indexWidget(video_idx)
             if not widget:
-                video_item = self.model.result[i]
+                video_item = self.model.get_row_data(i)
                 video_label = create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
                 self._table_view.setIndexWidget(video_idx, video_label)
 
-                channel_idx = self._sort_model.index(i, self.model.get_field_column(ResultFields.ChannelTitle))
+                channel_idx = self._sort_model.index(i, self.model.map_field_to_table_column(ResultFields.ChannelTitle))
                 channel_label = create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
                 self._table_view.setIndexWidget(channel_idx, channel_label)

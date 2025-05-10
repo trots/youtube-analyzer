@@ -300,7 +300,7 @@ class MainWindow(QMainWindow, StateSaveable):
         data_name = current_workspace.get_data_name()
         if not data_name:
             data_name = "export"
-        if not current_workspace or len(current_workspace.model.result) == 0:
+        if not current_workspace or current_workspace.model.rowCount() == 0:
             QMessageBox.warning(self, app_name, self.tr("There is no data to export"))
             return ""
 

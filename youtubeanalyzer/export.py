@@ -27,11 +27,11 @@ def export_to_xlsx(file_path: str, model: ResultTableModel):
             worksheet.write(0, index, model.FieldNames[column])
             index = index + 1
 
-    for row in range(len(model.result)):
+    for row in range(model.rowCount()):
         index = 0
         for column in range(ResultFields.MaxFieldsCount):
             if not exception_column(column):
-                worksheet.write(row + 1, index, model.result[row][column])
+                worksheet.write(row + 1, index, model.get_field_data(row, column))
                 index = index + 1
 
     worksheet.autofit()
@@ -49,10 +49,10 @@ def export_to_csv(file_path: str, model: ResultTableModel):
         csv_writer.writerow(header_csv)
 
         result_csv = []
-        for row in range(len(model.result)):
+        for row in range(model.rowCount()):
             for column in range(ResultFields.MaxFieldsCount):
                 if not exception_column(column):
-                    result_csv.append(model.result[row][column])
+                    result_csv.append(model.get_field_data(row, column))
             csv_writer.writerow(result_csv)
             result_csv.clear()
 
@@ -77,11 +77,11 @@ def export_to_html(file_path: str, model: ResultTableModel):
         if not exception_column(column):
             result_doc += th_o + str(model.FieldNames[column]) + th_c
     result_doc += tr_c
-    for row in range(len(model.result)):
+    for row in range(model.rowCount()):
         result_doc += tr_o
         for column in range(ResultFields.MaxFieldsCount):
             if not exception_column(column):
-                result_doc += td_o + str(model.result[row][column]) + td_c
+                result_doc += td_o + str(model.get_field_data(row, column)) + td_c
         result_doc += tr_c
     result_doc += table_c + body_c + html_c
     with open(file_path, 'w', encoding='utf-8') as htmlfile:
