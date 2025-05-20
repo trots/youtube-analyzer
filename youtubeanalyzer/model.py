@@ -64,8 +64,10 @@ class ResultTableModel(QAbstractTableModel):
         self._mode = ResultTableModel.Mode.Normal
         self._result = []
         self._network_manager = QNetworkAccessManager()
+        self._network_manager.setTransferTimeout(30000)
         self._network_manager.finished.connect(self._on_preview_image_reply)
         self._pending_requests: dict[str, int] = {}  # {url: row}
+        self._pending_replies: dict[str, int] = {}  # {url: row}
         self._font_metrics = QFontMetrics(QFont())
 
         self.FieldNames = [
@@ -85,7 +87,8 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Video Tags"),
             self.tr("Video Duration Timedelta"),
             self.tr("#"),
-            self.tr("Type")
+            self.tr("Type"),
+            self.tr("Preview image")
             ]
         self.FieldTooltips = [
             self.tr("Video title"),
@@ -104,7 +107,8 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Video tag list"),
             self.tr("Video duration timedelta"),
             self.tr("Video relevance in search output (0 is the higest relevance)"),
-            self.tr("Video type")
+            self.tr("Video type"),
+            self.tr("Video preview image")
             ]
         self._fields = [
             ResultFields.VideoRelevanceNumber,
@@ -123,11 +127,19 @@ class ResultTableModel(QAbstractTableModel):
         self.beginResetModel()
         self._result = result
         self._sort_cast.clear()
+        self._network_manager.clearConnectionCache()
+        self._network_manager.clearAccessCache()
+        self._pending_requests.clear()
+        self._pending_replies.clear()
         self.endResetModel()
 
     def clear(self):
         self.beginResetModel()
         self._result.clear()
+        self._network_manager.clearConnectionCache()
+        self._network_manager.clearAccessCache()
+        self._pending_requests.clear()
+        self._pending_replies.clear()
         self.endResetModel()
 
     def set_mode(self, mode: Mode):
@@ -164,7 +176,8 @@ class ResultTableModel(QAbstractTableModel):
         url = self._result[row][ResultFields.VideoPreviewLink]
         if url not in self._pending_requests:
             request = QNetworkRequest(QUrl.fromUserInput(url))
-            self._network_manager.get(request)
+            reply = self._network_manager.get(request)
+            self._pending_replies[url] = reply
             self._pending_requests[url] = row
         return None
 
@@ -240,6 +253,7 @@ class ResultTableModel(QAbstractTableModel):
                 column = self.map_field_to_table_column(ResultFields.VideoTitle)
                 changed_index = self.index(row, column)
                 self.dataChanged.emit(changed_index, changed_index, [Qt.DecorationRole])
+            del self._pending_replies[url]
             del self._pending_requests[url]
 
         reply.deleteLater()

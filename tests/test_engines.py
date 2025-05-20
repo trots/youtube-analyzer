@@ -242,6 +242,9 @@ class MockApiEngine(YoutubeApiEngine):
     def _get_channel_details(self, _youtube, _channel_ids):
         return self._channel_responce
 
+    def _type(self, vid):
+        return "longs"
+
 
 class TestStringMethods(unittest.TestCase):
 

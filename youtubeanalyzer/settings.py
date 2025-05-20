@@ -50,8 +50,9 @@ class Settings:
     TrendsRegion = SettingsKey("trends_region", "US")
     TrendsVideoCategoryId = SettingsKey("trends_video_category_id", 0)
     RequestPageLimit = SettingsKey("request_page_limit", 25)
-    FiltersVisible = SettingsKey("filters", True)
     PublishedTimeFilter = SettingsKey("published_time_filter", "")
+    ActiveToolPanelIndex = SettingsKey("active_tool_panel_index", -1)
+    VideoTableMode = SettingsKey("video_table_mode", 0)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
@@ -108,6 +109,9 @@ class Settings:
 
 
 class StateSaveable():
+    def __init__(self, settings: Settings):
+        self._settings: Settings = settings
+
     def load_state(self):
         raise "StateSaveable.load_state not implemented"
 

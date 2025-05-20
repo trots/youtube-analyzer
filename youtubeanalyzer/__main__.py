@@ -44,8 +44,8 @@ from youtubeanalyzer.settings import (
     StateSaveable,
     SettingsDialog
 )
-from youtubeanalyzer.widgets import (
-    TabWidget
+from youtubeanalyzer.workspace import (
+    WorkspaceTab
 )
 from youtubeanalyzer.search import (
     SearchWorkspaceFactory
@@ -179,11 +179,11 @@ class AboutPluginsDialog(QDialog):
         self.setLayout(layout)
 
 
-class MainWindow(QMainWindow, StateSaveable):
+class MainWindow(StateSaveable, QMainWindow):
     def __init__(self, settings: Settings):
-        super().__init__()
+        StateSaveable.__init__(self, settings)
+        QMainWindow.__init__(self)
 
-        self._settings = settings
         self._restore_geometry_on_show = True
 
         self.setWindowTitle(app_name + " " + version)
@@ -282,7 +282,7 @@ class MainWindow(QMainWindow, StateSaveable):
         self._settings.set(Settings.ActiveTabIndex, self._main_tab_widget.currentIndex())
 
     def _create_new_tab(self):
-        tab_widget = TabWidget(self._settings, self._main_tab_widget)
+        tab_widget = WorkspaceTab(self._settings, self._main_tab_widget)
         tab_index = self._main_tab_widget.addTab(tab_widget, self.tr("New tab"))
         self._main_tab_widget.setCurrentIndex(tab_index)
         return tab_widget
@@ -384,8 +384,8 @@ app.setStyle("Fusion")
 settings = Settings(app_name)
 Theme.apply(app, int(settings.get(Settings.Theme)))
 
-TabWidget.add_workspace_factory(SearchWorkspaceFactory())
-TabWidget.add_workspace_factory(TrendsWorkspaceFactory())
+WorkspaceTab.add_workspace_factory(SearchWorkspaceFactory())
+WorkspaceTab.add_workspace_factory(TrendsWorkspaceFactory())
 
 plugin_manager = PluginManager()
 plugin_manager.load_plugins()
