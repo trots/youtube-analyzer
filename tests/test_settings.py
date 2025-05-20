@@ -31,8 +31,9 @@ class TestSettingsModule(unittest.TestCase):
         self.assertEqual(Settings.TrendsRegion.key, "trends_region")
         self.assertEqual(Settings.TrendsVideoCategoryId.key, "trends_video_category_id")
         self.assertEqual(Settings.RequestPageLimit.key, "request_page_limit")
-        self.assertEqual(Settings.FiltersVisible.key, "filters")
         self.assertEqual(Settings.PublishedTimeFilter.key, "published_time_filter")
+        self.assertEqual(Settings.ActiveToolPanelIndex.key, "active_tool_panel_index")
+        self.assertEqual(Settings.VideoTableMode.key, "video_table_mode")
 
     def test_upgrade_from_version_1(self):
         etalon_test_file = "tests/data/settings_version_1.ini"

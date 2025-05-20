@@ -15,22 +15,22 @@ from PySide6.QtWidgets import (
 )
 from youtubeanalyzer.plugins import AbstractPlugin
 from youtubeanalyzer.settings import (
-    Settings,
-    StateSaveable
+    Settings
 )
 from youtubeanalyzer.engine import (
     SearchAutocompleteDownloader
 )
-from youtubeanalyzer.widgets import (
+from youtubeanalyzer.workspace import (
     TabWorkspaceFactory,
-    TabWidget
+    WorkspaceTab,
+    WorkspaceWidget
 )
 
 
-class AutocompleteWorkspace(QWidget, StateSaveable):
+class AutocompleteWorkspace(WorkspaceWidget):
     def __init__(self, settings: Settings, parent: QWidget = None):
-        super().__init__(parent)
-        self._settings = settings
+        WorkspaceWidget.__init__(self, settings, parent)
+
         self._autocomplete_downloader = SearchAutocompleteDownloader()
         self._autocomplete_downloader.finished.connect(self._on_autocomplete_downloaded)
 
@@ -139,4 +139,4 @@ class AutocompletePlugin(AbstractPlugin):
         return "1.0"
 
     def initialize(self):
-        TabWidget.add_workspace_factory(AutocompleteWorkspaceFactory())
+        WorkspaceTab.add_workspace_factory(AutocompleteWorkspaceFactory())

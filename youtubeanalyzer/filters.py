@@ -8,7 +8,6 @@ from PySide6.QtCore import (
 )
 from PySide6.QtWidgets import (
     QWidget,
-    QGroupBox,
     QToolButton,
     QComboBox,
     QStyle,
@@ -64,10 +63,12 @@ class ResultSortFilterProxyModel(QSortFilterProxyModel):
         return self.sourceModel().get_field_data(source_index.row(), result_field) if source_index else None
 
 
-class AbstractFilterWidget(QWidget, AbstractFilter, StateSaveable):
+class AbstractFilterWidget(StateSaveable, AbstractFilter, QWidget):
     def __init__(self, settings: Settings, parent=None):
-        super().__init__(parent)
-        self._settings = settings
+        StateSaveable.__init__(self, settings)
+        AbstractFilter.__init__(self)
+        QWidget.__init__(self, parent)
+
         self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
@@ -144,9 +145,11 @@ class PublishedDateFilterWidget(AbstractFilterWidget):
         self._model.invalidateFilter()
 
 
-class FiltersPanel(QGroupBox, StateSaveable):
+class FiltersPanel(StateSaveable, QWidget):
     def __init__(self, settings: Settings, model: ResultSortFilterProxyModel, parent=None):
-        super().__init__(parent)
+        StateSaveable.__init__(self, settings)
+        QWidget.__init__(self, parent)
+
         self._filter_widgets: list[AbstractFilterWidget] = []
 
         filters_layout = QHBoxLayout()

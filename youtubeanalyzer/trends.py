@@ -23,8 +23,12 @@ from youtubeanalyzer.engine import (
     YoutubeApiEngine
 )
 from youtubeanalyzer.widgets import (
-    critial_detailed_message,
-    TabWorkspaceFactory,
+    critial_detailed_message
+)
+from youtubeanalyzer.workspace import (
+    TabWorkspaceFactory
+)
+from youtubeanalyzer.video_table_workspace import (
     AbstractVideoTableWorkspace
 )
 
@@ -168,5 +172,5 @@ class TrendsWorkspaceFactory(TabWorkspaceFactory):
         button = QPushButton(self.tr("Search trends..."))
         return button
 
-    def create_workspace_widget(self, settings: Settings, parent: QWidget) -> QWidget:
+    def create_workspace_widget(self, settings: Settings, parent: QWidget):
         return TrendsWorkspace(settings, parent)

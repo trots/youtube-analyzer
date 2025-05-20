@@ -19,8 +19,12 @@ from youtubeanalyzer.engine import (
 )
 from youtubeanalyzer.widgets import (
     critial_detailed_message,
-    SearchLineEdit,
-    TabWorkspaceFactory,
+    SearchLineEdit
+)
+from youtubeanalyzer.workspace import (
+    TabWorkspaceFactory
+)
+from youtubeanalyzer.video_table_workspace import (
     AbstractVideoTableWorkspace
 )
 
