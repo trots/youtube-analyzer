@@ -53,6 +53,7 @@ class Settings:
     PublishedTimeFilter = SettingsKey("published_time_filter", "")
     ActiveToolPanelIndex = SettingsKey("active_tool_panel_index", -1)
     VideoTableMode = SettingsKey("video_table_mode", 0)
+    PreviewScaleIndex = SettingsKey("preview_scale_index", 100)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:

@@ -29,7 +29,8 @@ from PySide6.QtWidgets import (
     QFrame,
     QButtonGroup,
     QRadioButton,
-    QListView
+    QListView,
+    QSlider
 )
 from PySide6.QtCharts import (
     QChartView,
@@ -367,19 +368,39 @@ class VideoTableToolsPanel(StateSaveable, QWidget):
 
 class ViewsPanel(StateSaveable, QWidget):
     mode_changed = Signal(ResultTableModel.Mode)
+    scale_changed = Signal(float)
 
     def __init__(self, settings: Settings, model: ResultSortFilterProxyModel, parent=None):
         StateSaveable.__init__(self, settings)
         QWidget.__init__(self, parent)
 
         main_layout: QHBoxLayout = QHBoxLayout()
+        self._extra_stacked_layout: QStackedLayout = QStackedLayout()
+        self._extra_stacked_layout.setContentsMargins(0, 0, 0, 0)
+
         self._table_view_radio: QRadioButton = QRadioButton(self.tr("Table"))
         self._table_view_radio.setChecked(True)
-        self._table_view_radio.toggled.connect(lambda: self.mode_changed.emit(ResultTableModel.Mode.Normal))
+        self._table_view_radio.toggled.connect(lambda: self._on_view_mode_button_clicked(ResultTableModel.Mode.Normal))
         main_layout.addWidget(self._table_view_radio)
+        self._extra_stacked_layout.addWidget(QWidget())
+
         self._gallery_view_radio = QRadioButton(self.tr("Gallery"))
-        self._gallery_view_radio.toggled.connect(lambda: self.mode_changed.emit(ResultTableModel.Mode.Image))
+        self._gallery_view_radio.toggled.connect(lambda: self._on_view_mode_button_clicked(ResultTableModel.Mode.Image))
         main_layout.addWidget(self._gallery_view_radio)
+        gallery_extra_tools: QWidget = QWidget()
+        gallery_extra_tools.setLayout(QHBoxLayout())
+        gallery_extra_tools.layout().addWidget(QLabel(self.tr("Scale:")))
+        self._scale_slider: QSlider = QSlider(Qt.Orientation.Horizontal)
+        self._scale_slider.setToolTip(self.tr("Change scale of gallery images"))
+        self._scale_slider.setMinimum(50)
+        self._scale_slider.setMaximum(150)
+        self._scale_slider.setValue(100)
+        self._scale_slider.valueChanged.connect(lambda: self.scale_changed.emit(self._get_scale_value()))
+        gallery_extra_tools.layout().addWidget(self._scale_slider)
+        self._extra_stacked_layout.addWidget(gallery_extra_tools)
+
+        self._extra_stacked_layout.setCurrentIndex(0)
+        main_layout.addLayout(self._extra_stacked_layout)
         main_layout.addStretch()
         self.setLayout(main_layout)
 
@@ -388,12 +409,21 @@ class ViewsPanel(StateSaveable, QWidget):
             self._gallery_view_radio.setChecked(True)
         else:
             self._table_view_radio.setChecked(True)
+        self._scale_slider.setValue(int(self._settings.get(Settings.PreviewScaleIndex)))
 
     def save_state(self):
         if self._gallery_view_radio.isChecked():
             self._settings.set(Settings.VideoTableMode, ResultTableModel.Mode.Image)
         else:
             self._settings.set(Settings.VideoTableMode, ResultTableModel.Mode.Normal)
+        self._settings.set(Settings.PreviewScaleIndex, self._scale_slider.value())
+
+    def _get_scale_value(self):
+        return self._scale_slider.value() / 100
+
+    def _on_view_mode_button_clicked(self, mode: ResultTableModel.Mode):
+        self._extra_stacked_layout.setCurrentIndex(mode)
+        self.mode_changed.emit(mode)
 
 
 class AbstractVideoTableWorkspace(WorkspaceWidget):
@@ -433,6 +463,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
         views_panel = ViewsPanel(settings, self)
         views_panel.mode_changed.connect(self._on_view_mode_changed)
+        views_panel.scale_changed.connect(lambda scale: self.model.set_preview_scale(scale))
         self._tools_panel.add_tool_panel(self.tr("Views"), self.tr("Hide views panel"), self.tr("Show views panel"),
                                          views_panel)
 

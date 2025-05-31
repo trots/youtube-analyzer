@@ -55,6 +55,8 @@ class ResultFields:
 class ResultTableModel(QAbstractTableModel):
     SortRole: int = Qt.ItemDataRole.UserRole + 1
 
+    DefaultPreviewWidthPx: int = 200
+
     class Mode:
         Normal: int = 0
         Image: int = 1
@@ -62,6 +64,7 @@ class ResultTableModel(QAbstractTableModel):
     def __init__(self, parent, *args):
         QAbstractTableModel.__init__(self, parent, *args)
         self._mode = ResultTableModel.Mode.Normal
+        self._preview_scale: float = 1.0
         self._result = []
         self._network_manager = QNetworkAccessManager()
         self._network_manager.setTransferTimeout(30000)
@@ -147,6 +150,11 @@ class ResultTableModel(QAbstractTableModel):
         self._mode = mode
         self.endResetModel()
 
+    def set_preview_scale(self, scale: float):
+        self.beginResetModel()
+        self._preview_scale = scale
+        self.endResetModel()
+
     def has_data(self):
         return len(self._result) > 0
 
@@ -191,8 +199,9 @@ class ResultTableModel(QAbstractTableModel):
         if not index.isValid():
             return None
 
-        row = index.row()
-        column = self._fields[index.column()]
+        row: int = index.row()
+        column: int = self._fields[index.column()]
+        preview_size: float = ResultTableModel.DefaultPreviewWidthPx * self._preview_scale
 
         match role:
             case ResultTableModel.SortRole:
@@ -204,7 +213,8 @@ class ResultTableModel(QAbstractTableModel):
             case Qt.ItemDataRole.DisplayRole:
                 if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
                     if self._mode == ResultTableModel.Mode.Image:
-                        return self._font_metrics.elidedText(self._result[row][column], Qt.TextElideMode.ElideRight, 200)
+                        return self._font_metrics.elidedText(
+                            self._result[row][column], Qt.TextElideMode.ElideRight, preview_size)
                     else:
                         return None
                 if column == ResultFields.VideoViews or column == ResultFields.ChannelSubscribers:
@@ -213,11 +223,11 @@ class ResultTableModel(QAbstractTableModel):
                 return self._result[row][column]
             case Qt.ItemDataRole.DecorationRole:
                 if column == ResultFields.VideoTitle and self._mode == ResultTableModel.Mode.Image:
-                    image = self.get_video_preview_image(row)
+                    image: QImage = self.get_video_preview_image(row)
                     if image:
-                        return image.scaledToWidth(200)
+                        return image.scaledToWidth(preview_size)
                     else:
-                        pix = QImage(200, 200, QImage.Format.Format_ARGB32)
+                        pix = QImage(preview_size, preview_size, QImage.Format.Format_ARGB32)
                         pix.fill(Qt.GlobalColor.black)
                         return pix
             case Qt.ItemDataRole.ToolTipRole:
