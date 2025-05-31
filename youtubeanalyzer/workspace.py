@@ -1,46 +1,12 @@
 from PySide6.QtCore import (
-    QObject,
-    QSize,
-    Qt,
-    QModelIndex,
-    QUrl,
-    QTimer,
-    QStringListModel,
-    QItemSelection
-)
-from PySide6.QtGui import (
-    QImage,
-    QPixmap,
-    QResizeEvent,
-    QPainter,
-    QGuiApplication
+    QObject
 )
 from PySide6.QtWidgets import (
     QWidget,
-    QScrollArea,
-    QVBoxLayout,
-    QHBoxLayout,
     QGridLayout,
-    QLabel,
-    QTextEdit,
     QStackedLayout,
-    QComboBox,
-    QLineEdit,
-    QCompleter,
     QPushButton,
-    QTabWidget,
-    QSizePolicy,
-    QMessageBox,
-    QSpinBox,
-    QTableView,
-    QSplitter,
-    QFrame,
-    QButtonGroup,
-    QRadioButton,
-    QListView
-)
-from youtubeanalyzer.theme import (
-    Theme
+    QTabWidget
 )
 from youtubeanalyzer.settings import (
     Settings,
