@@ -34,6 +34,7 @@ class TestSettingsModule(unittest.TestCase):
         self.assertEqual(Settings.PublishedTimeFilter.key, "published_time_filter")
         self.assertEqual(Settings.ActiveToolPanelIndex.key, "active_tool_panel_index")
         self.assertEqual(Settings.VideoTableMode.key, "video_table_mode")
+        self.assertEqual(Settings.PreviewScaleIndex.key, "preview_scale_index")
 
     def test_upgrade_from_version_1(self):
         etalon_test_file = "tests/data/settings_version_1.ini"
