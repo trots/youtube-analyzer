@@ -57,8 +57,7 @@ from youtubeanalyzer.filters import (
 from youtubeanalyzer.chart import (
     ChannelsPieChart,
     VideoDurationChart,
-    WordsPieChart,
-    VideoTypeChart
+    WordsPieChart
 )
 from youtubeanalyzer.widgets import (
     create_link_label,
@@ -247,7 +246,6 @@ class AnalyticsWidget(QWidget):
         self._chart_combobox.addItem(self.tr("Channels distribution chart"))
         self._chart_combobox.addItem(self.tr("Video duration chart"))
         self._chart_combobox.addItem(self.tr("Popular title words chart"))
-        self._chart_combobox.addItem(self.tr("Video type chart"))
 
         self._chart_combobox.currentIndexChanged.connect(self._on_current_chart_changed)
         main_layout.addWidget(self._chart_combobox)
@@ -264,9 +262,6 @@ class AnalyticsWidget(QWidget):
 
         words_pie_chart = WordsPieChart(proxy_model)
         self._charts.append(words_pie_chart)
-
-        video_type_chart = VideoTypeChart(proxy_model)
-        self._charts.append(video_type_chart)
 
         self._chart_view.setChart(channels_pie_chart)
 

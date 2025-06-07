@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 import traceback
 import isodate
-import requests
 from PySide6.QtCore import (
     QObject,
     Signal,
@@ -435,15 +434,18 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         return video_response, channels
 
     def _type(self, vid):
-        url = 'http://www.youtube.com/shorts/' + vid
-        ret = requests.get(url, timeout=100)
-        text = ret.text
-        urlshorts = "//www.youtube.com/shorts/"
-        if (text.find(urlshorts) > 0):
-            type = "shorts"
-        else:
-            type = "longs"
-        return type
+        return "unknown"
+        # The code below is not fast enough to use for a large number of videos in a request.
+        # We can come back to video type detecting if we find a better method for doing so.
+        # url = 'http://www.youtube.com/shorts/' + vid
+        # ret = requests.get(url, timeout=100)
+        # text = ret.text
+        # urlshorts = "//www.youtube.com/shorts/"
+        # if (text.find(urlshorts) > 0):
+        #     type = "shorts"
+        # else:
+        #     type = "longs"
+        # return type
 
     def _responce_item_to_result(self, responce_item, video_item, result_index, channels, publish_time_key, video_id_getter):
         search_snippet = responce_item["snippet"]
