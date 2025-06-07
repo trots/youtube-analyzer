@@ -110,13 +110,11 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Video tag list"),
             self.tr("Video duration timedelta"),
             self.tr("Video relevance in search output (0 is the higest relevance)"),
-            self.tr("Video type"),
             self.tr("Video preview image")
             ]
         self._fields = [
             ResultFields.VideoRelevanceNumber,
             ResultFields.VideoTitle,
-            ResultFields.VideoType,
             ResultFields.VideoPublishedTime,
             ResultFields.VideoDuration,
             ResultFields.VideoViews,
