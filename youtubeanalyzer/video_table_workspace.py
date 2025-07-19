@@ -552,6 +552,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         v_layout.addWidget(self._main_splitter)
         self.setLayout(v_layout)
 
+    def has_data_to_export(self):
+        return True
+
     def get_data_name(self):
         raise "AbstractVideoTableWorkspace.get_data_name is not implemented"
 
@@ -623,14 +626,15 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             clipboard.setText(str(self.model.get_field_data(source_index.row(), field)))
 
     def _on_insert_widgets(self):
-        for i in range(self.model.rowCount()):
-            video_idx = self._sort_model.index(i, self.model.map_field_to_table_column(ResultFields.VideoTitle))
+        for row in range(self.model.rowCount()):
+            video_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.VideoTitle))
             widget = self._table_view.indexWidget(video_idx)
             if not widget:
-                video_item = self.model.get_row_data(i)
+                source_row = self._sort_model.mapToSource(video_idx).row()
+                video_item = self.model.get_row_data(source_row)
                 video_label = create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
                 self._table_view.setIndexWidget(video_idx, video_label)
 
-                channel_idx = self._sort_model.index(i, self.model.map_field_to_table_column(ResultFields.ChannelTitle))
+                channel_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.ChannelTitle))
                 channel_label = create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
                 self._table_view.setIndexWidget(channel_idx, channel_label)
