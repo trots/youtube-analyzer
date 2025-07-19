@@ -63,16 +63,13 @@ class ChannelsPieChart(QChart):
         if current_row == row:
             return
 
-        current_channel_name = self._proxy_model.get_field_data(current_row, ResultFields.ChannelTitle)
-
-        if current_channel_name is not None:
-            for slice in self._series.slices():
-                if slice.label() == current_channel_name:
-                    slice.setExploded(False)
-                    slice.setLabelVisible(False)
-                    slice.setPen(self._last_pen)
-                    slice.setBrush(self._last_brush)
-                    break
+        for slice in self._series.slices():
+            if slice.isExploded():
+                slice.setExploded(False)
+                slice.setLabelVisible(False)
+                slice.setPen(self._last_pen)
+                slice.setBrush(self._last_brush)
+                break
 
         channel_name = self._proxy_model.get_field_data(row, ResultFields.ChannelTitle)
 
