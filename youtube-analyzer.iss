@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "YouTube Analyzer"
-#define MyAppVersion "4.0"
+#define MyAppVersion "5.0"
 #define MyAppPublisher "Alexander Trotsenko"
 #define MyAppURL "https://github.com/trots/youtube-analyzer"
 #define MyAppExeName "youtube-analyzer.exe"
