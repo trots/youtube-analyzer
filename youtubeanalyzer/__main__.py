@@ -45,7 +45,8 @@ from youtubeanalyzer.settings import (
     SettingsDialog
 )
 from youtubeanalyzer.workspace import (
-    WorkspaceTab
+    WorkspaceTab,
+    WorkspaceWidget
 )
 from youtubeanalyzer.search import (
     SearchWorkspaceFactory
@@ -296,7 +297,11 @@ class MainWindow(StateSaveable, QMainWindow):
             self._main_tab_widget.removeTab(self._main_tab_widget.currentIndex())
 
     def _get_file_path_to_export(self, caption: str, filter: str, file_suffix: str):
-        current_workspace = self._main_tab_widget.currentWidget().current_workspace()
+        current_workspace: WorkspaceWidget = self._main_tab_widget.currentWidget().current_workspace()
+        if not current_workspace or not current_workspace.has_data_to_export():
+            QMessageBox.warning(self, app_name, self.tr("Export is not supported for this tab"))
+            return ""
+
         data_name = current_workspace.get_data_name()
         if not data_name:
             data_name = "export"

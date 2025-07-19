@@ -19,6 +19,9 @@ class WorkspaceWidget(StateSaveable, QWidget):
         StateSaveable.__init__(self, settings)
         QWidget.__init__(self, parent)
 
+    def has_data_to_export(self):
+        return False
+
 
 class TabWorkspaceFactory(QObject):
     def __init__(self, parent: QObject = None):
