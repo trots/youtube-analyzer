@@ -76,10 +76,11 @@ Source: "{#MyAppDistDir}\shiboken6.abi3.dll"; DestDir: "{app}"; Flags: ignorever
 Source: "{#MyAppDistDir}\unicodedata.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyAppDistDir}\plugins\*.pyd"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyAppDistDir}\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\certifi\*"; DestDir: "{app}\certifi"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\charset_normalizer\*"; DestDir: "{app}\charset_normalizer"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\googleapiclient\*"; DestDir: "{app}\googleapiclient"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyAppDistDir}\pycountry\*"; DestDir: "{app}\pycountry"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\PySide6\*"; DestDir: "{app}\PySide6"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\shiboken6\*"; DestDir: "{app}\shiboken6"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\translations\*"; DestDir: "{app}\translations"; Flags: ignoreversion recursesubdirs createallsubdirs
