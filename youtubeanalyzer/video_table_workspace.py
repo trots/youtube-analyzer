@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QStackedLayout,
     QComboBox,
     QPushButton,
-    QTabWidget,
     QSpinBox,
     QTableView,
     QSplitter,
@@ -61,7 +60,8 @@ from youtubeanalyzer.chart import (
 )
 from youtubeanalyzer.widgets import (
     create_link_label,
-    PixmapLabel
+    PixmapLabel,
+    FixedTabWidget
 )
 from youtubeanalyzer.workspace import (
     WorkspaceWidget
@@ -522,7 +522,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
         central_layout.addLayout(self._stacked_layout, 2)
 
-        self._side_tab_widget = QTabWidget()
+        self._side_tab_widget = FixedTabWidget()
 
         self._details_widget = VideoDetailsWidget(self.model, self)
         self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
@@ -567,6 +567,10 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         if splitter_state and not splitter_state.isEmpty():
             self._main_splitter.restoreState(splitter_state)
 
+        side_tab_index: int = int(self._settings.get(Settings.LastActiveDetailsTab))
+        print(side_tab_index)
+        self._side_tab_widget.setCurrentIndex(side_tab_index)
+
         # Restore main table
         table_header_state = self._settings.get(Settings.MainTableHeaderState)
         if not table_header_state.isEmpty():
@@ -580,7 +584,10 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._settings.set(Settings.LastActiveChartIndex, self._analytics_widget.get_current_chart_index())
         self._settings.set(Settings.MainTableHeaderState, self._table_view.horizontalHeader().saveState())
         self._settings.set(Settings.MainSplitterState, self._main_splitter.saveState())
-        self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+        if self.isVisible():
+            self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.currentIndex())
+        else:  # If QTabWidget is hidden, the current index becomes 0. So we need to save the last visible index
+            self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.get_last_visible_index())
         self._tools_panel.save_state()
 
     def handle_preferences_change(self):
