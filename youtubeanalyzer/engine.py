@@ -456,7 +456,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         video_published_time_str = video_published_time.strftime(PublishedDateFormat)
         video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
         video_duration = timedelta_to_str(video_duration_td)
-        views = int(statistics["viewCount"])
+        views = int(statistics["viewCount"] if "viewCount" in statistics else 0)
         video_link = "https://www.youtube.com/watch?v=" + video_id_getter(responce_item)
         channel_title = search_snippet["channelTitle"]
         channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
