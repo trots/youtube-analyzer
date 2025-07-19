@@ -85,6 +85,9 @@ class AutocompleteWorkspace(WorkspaceWidget):
     def save_state(self):
         pass  # Not needed
 
+    def handle_preferences_change(self):
+        pass  # Not needed
+
     def _on_autocomplete_downloaded(self, autocomplete_list):
         self._autocomplete_list_widget.clear()
         self._autocomplete_list_widget.addItems(autocomplete_list)
