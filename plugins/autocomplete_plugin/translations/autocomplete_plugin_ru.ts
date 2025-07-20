@@ -37,12 +37,12 @@
 <context>
     <name>AutocompleteWorkspaceFactory</name>
     <message>
-        <location filename="../autocomplete_plugin.py" line="120"/>
+        <location filename="../autocomplete_plugin.py" line="123"/>
         <source>Search autocomplete</source>
         <translation>Автодополнение поиска</translation>
     </message>
     <message>
-        <location filename="../autocomplete_plugin.py" line="121"/>
+        <location filename="../autocomplete_plugin.py" line="124"/>
         <source>Search autocomplete...</source>
         <translation>Автодополнение поиска...</translation>
     </message>
@@ -50,12 +50,12 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../autocomplete_plugin.py" line="135"/>
+        <location filename="../autocomplete_plugin.py" line="138"/>
         <source>Autocomplete plugin</source>
         <translation>Плагин автодополнения</translation>
     </message>
     <message>
-        <location filename="../autocomplete_plugin.py" line="138"/>
+        <location filename="../autocomplete_plugin.py" line="141"/>
         <source>Adds a new tab to work with YouTube search autocomplete</source>
         <translation>Добавляет новую вкладку для работы с автодополнением поиска YouTube</translation>
     </message>

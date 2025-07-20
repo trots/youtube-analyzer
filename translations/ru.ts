@@ -106,18 +106,18 @@
     </message>
     <message>
         <location filename="../youtubeanalyzer/video_table_workspace.py" line="462"/>
-        <source>Views</source>
-        <translation>Представления</translation>
+        <source>View</source>
+        <translation>Вид</translation>
     </message>
     <message>
         <location filename="../youtubeanalyzer/video_table_workspace.py" line="462"/>
-        <source>Hide views panel</source>
-        <translation>Скрыть панель представлений</translation>
+        <source>Hide view panel</source>
+        <translation>Скрыть панель настройки вида</translation>
     </message>
     <message>
         <location filename="../youtubeanalyzer/video_table_workspace.py" line="462"/>
-        <source>Show views panel</source>
-        <translation>Показать панель представлений</translation>
+        <source>Show view panel</source>
+        <translation>Показать панель настройки вида</translation>
     </message>
     <message>
         <location filename="../youtubeanalyzer/video_table_workspace.py" line="480"/>
@@ -683,7 +683,7 @@
 <context>
     <name>SearchLineEdit</name>
     <message>
-        <location filename="../youtubeanalyzer/widgets.py" line="85"/>
+        <location filename="../youtubeanalyzer/widgets.py" line="88"/>
         <source>Enter request and press &apos;Search&apos;...</source>
         <translation>Введите запрос и нажмите &apos;Поиск&apos;...</translation>
     </message>
@@ -840,67 +840,67 @@
 <context>
     <name>VideoDurationChart</name>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="114"/>
+        <location filename="../youtubeanalyzer/chart.py" line="111"/>
         <source>30s</source>
         <translation>30с</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="115"/>
+        <location filename="../youtubeanalyzer/chart.py" line="112"/>
         <source>1m</source>
         <translation>1м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="116"/>
+        <location filename="../youtubeanalyzer/chart.py" line="113"/>
         <source>3m</source>
         <translation>3м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="117"/>
+        <location filename="../youtubeanalyzer/chart.py" line="114"/>
         <source>5m</source>
         <translation>5м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="118"/>
+        <location filename="../youtubeanalyzer/chart.py" line="115"/>
         <source>10m</source>
         <translation>10м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="119"/>
+        <location filename="../youtubeanalyzer/chart.py" line="116"/>
         <source>15m</source>
         <translation>15м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="120"/>
+        <location filename="../youtubeanalyzer/chart.py" line="117"/>
         <source>20m</source>
         <translation>20м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="121"/>
+        <location filename="../youtubeanalyzer/chart.py" line="118"/>
         <source>30m</source>
         <translation>30м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="122"/>
+        <location filename="../youtubeanalyzer/chart.py" line="119"/>
         <source>45m</source>
         <translation>45м</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="123"/>
+        <location filename="../youtubeanalyzer/chart.py" line="120"/>
         <source>1h</source>
         <translation>1ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="124"/>
+        <location filename="../youtubeanalyzer/chart.py" line="121"/>
         <source>1,5h</source>
         <translation>1,5ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="125"/>
+        <location filename="../youtubeanalyzer/chart.py" line="122"/>
         <source>2h</source>
         <translation>2ч</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/chart.py" line="126"/>
+        <location filename="../youtubeanalyzer/chart.py" line="123"/>
         <source>2+h</source>
         <translation>2+ч</translation>
     </message>
@@ -914,7 +914,7 @@
     </message>
 </context>
 <context>
-    <name>ViewsPanel</name>
+    <name>ViewPanel</name>
     <message>
         <location filename="../youtubeanalyzer/video_table_workspace.py" line="376"/>
         <source>Table</source>

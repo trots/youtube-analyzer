@@ -361,7 +361,7 @@ class VideoTableToolsPanel(StateSaveable, QWidget):
             self._checked_button = button
 
 
-class ViewsPanel(StateSaveable, QWidget):
+class ViewPanel(StateSaveable, QWidget):
     mode_changed = Signal(ResultTableModel.Mode)
     scale_changed = Signal(float)
 
@@ -456,11 +456,11 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._tools_panel.add_tool_panel(self.tr("Filters"), self.tr("Hide filters panel"), self.tr("Show filters panel"),
                                          self._filters_panel)
 
-        views_panel = ViewsPanel(settings, self)
-        views_panel.mode_changed.connect(self._on_view_mode_changed)
-        views_panel.scale_changed.connect(lambda scale: self.model.set_preview_scale(scale))
-        self._tools_panel.add_tool_panel(self.tr("Views"), self.tr("Hide views panel"), self.tr("Show views panel"),
-                                         views_panel)
+        view_panel = ViewPanel(settings, self)
+        view_panel.mode_changed.connect(self._on_view_mode_changed)
+        view_panel.scale_changed.connect(lambda scale: self.model.set_preview_scale(scale))
+        self._tools_panel.add_tool_panel(self.tr("View"), self.tr("Hide view panel"), self.tr("Show view panel"),
+                                         view_panel)
 
         central_layout.addWidget(self._tools_panel)
 
@@ -568,7 +568,6 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._main_splitter.restoreState(splitter_state)
 
         side_tab_index: int = int(self._settings.get(Settings.LastActiveDetailsTab))
-        print(side_tab_index)
         self._side_tab_widget.setCurrentIndex(side_tab_index)
 
         # Restore main table
