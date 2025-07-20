@@ -14,7 +14,7 @@
 AppId={{6CBD04A3-42AC-4633-9AAB-C4C78566550E}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-;AppVerName={#MyAppName} {#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -23,6 +23,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=D:\git\youtube-analyzer\youtube-analyzer\LICENSE
+UninstallDisplayIcon={app}\{#MyAppExeName},0
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputBaseFilename=youtube-analyzer-setup
