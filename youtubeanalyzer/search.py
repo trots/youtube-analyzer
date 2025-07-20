@@ -18,7 +18,7 @@ from youtubeanalyzer.engine import (
     YoutubeGrepEngine
 )
 from youtubeanalyzer.widgets import (
-    critial_detailed_message,
+    critical_detailed_message,
     SearchLineEdit
 )
 from youtubeanalyzer.workspace import (
@@ -68,7 +68,7 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
             text = self.tr("Error in the searching process")
             if engine.errorReason is not None:
                 text += ": " + engine.errorReason
-            critial_detailed_message(self, app_name, text, engine.errorDetails)
+            critical_detailed_message(self, app_name, text, engine.errorDetails)
 
         QApplication.restoreOverrideCursor()
         self.setDisabled(False)

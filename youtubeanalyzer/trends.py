@@ -23,7 +23,7 @@ from youtubeanalyzer.engine import (
     YoutubeApiEngine
 )
 from youtubeanalyzer.widgets import (
-    critial_detailed_message
+    critical_detailed_message
 )
 from youtubeanalyzer.workspace import (
     TabWorkspaceFactory
@@ -95,7 +95,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         categories_lang = "ru_RU" if self._settings.get(Settings.Language) == "Ru" else "en_US"
         categories = engine.get_video_categories(region_code, categories_lang)
         if len(categories) == 0:
-            critial_detailed_message(self, app_name, self.tr("Unable to get video categories"), engine.errorDetails)
+            critical_detailed_message(self, app_name, self.tr("Unable to get video categories"), engine.errorDetails)
         self._category_combo_box.addItem(self.tr("All"), 0)
         for category in categories:
             self._category_combo_box.addItem(category.text, category.id)
@@ -152,7 +152,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
             text = self.tr("Trends searching failed")
             if engine.errorReason is not None:
                 text += ": " + engine.errorReason
-            critial_detailed_message(self, app_name, text, engine.errorDetails)
+            critical_detailed_message(self, app_name, text, engine.errorDetails)
 
         QApplication.restoreOverrideCursor()
         self.setDisabled(False)
