@@ -35,7 +35,7 @@ def create_link_label(link: str, text: str):
     return label
 
 
-def critial_detailed_message(parent, title, text, details_text):
+def critical_detailed_message(parent, title, text, details_text):
     dialog = QMessageBox(parent)
     dialog.setIcon(QMessageBox.Critical)
     dialog.setWindowTitle(title)
