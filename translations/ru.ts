@@ -184,18 +184,18 @@
     </message>
     <message>
         <location filename="../youtubeanalyzer/settings.py" line="204"/>
-        <source>Set the maximum page size for YouTube requests</source>
-        <translation>Установить максимальный размер страницы для запроса YouTube</translation>
+        <source>Set the maximum page size for YouTube requests. Default is 25</source>
+        <translation>Установить максимальный размер страницы для запроса YouTube. По умолчанию 25</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/settings.py" line="213"/>
+        <source>Set the maximum waiting time in seconds for YouTube request. Default is 10</source>
+        <translation>Установить максимальное время ожидания запроса на YouTube в секундах. По умолчанию 10</translation>
     </message>
     <message>
         <location filename="../youtubeanalyzer/settings.py" line="208"/>
         <source>Request timeout in seconds:</source>
         <translation>Время ожидания запроса в секундах:</translation>
-    </message>
-    <message>
-        <location filename="../youtubeanalyzer/settings.py" line="212"/>
-        <source>Set the maximum waiting time in seconds for YouTube request</source>
-        <translation>Установить максимальное время ожидания запроса на YouTube в секундах</translation>
     </message>
 </context>
 <context>
@@ -699,12 +699,12 @@
 <context>
     <name>SearchWorkspaceFactory</name>
     <message>
-        <location filename="../youtubeanalyzer/search.py" line="95"/>
+        <location filename="../youtubeanalyzer/search.py" line="96"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/search.py" line="96"/>
+        <location filename="../youtubeanalyzer/search.py" line="97"/>
         <source>Search video...</source>
         <translation>Поиск видео...</translation>
     </message>
@@ -712,27 +712,27 @@
 <context>
     <name>SettingsDialog</name>
     <message>
-        <location filename="../youtubeanalyzer/settings.py" line="229"/>
+        <location filename="../youtubeanalyzer/settings.py" line="230"/>
         <source>Settings</source>
         <translation>Настройки</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/settings.py" line="236"/>
+        <location filename="../youtubeanalyzer/settings.py" line="237"/>
         <source>General</source>
         <translation>Общие</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/settings.py" line="239"/>
+        <location filename="../youtubeanalyzer/settings.py" line="240"/>
         <source>Analytics</source>
         <translation>Аналитика</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/settings.py" line="242"/>
+        <location filename="../youtubeanalyzer/settings.py" line="243"/>
         <source>Advanced</source>
         <translation>Продвинутые</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/settings.py" line="263"/>
+        <location filename="../youtubeanalyzer/settings.py" line="264"/>
         <source>Restart the application now to apply the selected language?</source>
         <translation>Перезапустить приложение для применения выбранного языка?</translation>
     </message>

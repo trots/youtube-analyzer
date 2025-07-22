@@ -200,8 +200,8 @@ class AdvancedTab(QWidget):
         layout.addWidget(QLabel(self.tr("Request page limit:")))
         self._request_page_limit_edit = QSpinBox()
         self._request_page_limit_edit.setMinimum(5)
-        self._request_page_limit_edit.setMaximum(200)
-        self._request_page_limit_edit.setToolTip(self.tr("Set the maximum page size for YouTube requests"))
+        self._request_page_limit_edit.setMaximum(50)
+        self._request_page_limit_edit.setToolTip(self.tr("Set the maximum page size for YouTube requests. Default is 25"))
         self._request_page_limit_edit.setValue(int(self._settings.get(Settings.RequestPageLimit)))
         layout.addWidget(self._request_page_limit_edit)
 
@@ -209,7 +209,8 @@ class AdvancedTab(QWidget):
         self._request_timeout_sec_edit = QSpinBox()
         self._request_timeout_sec_edit.setMinimum(2)
         self._request_timeout_sec_edit.setMaximum(1000)
-        self._request_timeout_sec_edit.setToolTip(self.tr("Set the maximum waiting time in seconds for YouTube request"))
+        self._request_timeout_sec_edit.setToolTip(
+            self.tr("Set the maximum waiting time in seconds for YouTube request. Default is 10"))
         self._request_timeout_sec_edit.setValue(int(self._settings.get(Settings.RequestTimeoutSec)))
         layout.addWidget(self._request_timeout_sec_edit)
         layout.addStretch()
