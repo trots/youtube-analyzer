@@ -74,12 +74,13 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
         self.setDisabled(False)
 
     def _create_engine(self):
-        request_limit = self._search_limit_spin_box.value()
-        api_key = self._settings.get(Settings.YouTubeApiKey)
+        request_limit: int = self._search_limit_spin_box.value()
+        api_key: str = self._settings.get(Settings.YouTubeApiKey)
+        results_per_page: int = int(self._settings.get(Settings.RequestPageLimit))
         if not api_key:
             return YoutubeGrepEngine(self.model, request_limit)
         else:
-            return YoutubeApiEngine(api_key, self.model, request_limit)
+            return YoutubeApiEngine(api_key, self.model, request_limit, results_per_page)
 
 
 class SearchWorkspaceFactory(TabWorkspaceFactory):
