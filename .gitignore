@@ -8,3 +8,5 @@ translations/*.qm
 Output
 .coverage*
 unit_test_*
+LICENSE_ISS
+LICENSE_ISS_RU
