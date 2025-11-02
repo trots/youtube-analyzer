@@ -39,6 +39,9 @@ from youtubeanalyzer.defines import (
 from youtubeanalyzer.theme import (
     Theme
 )
+from youtubeanalyzer.eventbus import (
+    EventBus
+)
 from youtubeanalyzer.settings import (
     Settings,
     StateSaveable,
@@ -392,10 +395,13 @@ Theme.apply(app, int(settings.get(Settings.Theme)))
 WorkspaceTab.add_workspace_factory(SearchWorkspaceFactory())
 WorkspaceTab.add_workspace_factory(TrendsWorkspaceFactory())
 
+event_bus = EventBus()
+event_bus.quitRequested.connect(app.exit)
+
 plugin_manager = PluginManager()
 plugin_manager.load_plugins()
 for plugin in plugin_manager.get_plugins():
-    plugin.initialize()
+    plugin.initialize(settings)
 
 while True:
     app_translator: QTranslator = QTranslator()
