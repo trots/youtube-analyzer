@@ -83,6 +83,12 @@ class Settings:
     def end_array(self):
         self._impl.endArray()
 
+    def begin_plugin_group(self, plugin_name):
+        self._impl.beginGroup(plugin_name)
+
+    def end_plugin_group(self):
+        self._impl.endGroup()
+
     def _upgrade_settings(self):
         if self._impl.contains(Settings.RequestLimit.key) and not self._impl.contains(Settings.Version.key):
             # Need to upgrade to version 1

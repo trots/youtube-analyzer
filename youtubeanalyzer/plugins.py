@@ -2,10 +2,17 @@ import sys
 import importlib
 import pkgutil
 from pathlib import Path
-from PySide6.QtWidgets import QWidget
+
+from PySide6.QtCore import (
+    QObject
+)
+
+from youtubeanalyzer.settings import (
+    Settings
+)
 
 
-class AbstractPlugin:
+class AbstractPlugin(QObject):
     def get_name(self) -> str:
         pass
 
@@ -18,7 +25,7 @@ class AbstractPlugin:
     def get_version(self) -> str:
         pass
 
-    def initialize(self, parent: QWidget):
+    def initialize(self, settings: Settings):
         pass
 
     def execute(self):
