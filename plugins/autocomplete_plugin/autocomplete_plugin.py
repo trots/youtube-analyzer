@@ -141,5 +141,5 @@ class AutocompletePlugin(AbstractPlugin):
     def get_version(self) -> str:
         return "1.0"
 
-    def initialize(self):
+    def initialize(self, settings: Settings):
         WorkspaceTab.add_workspace_factory(AutocompleteWorkspaceFactory())
