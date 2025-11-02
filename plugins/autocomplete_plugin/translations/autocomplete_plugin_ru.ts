@@ -2,6 +2,14 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="ru_RU" sourcelanguage="en_US">
 <context>
+    <name>AutocompletePlugin</name>
+    <message>
+        <location filename="../autocomplete_plugin.py" line="147"/>
+        <source>LICENSE</source>
+        <translation>LICENSE_RU</translation>
+    </message>
+</context>
+<context>
     <name>AutocompleteWorkspace</name>
     <message>
         <location filename="../autocomplete_plugin.py" line="39"/>

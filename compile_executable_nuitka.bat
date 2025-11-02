@@ -15,6 +15,11 @@
     --output-dir=__main__.dist/plugins
 
 copy logo.png __main__.dist\logo.png
+copy LICENSE __main__.dist\LICENSE
+copy LICENSE_RU __main__.dist\LICENSE_RU
+
+copy LICENSE LICENSE_ISS
+copy LICENSE_RU LICENSE_ISS_RU
 
 call compile_translations.bat
 mkdir __main__.dist\translations
