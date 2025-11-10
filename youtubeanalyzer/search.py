@@ -7,9 +7,6 @@ from PySide6.QtWidgets import (
     QWidget,
     QPushButton
 )
-from youtubeanalyzer.defines import (
-    app_name
-)
 from youtubeanalyzer.settings import (
     Settings
 )
@@ -18,6 +15,7 @@ from youtubeanalyzer.engine import (
     YoutubeGrepEngine
 )
 from youtubeanalyzer.widgets import (
+    critical_message,
     critical_detailed_message,
     SearchLineEdit
 )
@@ -60,27 +58,32 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
         self._details_widget.clear()
         QApplication.instance().processEvents()
 
-        engine = self._create_engine()
-        if engine.search(self.request_text):
-            self._on_insert_widgets()
-            self._table_view.resizeColumnsToContents()
-        else:
-            text = self.tr("Error in the searching process")
-            if engine.errorReason is not None:
-                text += ": " + engine.errorReason
-            critical_detailed_message(self, app_name, text, engine.errorDetails)
+        try:
+            engine = self._create_engine()
+            if engine.search(self.request_text):
+                self._on_insert_widgets()
+                self._table_view.resizeColumnsToContents()
+            else:
+                text = self.tr("Error in the searching process")
+                if engine.errorReason is not None:
+                    text += ": " + engine.errorReason
+                critical_detailed_message(self, text, engine.errorDetails)  # TODO: engine exception
+        except Exception as e:
+            QApplication.restoreOverrideCursor()
+            self.setDisabled(False)
+            critical_message(self, str(e))
 
         QApplication.restoreOverrideCursor()
         self.setDisabled(False)
 
     def _create_engine(self):
-        request_limit: int = self._search_limit_spin_box.value()
-        api_key: str = self._settings.get(Settings.YouTubeApiKey)
-        results_per_page: int = int(self._settings.get(Settings.RequestPageLimit))
+        request_limit: int = self._get_request_limit()
+        api_key: str = self._get_api_key()
         if not api_key:
             return YoutubeGrepEngine(self.model, request_limit)
         else:
-            return YoutubeApiEngine(api_key, self.model, request_limit, results_per_page)
+            request_page_limit: int = self._get_request_page_limit()
+            return YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
 
 
 class SearchWorkspaceFactory(TabWorkspaceFactory):

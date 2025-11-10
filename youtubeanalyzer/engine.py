@@ -381,9 +381,9 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
             video_response, channels = self._get_response_details(youtube, response, video_id_getter)
 
             count = 0
-            for responce_item in response["items"]:
-                result.append(self._responce_item_to_result(responce_item, video_response["items"][count], total_count,
-                                                            channels, published_time_key, video_id_getter))
+            for response_item in response["items"]:
+                result.append(self._item_to_result(response_item, video_response["items"][count], total_count,
+                                                   channels, published_time_key, video_id_getter))
                 count = count + 1
                 total_count = total_count + 1
 
@@ -447,30 +447,42 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         #     type = "longs"
         # return type
 
-    def _responce_item_to_result(self, responce_item, video_item, result_index, channels, publish_time_key, video_id_getter):
-        search_snippet = responce_item["snippet"]
+    def _item_to_result(self, item, video_item, result_index, channels, publish_time_key, video_id_getter):
+        snippet = item["snippet"]
+        video_id: str = video_id_getter(item)
         content_details = video_item["contentDetails"]
         statistics = video_item["statistics"]
-        video_title = search_snippet["title"]
-        video_published_time = datetime.strptime(search_snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ")
+        video_snippet = video_item["snippet"]
+
+        video_title = snippet["title"]
+        video_published_time = datetime.strptime(snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ")
         video_published_time_str = video_published_time.strftime(PublishedDateFormat)
         video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
         video_duration = timedelta_to_str(video_duration_td)
-        views = int(statistics["viewCount"] if "viewCount" in statistics else 0)
-        video_link = "https://www.youtube.com/watch?v=" + video_id_getter(responce_item)
-        channel_title = search_snippet["channelTitle"]
-        channel_url = "https://www.youtube.com/channel/" + search_snippet["channelId"]
-        channel_item = channels[search_snippet["channelId"]]
-        channel_subscribers = int(channel_item["statistics"]["subscriberCount"])
-        channel_views = int(channel_item["statistics"]["viewCount"])
+        views = int(statistics.get("viewCount", 0))
+        video_link = "https://www.youtube.com/watch?v=" + video_id
+        channel_title = snippet["channelTitle"]
+        channel_url = "https://www.youtube.com/channel/" + snippet["channelId"]
+
+        channel_item = channels.get(snippet["channelId"], {})
+        channel_stats = channel_item.get("statistics", {})
+        channel_subscribers = int(channel_stats.get("subscriberCount", 0))
+        channel_views = int(channel_stats.get("viewCount", 0))
         channel_joined_date = ""
-        video_preview_link = search_snippet["thumbnails"]["high"]["url"]
-        channel_snippet = channel_item["snippet"]
-        channel_logo_link = channel_snippet["thumbnails"]["default"]["url"]
-        channel_logo_link = channel_logo_link.replace("https", "http")  # https is not working. I don't know why
-        video_snippet = video_item["snippet"]
-        tags = video_snippet["tags"] if "tags" in video_snippet else None
-        video_type = self._type(video_id_getter(responce_item))
+
+        video_preview_link = snippet["thumbnails"]["high"]["url"]
+
+        channel_logo_link = ""
+        channel_snippet = channel_item.get("snippet", {})
+        if channel_snippet:
+            channel_thumbnails = channel_snippet.get("thumbnails", {})
+            if "default" in channel_thumbnails:
+                channel_logo_link = channel_thumbnails["default"]["url"]
+                # https is not working. I don't know why
+                channel_logo_link = channel_logo_link.replace("https", "http")
+
+        tags = video_snippet.get("tags", [])
+        video_type = self._type(video_id)
 
         return make_result_row(video_title, video_published_time_str, video_duration, views,
                                video_link, channel_title, channel_url, channel_subscribers,
