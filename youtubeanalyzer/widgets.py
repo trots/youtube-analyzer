@@ -20,6 +20,9 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QTabWidget
 )
+from youtubeanalyzer.defines import (
+    app_name
+)
 from youtubeanalyzer.engine import (
     SearchAutocompleteDownloader
 )
@@ -35,10 +38,18 @@ def create_link_label(link: str, text: str):
     return label
 
 
-def critical_detailed_message(parent, title, text, details_text):
+def critical_message(parent, text):
     dialog = QMessageBox(parent)
     dialog.setIcon(QMessageBox.Critical)
-    dialog.setWindowTitle(title)
+    dialog.setWindowTitle(app_name)
+    dialog.setText(text)
+    return dialog.exec()
+
+
+def critical_detailed_message(parent, text, details_text):
+    dialog = QMessageBox(parent)
+    dialog.setIcon(QMessageBox.Critical)
+    dialog.setWindowTitle(app_name)
     dialog.setText(text)
     dialog.setDetailedText(details_text)
     return dialog.exec()

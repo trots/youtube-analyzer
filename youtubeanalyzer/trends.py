@@ -10,11 +10,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QPushButton,
-    QComboBox,
-    QMessageBox
-)
-from youtubeanalyzer.defines import (
-    app_name
+    QComboBox
 )
 from youtubeanalyzer.settings import (
     Settings
@@ -23,6 +19,7 @@ from youtubeanalyzer.engine import (
     YoutubeApiEngine
 )
 from youtubeanalyzer.widgets import (
+    critical_message,
     critical_detailed_message
 )
 from youtubeanalyzer.workspace import (
@@ -95,7 +92,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         categories_lang = "ru_RU" if self._settings.get(Settings.Language) == "Ru" else "en_US"
         categories = engine.get_video_categories(region_code, categories_lang)
         if len(categories) == 0:
-            critical_detailed_message(self, app_name, self.tr("Unable to get video categories"), engine.errorDetails)
+            critical_detailed_message(self, self.tr("Unable to get video categories"), engine.errorDetails)
         self._category_combo_box.addItem(self.tr("All"), 0)
         for category in categories:
             self._category_combo_box.addItem(category.text, category.id)
@@ -118,7 +115,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         if category_id is None:
             QApplication.restoreOverrideCursor()
             self.setDisabled(False)
-            QMessageBox.critical(self, app_name, self.tr("Unable to show trends. Video category is not selected."))
+            critical_message(self, self.tr("Unable to show trends. Video category is not selected."))
             return
 
         region_code = self._region_combo_box.currentData()
@@ -126,33 +123,24 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
             region_code = "US"
             print("Region code is not set. Using 'US' by default")
 
-        api_key = self._settings.get(Settings.YouTubeApiKey)
-        if not api_key:
+        try:
+            api_key: str = self._get_api_key()
+            request_limit: int = self._get_request_limit()
+            request_page_limit: int = self._get_request_page_limit()
+
+            engine = YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
+            if engine.trends(int(category_id), region_code):
+                self._on_insert_widgets()
+                self._table_view.resizeColumnsToContents()
+            else:
+                text = self.tr("Trends searching failed")
+                if engine.errorReason is not None:
+                    text += ": " + engine.errorReason
+                critical_detailed_message(self, text, engine.errorDetails)  # TODO: engine exception
+        except Exception as e:
             QApplication.restoreOverrideCursor()
             self.setDisabled(False)
-            QMessageBox.critical(self, app_name, self.tr("Unable to show trends. YouTube API key is not set. \
-                                                         Please set it in the preferences"))
-            return
-
-        request_limit = self._search_limit_spin_box.value()
-        if not request_limit:
-            request_limit = 10
-            print("Request limit is not set. Using '10' by default")
-
-        request_page_limit = int(self._settings.get(Settings.RequestPageLimit))
-        if not request_page_limit:
-            request_page_limit = 25
-            print("Request page limit is not set. Using '25' by default")
-
-        engine = YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
-        if engine.trends(int(category_id), region_code):
-            self._on_insert_widgets()
-            self._table_view.resizeColumnsToContents()
-        else:
-            text = self.tr("Trends searching failed")
-            if engine.errorReason is not None:
-                text += ": " + engine.errorReason
-            critical_detailed_message(self, app_name, text, engine.errorDetails)
+            critical_message(self, str(e))
 
         QApplication.restoreOverrideCursor()
         self.setDisabled(False)

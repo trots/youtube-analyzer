@@ -602,6 +602,26 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
     def _create_toolbar(self, h_layout: QHBoxLayout):
         raise "AbstractVideoTableWorkspace._create_toolbar is not implemented"
 
+    def _get_api_key(self, required=True):
+        api_key = self._settings.get(Settings.YouTubeApiKey)
+        if not api_key and required:
+            raise Exception(self.tr("YouTube API key is not set. Please set it in the preferences"))
+        return api_key
+
+    def _get_request_limit(self):
+        request_limit: int = self._search_limit_spin_box.value()
+        if not request_limit:
+            request_limit = 10
+            print("Request limit is not set. Using '10' by default")
+        return request_limit
+
+    def _get_request_page_limit(self):
+        request_page_limit: int = int(self._settings.get(Settings.RequestPageLimit))
+        if not request_page_limit:
+            request_page_limit = 25
+            print("Request page limit is not set. Using '25' by default")
+        return request_page_limit
+
     def _on_search_clicked(self):
         raise "AbstractVideoTableWorkspace._on_search_clicked is not implemented"
 
