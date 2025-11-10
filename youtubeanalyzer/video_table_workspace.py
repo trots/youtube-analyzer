@@ -632,7 +632,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             clipboard.setText(str(self.model.get_field_data(source_index.row(), field)))
 
     def _on_insert_widgets(self):
-        for row in range(self.model.rowCount()):
+        for row in range(self._sort_model.rowCount()):
             video_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.VideoTitle))
             widget = self._table_view.indexWidget(video_idx)
             if not widget:
