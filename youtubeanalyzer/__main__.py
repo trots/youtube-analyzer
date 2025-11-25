@@ -158,7 +158,9 @@ class MainWindow(StateSaveable, QMainWindow):
         StateSaveable.__init__(self, settings)
         QMainWindow.__init__(self)
 
-        self._restore_geometry_on_show = True
+        self._restore_geometry_on_show: bool = True
+
+        event_bus = EventBus()
 
         self.setWindowTitle(app_name + " " + version)
 
@@ -182,7 +184,7 @@ class MainWindow(StateSaveable, QMainWindow):
         window_menu = self.menuBar().addMenu(self.tr("Window"))
         add_new_tab_action = window_menu.addAction(self.tr("Create a new tab"))
         add_new_tab_action.setShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_N))
-        add_new_tab_action.triggered.connect(self._create_new_tab)
+        add_new_tab_action.triggered.connect(lambda: event_bus.create_new_tab.emit())
 
         help_menu = self.menuBar().addMenu(self.tr("Help"))
         authors_action = help_menu.addAction(self.tr("Authors..."))
@@ -206,7 +208,7 @@ class MainWindow(StateSaveable, QMainWindow):
         add_new_tab_button.setFixedHeight(20)
         add_new_tab_button.setText("+")
         add_new_tab_button.setToolTip(self.tr("Create a new tab"))
-        add_new_tab_button.clicked.connect(self._create_new_tab)
+        add_new_tab_button.clicked.connect(lambda: event_bus.create_new_tab.emit())
         self._main_tab_widget.setCornerWidget(add_new_tab_button, Qt.Corner.TopRightCorner)
 
         central_widget = QWidget()
@@ -214,6 +216,7 @@ class MainWindow(StateSaveable, QMainWindow):
         self.setCentralWidget(central_widget)
 
         self._create_new_tab()
+        event_bus.create_new_tab.connect(self._create_new_tab)
 
     def showEvent(self, _event: QShowEvent):
         if self._restore_geometry_on_show:
@@ -255,10 +258,12 @@ class MainWindow(StateSaveable, QMainWindow):
         self._settings.end_array()
         self._settings.set(Settings.ActiveTabIndex, self._main_tab_widget.currentIndex())
 
-    def _create_new_tab(self):
-        tab_widget = WorkspaceTab(self._settings, self._main_tab_widget)
-        tab_index = self._main_tab_widget.addTab(tab_widget, self.tr("New tab"))
+    def _create_new_tab(self, workspace_uid: str = None, workspace_data: object = None) -> WorkspaceTab:
+        tab_widget: WorkspaceTab = WorkspaceTab(self._settings, self._main_tab_widget)
+        tab_index: int = self._main_tab_widget.addTab(tab_widget, self.tr("New tab"))
         self._main_tab_widget.setCurrentIndex(tab_index)
+        if workspace_uid is not None:
+            tab_widget.create_workspace(workspace_uid, workspace_data)
         return tab_widget
 
     def _on_close_tab_requested(self, index):
@@ -366,7 +371,7 @@ WorkspaceTab.add_workspace_factory(SearchWorkspaceFactory())
 WorkspaceTab.add_workspace_factory(TrendsWorkspaceFactory())
 
 event_bus = EventBus()
-event_bus.quitRequested.connect(app.exit)
+event_bus.quit_requested.connect(app.exit)
 
 plugin_manager = PluginManager()
 plugin_manager.load_plugins()
