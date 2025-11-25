@@ -375,8 +375,7 @@ event_bus.quit_requested.connect(app.exit)
 
 plugin_manager = PluginManager()
 plugin_manager.load_plugins()
-for plugin in plugin_manager.get_plugins():
-    plugin.initialize(settings)
+plugin_manager.initialize_plugins(settings)
 
 while True:
     app_translator: QTranslator = QTranslator()

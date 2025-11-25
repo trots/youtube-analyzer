@@ -45,6 +45,9 @@ class AbstractPlugin(QObject):
     def get_license_text(self) -> str:
         pass
 
+    def get_dependencies(self) -> list[str]:
+        return []
+
     def initialize(self, settings: Settings):
         pass
 
@@ -58,7 +61,6 @@ class PluginManager:
         self._plugins: list[AbstractPlugin] = []
 
     def load_plugins(self):
-        is_compiled_executable = getattr(sys, "frozen", False)
         base_dir: Path = self._get_base_dir()
         plugin_path: Path = base_dir / self._plugin_dir
 
@@ -66,19 +68,12 @@ class PluginManager:
             print(f"Warning: {plugin_path} is not found!")
             return
 
-        for _, name, _ in pkgutil.iter_modules([str(plugin_path)]):
-            if is_compiled_executable:
-                module = importlib.import_module(f"{self._plugin_dir}.{name}")
-            else:
-                module = importlib.import_module(f"{self._plugin_dir}.{name}.{name}")
-            for item in dir(module):
-                obj = getattr(module, item)
-                if (
-                    isinstance(obj, type)
-                    and issubclass(obj, AbstractPlugin)
-                    and obj != AbstractPlugin
-                ):
-                    self._plugins.append(obj())
+        discovered_plugins: dict[str, AbstractPlugin] = self._discover_plugins(plugin_path)
+        self._plugins = self._resolve_dependencies(discovered_plugins)
+
+    def initialize_plugins(self, settings: Settings):
+        for plugin in self._plugins:
+            plugin.initialize(settings)
 
     def get_plugins(self):
         return self._plugins
@@ -103,6 +98,69 @@ class PluginManager:
             return Path(sys.executable).parent
         else:
             return Path(__file__).parent.parent
+
+    def _discover_plugins(self, plugin_path: Path) -> dict[str, AbstractPlugin]:
+        discovered_plugins: dict[str, AbstractPlugin] = {}
+        is_compiled_executable: bool = getattr(sys, "frozen", False)
+
+        for _, name, _ in pkgutil.iter_modules([str(plugin_path)]):
+            try:
+                if is_compiled_executable:
+                    module_path: str = f"{self._plugin_dir}.{name}"
+                else:
+                    module_path: str = f"{self._plugin_dir}.{name}.{name}"
+
+                module = importlib.import_module(module_path)
+
+                for item in dir(module):
+                    obj = getattr(module, item)
+                    if (
+                        isinstance(obj, type)
+                        and issubclass(obj, AbstractPlugin)
+                        and obj != AbstractPlugin
+                    ):
+                        instance = obj()
+                        plugin_name: str = instance.get_name()
+                        if plugin_name in discovered_plugins:
+                            print(f"Warning: Duplicate plugin name '{plugin_name}' ignored.")
+                        else:
+                            discovered_plugins[plugin_name] = instance
+            except Exception as e:
+                print(f"Error loading module {name}: {e}")
+
+        return discovered_plugins
+
+    def _resolve_dependencies(self, discovered_plugins: dict[str, AbstractPlugin]) -> list[AbstractPlugin]:
+        sorted_plugins: list[AbstractPlugin] = []
+        pending_plugins = discovered_plugins.copy()
+
+        while True:
+            added_on_this_pass = []
+
+            for name, plugin in pending_plugins.items():
+                dependencies = plugin.get_dependencies()
+
+                dependencies_met: bool = True
+                for dep_name in dependencies:
+                    if not any(plugin.get_name() == dep_name for plugin in sorted_plugins):
+                        dependencies_met = False
+                        break
+
+                if dependencies_met:
+                    sorted_plugins.append(plugin)
+                    added_on_this_pass.append(name)
+
+            if not added_on_this_pass:
+                break
+
+            for name in added_on_this_pass:
+                del pending_plugins[name]
+
+        if pending_plugins:
+            skipped_names = list(pending_plugins.keys())
+            print(f"Plugins skipped due to missing or circular dependencies: {skipped_names}")
+
+        return sorted_plugins
 
 
 class PluginDetailsDialog(QDialog):
