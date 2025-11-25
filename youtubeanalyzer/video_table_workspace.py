@@ -7,6 +7,7 @@ from PySide6.QtCore import (
     QItemSelection
 )
 from PySide6.QtGui import (
+    QAction,
     QPixmap,
     QPainter,
     QGuiApplication
@@ -439,8 +440,8 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._search_button.clicked.connect(self._on_search_clicked)
         h_layout.addWidget(self._search_button)
 
-        self.model = ResultTableModel(self)
-        self._sort_model = ResultSortFilterProxyModel(self)
+        self.model: ResultTableModel = ResultTableModel(self)
+        self._sort_model: ResultSortFilterProxyModel = ResultSortFilterProxyModel(self)
         self._sort_model.setSourceModel(self.model)
         self._sort_model.rowsInserted.connect(self._on_insert_widgets)
         self._sort_model.rowsRemoved.connect(self._on_insert_widgets)
@@ -588,6 +589,16 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         else:  # If QTabWidget is hidden, the current index becomes 0. So we need to save the last visible index
             self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.get_last_visible_index())
         self._tools_panel.save_state()
+
+    def add_context_menu_action(self, action_text: str) -> QAction:
+        return self._table_view.addAction(action_text)
+
+    def get_current_row_data(self) -> list | None:
+        current_index: QModelIndex = self._table_view.currentIndex()
+        if not current_index.isValid():
+            return None
+        source_index: QModelIndex = self._sort_model.mapToSource(current_index)
+        return self.model.get_row_data(source_index.row())
 
     def handle_preferences_change(self):
         if int(self._settings.get(Settings.Theme)) == Theme.Dark:

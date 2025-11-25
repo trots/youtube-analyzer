@@ -8,6 +8,9 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTabWidget
 )
+from youtubeanalyzer.eventbus import (
+    EventBus
+)
 from youtubeanalyzer.settings import (
     Settings,
     StateSaveable
@@ -21,6 +24,9 @@ class WorkspaceWidget(StateSaveable, QWidget):
 
     def has_data_to_export(self):
         return False
+
+    def set_workspace_data(self, workspace_data: object):
+        pass
 
 
 class TabWorkspaceFactory(QObject):
@@ -97,19 +103,18 @@ class WorkspaceTab(StateSaveable, QWidget):
         if workspace:
             workspace.handle_preferences_change()
 
-    def create_workspace(self, workspace_uid: str):
+    def create_workspace(self, workspace_uid: str, workspace_data: object = None):
         if workspace_uid not in WorkspaceTab.workspace_factories:
             return None
-        factory = WorkspaceTab.workspace_factories[workspace_uid]
-        workspace_widget = factory.create_workspace_widget(self._settings, self)
-        self._main_stacked_layout.addWidget(workspace_widget)
-        self._main_stacked_layout.setCurrentIndex(1)
-        tab_index = self._parent_tab_widget.indexOf(self)
-        self._parent_tab_widget.setTabText(tab_index, factory.get_workspace_name())
-        self._current_workspace_uid = workspace_uid
+        factory: TabWorkspaceFactory = WorkspaceTab.workspace_factories[workspace_uid]
+        workspace_widget: WorkspaceWidget = factory.create_workspace_widget(self._settings, self)
+        if workspace_widget:
+            workspace_widget.set_workspace_data(workspace_data)
+            self._main_stacked_layout.addWidget(workspace_widget)
+            self._main_stacked_layout.setCurrentIndex(1)
+            tab_index: int = self._parent_tab_widget.indexOf(self)
+            self._parent_tab_widget.setTabText(tab_index, factory.get_workspace_name())
+            self._current_workspace_uid = workspace_uid
+            event_bus = EventBus()
+            event_bus.workspace_created.emit(workspace_widget)
         return workspace_widget
-
-    def _create_workspace(self):
-        workspace_button = self.sender()
-        workspace_index = self._main_layout.indexOf(workspace_button) - 1
-        self.create_workspace(workspace_index)

@@ -17,10 +17,9 @@ class QSingleton(type(QObject)):
 
 
 class EventBus(QObject, metaclass=QSingleton):
-    quitRequested = Signal()
+    create_new_tab = Signal(str, object)  # workspace_uid, workspace_data
+    quit_requested = Signal()
+    workspace_created = Signal(object)  # workspace
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-    def emitQuitRequested(self):
-        self.quitRequested.emit()
