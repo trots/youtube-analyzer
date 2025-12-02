@@ -65,8 +65,8 @@ class PluginManager:
         plugin_path: Path = base_dir / self._plugin_dir
 
         if not plugin_path.exists():
-            print(f"Warning: {plugin_path} is not found!")
-            return
+            message: str = QObject.tr("Path '{}' is not found")
+            raise FileNotFoundError(message.format(plugin_path))
 
         discovered_plugins: dict[str, AbstractPlugin] = self._discover_plugins(plugin_path)
         self._plugins = self._resolve_dependencies(discovered_plugins)
@@ -80,17 +80,16 @@ class PluginManager:
 
     def get_license_text(self, license_name: str):
         if not license_name:
-            return ""
+            return QObject.tr("No license to load")
 
         base_dir: Path = self._get_base_dir()
         license_file: Path = base_dir / license_name
         if license_file.exists() and license_file.is_file():
             try:
                 return license_file.read_text()
-            except Exception:
-                print("Read license file exception")
-                return ""
-        return ""
+            except Exception as e:
+                return QObject.tr("Unable to read license file: " + str(e))
+        return QObject.tr("License file is not exist")
 
     def _get_base_dir(self):
         is_compiled_executable = getattr(sys, "frozen", False)

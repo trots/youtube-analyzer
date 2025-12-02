@@ -57,9 +57,9 @@ def print_exception_chain(exception: Exception):
     return output
 
 
-def critical_detailed_message(parent: QWidget, text: str, details: str | Exception):
+def show_detailed_message(severity_icon: QMessageBox.Icon, parent: QWidget, text: str, details: str | Exception):
     dialog = QMessageBox(parent)
-    dialog.setIcon(QMessageBox.Critical)
+    dialog.setIcon(severity_icon)
     dialog.setWindowTitle(app_name)
     dialog.setText(text)
     if type(details) is Exception:
@@ -70,6 +70,14 @@ def critical_detailed_message(parent: QWidget, text: str, details: str | Excepti
     else:
         dialog.setDetailedText(details)
     return dialog.exec()
+
+
+def critical_detailed_message(parent: QWidget, text: str, details: str | Exception):
+    return show_detailed_message(QMessageBox.Icon.Critical, parent, text, details)
+
+
+def warning_detailed_message(parent: QWidget, text: str, details: str | Exception):
+    return show_detailed_message(QMessageBox.Icon.Warning, parent, text, details)
 
 
 class PixmapLabel(QLabel):

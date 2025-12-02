@@ -4,39 +4,39 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="91"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="95"/>
         <source>About</source>
         <translation>О программе</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="103"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="107"/>
         <source>Version: </source>
         <translation>Версия: </translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="100"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="104"/>
         <source>Software for analyzing of YouTube search output</source>
         <translation>Программа для анализа поисковой выдачи YouTube</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="107"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="111"/>
         <source>Based on: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</source>
         <translation>Основан на: PySide6, youtube-search-python,
  google-api-python-client, XlsxWriter, isodate.</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="114"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="118"/>
         <source>Web site:</source>
         <translation>Веб-сайт:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="119"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="123"/>
         <source>License:</source>
         <translation>Лицензия:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="132"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="136"/>
         <source>All rights reserved</source>
         <translation>Все права защищены</translation>
     </message>
@@ -44,42 +44,42 @@
 <context>
     <name>AboutPluginsDialog</name>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="174"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="229"/>
         <source>Installed plugins</source>
         <translation>Установленные плагины</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="184"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="239"/>
         <source>Name</source>
         <translation>Название</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="184"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="239"/>
         <source>Version</source>
         <translation>Версия</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="184"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="239"/>
         <source>Description</source>
         <translation>Описание</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="196"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="251"/>
         <source>Details...</source>
         <translation>Подробности...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="197"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="252"/>
         <source>More info about the selected plugin</source>
         <translation>Больше информации о выбранном плагине</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="207"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="262"/>
         <source>No Selection</source>
         <translation>Ничего не выбрано</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="207"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="262"/>
         <source>Please select a plugin to view details.</source>
         <translation>Пожалуйста, выберите плагин для просмотра его подробностей.</translation>
     </message>
@@ -95,104 +95,109 @@
 <context>
     <name>AbstractVideoTableWorkspace</name>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="432"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="433"/>
         <source>Set the search result limit</source>
         <translation>Установка максимального количества результатов поиска</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="437"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="438"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="438"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="439"/>
         <source>Click to start searching</source>
         <translation>Начать поиск</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="456"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="457"/>
         <source>Filters</source>
         <translation>Фильтры</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="456"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="457"/>
         <source>Hide filters panel</source>
         <translation>Скрыть панель фильтров</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="456"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="457"/>
         <source>Show filters panel</source>
         <translation>Показать панель фильтров</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="462"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="463"/>
         <source>View</source>
         <translation>Вид</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="462"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="463"/>
         <source>Hide view panel</source>
         <translation>Скрыть панель настройки вида</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="462"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="463"/>
         <source>Show view panel</source>
         <translation>Показать панель настройки вида</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="480"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="481"/>
         <source>Copy video title</source>
         <translation>Скопировать название видео</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="483"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="484"/>
         <source>Copy video link</source>
         <translation>Скопировать ссылку на видео</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="486"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="487"/>
         <source>Copy channel title</source>
         <translation>Скопировать название канала</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="489"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="490"/>
         <source>Copy channel link</source>
         <translation>Скопировать ссылку на канал</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="492"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="493"/>
         <source>Copy published time</source>
         <translation>Скопировать время публикации</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="495"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="496"/>
         <source>Copy duration</source>
         <translation>Скопировать продолжительность</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="498"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="499"/>
         <source>Copy views</source>
         <translation>Скопировать количество просмотров</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="501"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="502"/>
         <source>Copy subscribers</source>
         <translation>Скопировать количество подписчиков</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="504"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="505"/>
         <source>Copy views/subscribers</source>
         <translation>Скопировать просмотры/подписчики</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="528"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="529"/>
         <source>Details</source>
         <translation>Подробности</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="531"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="532"/>
         <source>Analytics</source>
         <translation>Аналитика</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="619"/>
+        <source>YouTube API key is not set. Please set it in the preferences</source>
+        <translation>Ключ YouTube API не установлен. Пожалуйста, установите его в настройках</translation>
     </message>
 </context>
 <context>
@@ -234,34 +239,30 @@
 <context>
     <name>AnalyticsWidget</name>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="246"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="247"/>
         <source>Channels distribution chart</source>
         <translation>График распределения каналов</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="247"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="248"/>
         <source>Video duration chart</source>
         <translation>График продолжительности видео</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="248"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="249"/>
         <source>Popular title words chart</source>
         <translation>График популярных слов в заголовках</translation>
-    </message>
-    <message>
-        <source>Video type chart</source>
-        <translation type="vanished">График распределения типов видео</translation>
     </message>
 </context>
 <context>
     <name>AuthorsDialog</name>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="140"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="144"/>
         <source>Authors</source>
         <translation>Авторы</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="146"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="150"/>
         <source>The YouTube Analyzer team, in alphabetical order:
 </source>
         <translation>YouTube Analyzer team, в алфавитном порядке:
@@ -271,7 +272,7 @@
 <context>
     <name>DontAskAgainQuestionDialog</name>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="81"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="85"/>
         <source>Don&apos;t ask again</source>
         <translation>Не спрашивать снова</translation>
     </message>
@@ -322,150 +323,118 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="165"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="171"/>
         <source>File</source>
         <translation>Файл</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="166"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="172"/>
         <source>Export to XLSX...</source>
         <translation>Экспорт в XLSX...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="168"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="174"/>
         <source>Export to CSV...</source>
         <translation>Экспорт в CSV...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="170"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="176"/>
         <source>Export to HTML...</source>
         <translation>Экспорт в HTML...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="174"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="180"/>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="178"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="184"/>
         <source>Edit</source>
         <translation>Правка</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="179"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="185"/>
         <source>Preferences...</source>
         <translation>Настройки...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="182"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="188"/>
         <source>Window</source>
         <translation>Окно</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="183"/>
-        <location filename="../youtubeanalyzer/__main__.py" line="208"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="189"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="214"/>
         <source>Create a new tab</source>
         <translation>Создать новую вкладку</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="191"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="197"/>
         <source>About plugins...</source>
         <translation>О плагинах...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="260"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="267"/>
         <source>New tab</source>
         <translation>Новая вкладка</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="275"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="284"/>
         <source>Export is not supported for this tab</source>
         <translation>Экспорт не поддерживается для этой вкладки</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="282"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="291"/>
         <source>There is no data to export</source>
         <translation>Нет данных для экспорта</translation>
     </message>
     <message>
-        <source>View</source>
-        <translation type="vanished">Вид</translation>
-    </message>
-    <message>
-        <source>Show details</source>
-        <translation type="vanished">Показать подробности</translation>
-    </message>
-    <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="187"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="193"/>
         <source>Help</source>
         <translation>Справка</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="188"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="194"/>
         <source>Authors...</source>
         <translation>Авторы...</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="193"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="199"/>
         <source>About...</source>
         <translation>О программе...</translation>
     </message>
     <message>
-        <source>Set the search result limit</source>
-        <translation type="vanished">Установка максимального количества результатов поиска</translation>
-    </message>
-    <message>
-        <source>Search</source>
-        <translation type="vanished">Поиск</translation>
-    </message>
-    <message>
-        <source>Click to start searching</source>
-        <translation type="vanished">Начать поиск</translation>
-    </message>
-    <message>
-        <source>Details</source>
-        <translation type="vanished">Подробности</translation>
-    </message>
-    <message>
-        <source>Analytics</source>
-        <translation type="vanished">Аналитика</translation>
-    </message>
-    <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="224"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="231"/>
         <source>Exit?</source>
         <translation>Выйти?</translation>
     </message>
     <message>
-        <source>Error in the searching process</source>
-        <translation type="vanished">Поиск завершился с ошибкой</translation>
-    </message>
-    <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="294"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="303"/>
         <source>Save XLSX</source>
         <translation>Сохранить XLSX</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="294"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="303"/>
         <source>Xlsx File (*.xlsx)</source>
         <translation>Xlsx-файл (*.xlsx)</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="301"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="310"/>
         <source>Save CSV</source>
         <translation>Сохранить CSV</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="301"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="310"/>
         <source>Csv File (*.csv)</source>
         <translation>Csv-файл (*.csv)</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="308"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="317"/>
         <source>Save HTML</source>
         <translation>Сохранить HTML</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/__main__.py" line="308"/>
+        <location filename="../youtubeanalyzer/__main__.py" line="317"/>
         <source>Html File (*.html)</source>
         <translation>Html-файл (*.html)</translation>
     </message>
@@ -473,37 +442,37 @@
 <context>
     <name>PluginDetailsDialog</name>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="117"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="171"/>
         <source>Plugin Details</source>
         <translation>Подробности о плагине</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="131"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="186"/>
         <source>Name:</source>
         <translation>Название:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="134"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="189"/>
         <source>Version:</source>
         <translation>Версия:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="139"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="194"/>
         <source>Description:</source>
         <translation>Описание:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="145"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="200"/>
         <source>License:</source>
         <translation>Лицензия:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="147"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="202"/>
         <source>Close</source>
         <translation>Закрыть</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/plugins.py" line="167"/>
+        <location filename="../youtubeanalyzer/plugins.py" line="222"/>
         <source>No license text available</source>
         <translation>Текст лицензии отсутствует</translation>
     </message>
@@ -554,6 +523,39 @@
         <location filename="../youtubeanalyzer/filters.py" line="105"/>
         <source>Last 3 years</source>
         <translation>За последние 3 года</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../youtubeanalyzer/__main__.py" line="404"/>
+        <source>Unable to load plugins</source>
+        <translation>Невозможно загрузить плагины</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/widgets.py" line="68"/>
+        <source>Causes:</source>
+        <translation>Причины:</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/plugins.py" line="69"/>
+        <source>Path &apos;{}&apos; is not found</source>
+        <translation>Путь &apos;{}&apos; не найден</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/plugins.py" line="85"/>
+        <source>No license to load</source>
+        <translation>Нет лицензии для загрузки</translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/plugins.py" line="91"/>
+        <source>Unable to read license file: </source>
+        <translation>Невозможно загрузить файл лицензии: </translation>
+    </message>
+    <message>
+        <location filename="../youtubeanalyzer/plugins.py" line="94"/>
+        <source>License file is not exist</source>
+        <translation>Файл лицензии не существует</translation>
     </message>
 </context>
 <context>
@@ -729,10 +731,6 @@
         <translation>Релевантность видео в поисковой выдаче (0 обозначает наивысшую релевантность)</translation>
     </message>
     <message>
-        <source>Video type</source>
-        <translation type="vanished">Тип видео</translation>
-    </message>
-    <message>
         <location filename="../youtubeanalyzer/model.py" line="115"/>
         <source>Video preview image</source>
         <translation>Превью изображение для видео</translation>
@@ -741,7 +739,7 @@
 <context>
     <name>SearchLineEdit</name>
     <message>
-        <location filename="../youtubeanalyzer/widgets.py" line="88"/>
+        <location filename="../youtubeanalyzer/widgets.py" line="124"/>
         <source>Enter request and press &apos;Search&apos;...</source>
         <translation>Введите запрос и нажмите &apos;Поиск&apos;...</translation>
     </message>
@@ -749,7 +747,7 @@
 <context>
     <name>SearchWorkspace</name>
     <message>
-        <location filename="../youtubeanalyzer/search.py" line="69"/>
+        <location filename="../youtubeanalyzer/search.py" line="68"/>
         <source>Error in the searching process</source>
         <translation>Поиск завершился с ошибкой</translation>
     </message>
@@ -757,12 +755,12 @@
 <context>
     <name>SearchWorkspaceFactory</name>
     <message>
-        <location filename="../youtubeanalyzer/search.py" line="96"/>
+        <location filename="../youtubeanalyzer/search.py" line="99"/>
         <source>Search</source>
         <translation>Поиск</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/search.py" line="97"/>
+        <location filename="../youtubeanalyzer/search.py" line="100"/>
         <source>Search video...</source>
         <translation>Поиск видео...</translation>
     </message>
@@ -798,48 +796,42 @@
 <context>
     <name>TrendsWorkspace</name>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="98"/>
+        <location filename="../youtubeanalyzer/trends.py" line="95"/>
         <source>Unable to get video categories</source>
         <translation>Не удалось загрузить категории видео</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="70"/>
+        <location filename="../youtubeanalyzer/trends.py" line="67"/>
         <source>Category:</source>
         <translation>Категория:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="72"/>
+        <location filename="../youtubeanalyzer/trends.py" line="69"/>
         <source>Select the video category to search trends</source>
         <translation>Выберите категорию видео для поиска трендов</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="75"/>
+        <location filename="../youtubeanalyzer/trends.py" line="72"/>
         <source>Region:</source>
         <translation>Регион:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="77"/>
+        <location filename="../youtubeanalyzer/trends.py" line="74"/>
         <source>Select the region to search trends</source>
         <translation>Выберите регион для поиска трендов</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="99"/>
+        <location filename="../youtubeanalyzer/trends.py" line="96"/>
         <source>All</source>
         <translation>Все</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="121"/>
+        <location filename="../youtubeanalyzer/trends.py" line="118"/>
         <source>Unable to show trends. Video category is not selected.</source>
         <translation>Не удалось показать тренды. Не задана категория видео.</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="134"/>
-        <source>Unable to show trends. YouTube API key is not set. 
-                                                         Please set it in the preferences</source>
-        <translation>Не удалось показать тренды. Не установлен ключ YouTube API. Пожалуйста, установите его в настройках</translation>
-    </message>
-    <message>
-        <location filename="../youtubeanalyzer/trends.py" line="153"/>
+        <location filename="../youtubeanalyzer/trends.py" line="137"/>
         <source>Trends searching failed</source>
         <translation>Поиск по трендам завершился с ошибкой</translation>
     </message>
@@ -847,12 +839,12 @@
 <context>
     <name>TrendsWorkspaceFactory</name>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="171"/>
+        <location filename="../youtubeanalyzer/trends.py" line="159"/>
         <source>Trends</source>
         <translation>Тренды</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/trends.py" line="172"/>
+        <location filename="../youtubeanalyzer/trends.py" line="160"/>
         <source>Search trends...</source>
         <translation>Поиск трендов...</translation>
     </message>
@@ -860,37 +852,37 @@
 <context>
     <name>VideoDetailsWidget</name>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="141"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="142"/>
         <source>Tags:</source>
         <translation>Теги:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="143"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="144"/>
         <source>The video tags</source>
         <translation>Теги видео</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="145"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="146"/>
         <source>No tags</source>
         <translation>Нет тегов</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="156"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="157"/>
         <source>Select a video to see its details</source>
         <translation>Выберите видео для просмотра подробностей</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="180"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="181"/>
         <source> subscribers</source>
         <translation> подписчиков</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="182"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="183"/>
         <source> views</source>
         <translation> просмотров</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="233"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="234"/>
         <source>Download error: </source>
         <translation>Ошибка загрузки: </translation>
     </message>
@@ -962,34 +954,26 @@
         <source>2+h</source>
         <translation>2+ч</translation>
     </message>
-    <message>
-        <source>3h</source>
-        <translation type="vanished">3ч</translation>
-    </message>
-    <message>
-        <source>3+h</source>
-        <translation type="vanished">3+ч</translation>
-    </message>
 </context>
 <context>
     <name>ViewPanel</name>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="376"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="377"/>
         <source>Table</source>
         <translation>Таблица</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="382"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="383"/>
         <source>Gallery</source>
         <translation>Галерея</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="387"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="388"/>
         <source>Scale:</source>
         <translation>Масштаб:</translation>
     </message>
     <message>
-        <location filename="../youtubeanalyzer/video_table_workspace.py" line="389"/>
+        <location filename="../youtubeanalyzer/video_table_workspace.py" line="390"/>
         <source>Change scale of gallery images</source>
         <translation>Изменить масштаб изображений в галерее</translation>
     </message>
