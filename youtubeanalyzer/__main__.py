@@ -6,7 +6,8 @@ from PySide6.QtCore import (
     QFileInfo,
     QTranslator,
     QLibraryInfo,
-    QKeyCombination
+    QKeyCombination,
+    QObject
 )
 from PySide6.QtGui import (
     QIcon,
@@ -63,6 +64,9 @@ from youtubeanalyzer.export import (
 from youtubeanalyzer.plugins import (
     PluginManager,
     AboutPluginsDialog
+)
+from youtubeanalyzer.widgets import (
+    warning_detailed_message
 )
 
 
@@ -208,7 +212,7 @@ class MainWindow(StateSaveable, QMainWindow):
         add_new_tab_button.setFixedHeight(20)
         add_new_tab_button.setText("+")
         add_new_tab_button.setToolTip(self.tr("Create a new tab"))
-        add_new_tab_button.clicked.connect(lambda: event_bus.create_new_tab.emit())
+        add_new_tab_button.clicked.connect(lambda: event_bus.create_new_tab.emit(None, None))
         self._main_tab_widget.setCornerWidget(add_new_tab_button, Qt.Corner.TopRightCorner)
 
         central_widget = QWidget()
@@ -373,10 +377,6 @@ WorkspaceTab.add_workspace_factory(TrendsWorkspaceFactory())
 event_bus = EventBus()
 event_bus.quit_requested.connect(app.exit)
 
-plugin_manager = PluginManager()
-plugin_manager.load_plugins()
-plugin_manager.initialize_plugins(settings)
-
 while True:
     app_translator: QTranslator = QTranslator()
     qt_translator: QTranslator = QTranslator()
@@ -388,12 +388,20 @@ while True:
             app.installTranslator(app_translator)
         if qt_translator.load(qt_lang, QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
             app.installTranslator(qt_translator)
-        for plugin in plugin_manager.get_plugins():
-            plugin_lang = "translations/" + plugin.get_name() + "_ru.qm"
-            plugin_translator = QTranslator()
-            if plugin_translator.load(plugin_lang):
-                app.installTranslator(plugin_translator)
-                plugin_translators.append(plugin_translator)
+
+    plugin_manager: PluginManager = PluginManager()
+    try:
+        plugin_manager.load_plugins()
+        plugin_manager.initialize_plugins(settings)
+        if settings.get(Settings.Language) == "Ru":
+            for plugin in plugin_manager.get_plugins():
+                plugin_lang = "translations/" + plugin.get_name() + "_ru.qm"
+                plugin_translator = QTranslator()
+                if plugin_translator.load(plugin_lang):
+                    app.installTranslator(plugin_translator)
+                    plugin_translators.append(plugin_translator)
+    except Exception as e:
+        warning_detailed_message(None, QObject.tr("Unable to load plugins"), e)
 
     window = MainWindow(settings)
     window.resize(app.screens()[0].size() * 0.7)
