@@ -46,7 +46,7 @@ def critical_message(parent, text):
     return dialog.exec()
 
 
-def print_exception_chain(exception: Exception):
+def print_exception_chain(exception: BaseException):
     output = ""
     if hasattr(exception, "__cause__") and exception.__cause__:
         output += print_exception_chain(exception.__cause__)
@@ -57,18 +57,18 @@ def print_exception_chain(exception: Exception):
     return output
 
 
-def show_detailed_message(severity_icon: QMessageBox.Icon, parent: QWidget, text: str, details: str | Exception):
+def show_detailed_message(severity_icon: QMessageBox.Icon, parent: QWidget, text: str, details: str | BaseException):
     dialog = QMessageBox(parent)
     dialog.setIcon(severity_icon)
     dialog.setWindowTitle(app_name)
     dialog.setText(text)
-    if type(details) is Exception:
+    if type(details) is str:
+        dialog.setDetailedText(details)
+    else:
         details_text: str = print_exception_chain(details)
         if details_text:
             details_text = QObject.tr("Causes:") + "\n" + details_text
         dialog.setDetailedText(details_text)
-    else:
-        dialog.setDetailedText(details)
     return dialog.exec()
 
 
