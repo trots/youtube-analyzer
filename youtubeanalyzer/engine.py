@@ -470,7 +470,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         channel_views = int(channel_stats.get("viewCount", 0))
         channel_joined_date = ""
 
-        video_preview_link = snippet["thumbnails"]["high"]["url"]
+        video_preview_link = snippet["thumbnails"]["medium"]["url"]
 
         channel_logo_link = ""
         channel_snippet = channel_item.get("snippet", {})

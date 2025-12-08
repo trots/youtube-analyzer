@@ -509,7 +509,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._list_vew = QListView()
         self._list_vew.setViewMode(QListView.ViewMode.IconMode)
         self._list_vew.setResizeMode(QListView.ResizeMode.Adjust)
-        self._list_vew.setIconSize(QSize(100, 100))
+        self._list_vew.setIconSize(QSize(160, 90))
         self._list_vew.setUniformItemSizes(True)
         self._list_vew.setModel(self._sort_model)
         self._list_vew.setModelColumn(1)
