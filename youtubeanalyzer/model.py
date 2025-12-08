@@ -2,7 +2,8 @@ import operator
 from PySide6.QtCore import (
     Qt,
     QAbstractTableModel,
-    QUrl
+    QUrl,
+    QSize
 )
 from PySide6.QtGui import (
     QImage,
@@ -55,7 +56,7 @@ class ResultFields:
 class ResultTableModel(QAbstractTableModel):
     SortRole: int = Qt.ItemDataRole.UserRole + 1
 
-    DefaultPreviewWidthPx: int = 200
+    DefaultPreviewSizePx: QSize = QSize(160, 90)
 
     class Mode:
         Normal: int = 0
@@ -199,7 +200,7 @@ class ResultTableModel(QAbstractTableModel):
 
         row: int = index.row()
         column: int = self._fields[index.column()]
-        preview_size: float = ResultTableModel.DefaultPreviewWidthPx * self._preview_scale
+        preview_size: QSize = ResultTableModel.DefaultPreviewSizePx * self._preview_scale
 
         match role:
             case ResultTableModel.SortRole:
@@ -212,7 +213,7 @@ class ResultTableModel(QAbstractTableModel):
                 if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
                     if self._mode == ResultTableModel.Mode.Image:
                         return self._font_metrics.elidedText(
-                            self._result[row][column], Qt.TextElideMode.ElideRight, preview_size)
+                            self._result[row][column], Qt.TextElideMode.ElideRight, preview_size.width())
                     else:
                         return None
                 if column == ResultFields.VideoViews or column == ResultFields.ChannelSubscribers:
@@ -223,9 +224,9 @@ class ResultTableModel(QAbstractTableModel):
                 if column == ResultFields.VideoTitle and self._mode == ResultTableModel.Mode.Image:
                     image: QImage = self.get_video_preview_image(row)
                     if image:
-                        return image.scaledToWidth(preview_size)
+                        return image.scaledToWidth(preview_size.width())
                     else:
-                        pix = QImage(preview_size, preview_size, QImage.Format.Format_ARGB32)
+                        pix = QImage(preview_size, QImage.Format.Format_ARGB32)
                         pix.fill(Qt.GlobalColor.black)
                         return pix
             case Qt.ItemDataRole.ToolTipRole:
