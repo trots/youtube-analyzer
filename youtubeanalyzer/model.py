@@ -154,6 +154,9 @@ class ResultTableModel(QAbstractTableModel):
         self._preview_scale = scale
         self.endResetModel()
 
+    def get_preview_size(self) -> QSize:
+        return ResultTableModel.DefaultPreviewSizePx * self._preview_scale
+
     def has_data(self):
         return len(self._result) > 0
 
@@ -200,7 +203,7 @@ class ResultTableModel(QAbstractTableModel):
 
         row: int = index.row()
         column: int = self._fields[index.column()]
-        preview_size: QSize = ResultTableModel.DefaultPreviewSizePx * self._preview_scale
+        preview_size: QSize = self.get_preview_size()
 
         match role:
             case ResultTableModel.SortRole:
@@ -212,8 +215,7 @@ class ResultTableModel(QAbstractTableModel):
             case Qt.ItemDataRole.DisplayRole:
                 if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
                     if self._mode == ResultTableModel.Mode.Image:
-                        return self._font_metrics.elidedText(
-                            self._result[row][column], Qt.TextElideMode.ElideRight, preview_size.width())
+                        return self._elide_two_lines(self._result[row][column], preview_size.width())
                     else:
                         return None
                 if column == ResultFields.VideoViews or column == ResultFields.ChannelSubscribers:
@@ -266,6 +268,31 @@ class ResultTableModel(QAbstractTableModel):
             del self._pending_requests[url]
 
         reply.deleteLater()
+
+    def _elide_two_lines(self, text: str, width: int) -> str:
+        if not text:
+            return ""
+
+        if self._font_metrics.horizontalAdvance(text) <= width:
+            return text
+
+        words: list[str] = text.split()
+        if not words:
+            return ""
+
+        first_line: str = words[0]
+        for i in range(1, len(words)):
+            word: str = words[i]
+            test_line: str = first_line + " " + word
+
+            if self._font_metrics.horizontalAdvance(test_line + "\n") <= width:
+                first_line = test_line
+            else:
+                remainder: str = " ".join(words[i:])
+                line2: str = self._font_metrics.elidedText(remainder, Qt.TextElideMode.ElideRight, width)
+                return f"{first_line}\n{line2}"
+
+        return first_line
 
 
 class DataCache:
