@@ -149,7 +149,7 @@ class MockApiEngine(YoutubeApiEngine):
                 "channelId": "channel1",
                 "channelTitle": "First channel",
                 "thumbnails": {
-                    "high": {
+                    "medium": {
                         "url": "https://yt3.com/high1.png"
                     }
                 }
@@ -165,7 +165,7 @@ class MockApiEngine(YoutubeApiEngine):
                 "channelId": "channel2",
                 "channelTitle": "Second channel",
                 "thumbnails": {
-                    "high": {
+                    "medium": {
                         "url": "https://yt3.com/high2.png"
                     }
                 }
