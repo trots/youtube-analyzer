@@ -389,7 +389,7 @@ class ViewPanel(StateSaveable, QWidget):
         self._scale_slider: QSlider = QSlider(Qt.Orientation.Horizontal)
         self._scale_slider.setToolTip(self.tr("Change scale of gallery images"))
         self._scale_slider.setMinimum(50)
-        self._scale_slider.setMaximum(150)
+        self._scale_slider.setMaximum(250)
         self._scale_slider.setValue(100)
         self._scale_slider.valueChanged.connect(lambda: self.scale_changed.emit(self._get_scale_value()))
         gallery_extra_tools.layout().addWidget(self._scale_slider)
@@ -459,7 +459,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
         view_panel = ViewPanel(settings, self)
         view_panel.mode_changed.connect(self._on_view_mode_changed)
-        view_panel.scale_changed.connect(lambda scale: self.model.set_preview_scale(scale))
+        view_panel.scale_changed.connect(self._on_preview_scale_changed)
         self._tools_panel.add_tool_panel(self.tr("View"), self.tr("Hide view panel"), self.tr("Show view panel"),
                                          view_panel)
 
@@ -518,6 +518,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             lambda s_index, e_index, roles:
                 self._list_vew.viewport().update() if Qt.ItemDataRole.DecorationRole in roles else None)
         self._stacked_layout.addWidget(self._list_vew)
+        self._on_preview_scale_changed(1.0)
 
         self._stacked_layout.setCurrentIndex(0)
 
@@ -643,6 +644,12 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._on_insert_widgets()
         else:
             self._stacked_layout.setCurrentIndex(1)
+
+    def _on_preview_scale_changed(self, scale: float):
+        TitleFieldHeightPx: int = 60
+        self.model.set_preview_scale(scale)
+        item_height: int = self.model.get_preview_size().height() + TitleFieldHeightPx
+        self._list_vew.setStyleSheet(f"QListView::item {{ height: {item_height}; }}")
 
     def _on_table_row_changed(self, current: QItemSelection, _previous: QItemSelection):
         proxy_indexes = current.indexes()
