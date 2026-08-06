@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QCompleter,
     QSizePolicy,
     QMessageBox,
+    QCheckBox,
     QTabWidget
 )
 from youtubeanalyzer.defines import (
@@ -25,6 +26,10 @@ from youtubeanalyzer.defines import (
 )
 from youtubeanalyzer.engine import (
     SearchAutocompleteDownloader
+)
+from youtubeanalyzer.settings import (
+    Settings,
+    SettingsKey
 )
 
 
@@ -78,6 +83,35 @@ def critical_detailed_message(parent: QWidget, text: str, details: str | Excepti
 
 def warning_detailed_message(parent: QWidget, text: str, details: str | Exception):
     return show_detailed_message(QMessageBox.Icon.Warning, parent, text, details)
+
+
+class DontShowAgainWarningDialog(QMessageBox):
+    def __init__(self, parent: QWidget, text: str, details: str | BaseException):
+        super().__init__(parent)
+        self.setIcon(QMessageBox.Icon.Warning)
+        self.setWindowTitle(app_name)
+        self.setText(text)
+        if type(details) is str:
+            self.setDetailedText(details)
+        else:
+            details_text: str = print_exception_chain(details)
+            if details_text:
+                details_text = QObject.tr("Causes:") + "\n" + details_text
+            self.setDetailedText(details_text)
+        self._check_box = QCheckBox(self.tr("Don't show again"))
+        self.setCheckBox(self._check_box)
+
+    def is_dont_show_again(self):
+        return 1 if self._check_box.isChecked() else 0
+
+
+def warning_detailed_message_dont_show_again(parent: QWidget, settings: Settings, settings_key: SettingsKey,
+                                             text: str, details: str | BaseException):
+    if int(settings.get(settings_key)):
+        return
+    dialog = DontShowAgainWarningDialog(parent, text, details)
+    dialog.exec()
+    settings.set(settings_key, dialog.is_dont_show_again())
 
 
 class PixmapLabel(QLabel):

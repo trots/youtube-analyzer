@@ -15,7 +15,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QCheckBox,
     QTabWidget,
-    QSpinBox
+    QSpinBox,
+    QPushButton
 )
 
 
@@ -54,6 +55,7 @@ class Settings:
     ActiveToolPanelIndex = SettingsKey("active_tool_panel_index", -1)
     VideoTableMode = SettingsKey("video_table_mode", 0)
     PreviewScaleIndex = SettingsKey("preview_scale_index", 100)
+    DontShowSkippedItemsWarning = SettingsKey("dont_show_skipped_items_warning", 0)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
@@ -219,6 +221,13 @@ class AdvancedTab(QWidget):
             self.tr("Set the maximum waiting time in seconds for YouTube request. Default is 10"))
         self._request_timeout_sec_edit.setValue(int(self._settings.get(Settings.RequestTimeoutSec)))
         layout.addWidget(self._request_timeout_sec_edit)
+
+        self._reset_dont_show_again_button = QPushButton(self.tr("Reset all \"don't show again\" dialogs"))
+        self._reset_dont_show_again_button.setToolTip(
+            self.tr("Show confirmation and warning dialogs again that were previously dismissed with "
+                     "\"don't ask/show again\""))
+        self._reset_dont_show_again_button.clicked.connect(self._on_reset_dont_show_again)
+        layout.addWidget(self._reset_dont_show_again_button)
         layout.addStretch()
 
         self.setLayout(layout)
@@ -226,6 +235,10 @@ class AdvancedTab(QWidget):
     def save_settings(self):
         self._settings.set(Settings.RequestPageLimit, self._request_page_limit_edit.value())
         self._settings.set(Settings.RequestTimeoutSec, self._request_timeout_sec_edit.value())
+
+    def _on_reset_dont_show_again(self):
+        self._settings.set(Settings.DontAskAgainExit, 0)
+        self._settings.set(Settings.DontShowSkippedItemsWarning, 0)
 
 
 class SettingsDialog(QDialog):
