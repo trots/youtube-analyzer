@@ -17,6 +17,7 @@ from youtubeanalyzer.engine import (
 from youtubeanalyzer.widgets import (
     critical_message,
     critical_detailed_message,
+    warning_detailed_message,
     SearchLineEdit
 )
 from youtubeanalyzer.workspace import (
@@ -63,6 +64,8 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
             if engine.search(self.request_text):
                 self._on_insert_widgets()
                 self._table_view.resizeColumnsToContents()
+                if engine.warnings:
+                    warning_detailed_message(self, self.tr("Some items were skipped"), "\n".join(engine.warnings))
             else:
                 text = self.tr("Error in the searching process")
                 if engine.errorReason is not None:
