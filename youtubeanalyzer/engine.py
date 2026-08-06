@@ -164,6 +164,7 @@ class AbstractYoutubeEngine:
                  request_timeout_sec: int = 10):
         self.errorDetails = None
         self.errorReason = None
+        self.warnings = []
         self._model = model
         self._request_limit = request_limit
         self._results_per_page = min(request_limit, results_per_page)
@@ -298,6 +299,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
     def search(self, request_text: str):
         self.errorDetails = None
         self.errorReason = None
+        self.warnings = []
         try:
             def request_handler(youtube, page_token):
                 request = youtube.search().list(
@@ -309,7 +311,9 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 )
                 return request.execute()
 
-            def video_id_getter(item): return item["id"]["videoId"]
+            def video_id_getter(item):
+                id_obj = item.get("id", {})
+                return id_obj.get("videoId", None)
 
             result = self._request_videos(request_handler, video_id_getter, "publishTime")
             self._model.set_data(result)
@@ -321,6 +325,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
     def get_video_categories(self, region_code: str = "US", output_language="en_US"):
         self.errorDetails = None
         self.errorReason = None
+        self.warnings = []
         try:
             youtube = self._create_youtube_client()
             request = youtube.videoCategories().list(
@@ -329,10 +334,17 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 hl=output_language
             )
             response = request.execute()
+            if "items" not in response:
+                raise RuntimeError("The video categories response doesn't contain 'items'")
             categories = []
             for item in response["items"]:
-                snippet = item["snippet"]
-                categories.append(VideoCategory(item["id"], snippet["title"]))
+                category_id = item.get("id")
+                snippet = item.get("snippet")
+                if not category_id or snippet is None:
+                    self.warnings.append(
+                        "A video category was skipped: the response item is missing 'id' or 'snippet'.")
+                    continue
+                categories.append(VideoCategory(category_id, snippet.get("title", "")))
             return categories
         except Exception as e:
             self.errorDetails = str(e)
@@ -341,6 +353,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
     def trends(self, category_id: int, region_code: str = "US"):
         self.errorDetails = None
         self.errorReason = None
+        self.warnings = []
         try:
             def request_handler(youtube, page_token):
                 request = youtube.videos().list(
@@ -353,7 +366,7 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 )
                 return request.execute()
 
-            def video_id_getter(item): return item["id"]
+            def video_id_getter(item): return item.get("id", None)
 
             result = self._request_videos(request_handler, video_id_getter, "publishedAt")
             self._model.set_data(result)
@@ -377,14 +390,24 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
 
         while True:
             response = request_handler(youtube, page_token)
+            if "items" not in response:
+                # Without "items" there is nothing to work with at all - this page is unusable.
+                raise RuntimeError("The API response doesn't contain 'items'")
 
-            video_response, channels = self._get_response_details(youtube, response, video_id_getter)
+            valid_items = self._filter_items_with_video_id(response["items"], video_id_getter)
+            videos, channels = self._get_response_details(youtube, valid_items)
 
-            count = 0
-            for response_item in response["items"]:
-                result.append(self._item_to_result(response_item, video_response["items"][count], total_count,
-                                                   channels, published_time_key, video_id_getter))
-                count = count + 1
+            for item, video_id in valid_items:
+                video_item = videos.get(video_id)
+                if video_item is None:
+                    self.warnings.append(f"Video '{video_id}' was skipped: no details were returned for it.")
+                    continue
+
+                row = self._item_to_result(item, video_item, total_count, channels, published_time_key, video_id)
+                if row is None:
+                    continue
+
+                result.append(row)
                 total_count = total_count + 1
 
                 if total_count >= self._request_limit:
@@ -398,6 +421,20 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 page_token = response["nextPageToken"]
 
         return result
+
+    def _filter_items_with_video_id(self, items, video_id_getter):
+        # A missing video ID makes an item unusable: we can't fetch its details, nor build a link for it.
+        valid_items = []
+        for item in items:
+            try:
+                video_id = video_id_getter(item)
+            except (KeyError, TypeError, AttributeError):
+                video_id = None
+            if not video_id:
+                self.warnings.append("A video was skipped: its ID is missing in the response.")
+                continue
+            valid_items.append((item, video_id))
+        return valid_items
 
     def _get_video_details(self, youtube, video_ids):
         video_request = youtube.videos().list(
@@ -413,25 +450,32 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         )
         return channel_request.execute()
 
-    def _get_response_details(self, youtube, response, video_id_getter):
-        video_ids = ""
-        channel_ids = ""
-        for item in response["items"]:
-            video_ids = video_ids + "," + video_id_getter(item)
-            channel_id = item["snippet"]["channelId"]
-            if channel_id in channel_ids:
-                continue
-            channel_ids = channel_ids + "," + channel_id
-        video_ids = video_ids[1:]  # Removing of the first comma
-        channel_ids = channel_ids[1:]  # Removing of the first comma
+    def _get_response_details(self, youtube, valid_items):
+        video_ids = [video_id for _, video_id in valid_items]
+        channel_ids = []
+        for item, _ in valid_items:
+            # A missing channelId is not fatal: the video is still shown, just without channel info.
+            channel_id = item.get("snippet", {}).get("channelId")
+            if channel_id and channel_id not in channel_ids:
+                channel_ids.append(channel_id)
 
-        video_response = self._get_video_details(youtube, video_ids)
-        channel_response = self._get_channel_details(youtube, channel_ids)
+        videos = {}
+        if video_ids:
+            video_response = self._get_video_details(youtube, ",".join(video_ids))
+            for video_item in video_response.get("items", []):
+                video_id = video_item.get("id")
+                if video_id:
+                    videos[video_id] = video_item
+
         channels = {}
-        for channel_item in channel_response["items"]:
-            channels[channel_item["id"]] = channel_item
+        if channel_ids:
+            channel_response = self._get_channel_details(youtube, ",".join(channel_ids))
+            for channel_item in channel_response.get("items", []):
+                channel_id = channel_item.get("id")
+                if channel_id:
+                    channels[channel_id] = channel_item
 
-        return video_response, channels
+        return videos, channels
 
     def _type(self, vid):
         return "unknown"
@@ -447,30 +491,51 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         #     type = "longs"
         # return type
 
-    def _item_to_result(self, item, video_item, result_index, channels, publish_time_key, video_id_getter):
-        snippet = item["snippet"]
-        video_id: str = video_id_getter(item)
-        content_details = video_item["contentDetails"]
-        statistics = video_item["statistics"]
-        video_snippet = video_item["snippet"]
+    def _item_to_result(self, item, video_item, result_index, channels, publish_time_key, video_id):
+        snippet = item.get("snippet")
+        if snippet is None:
+            # Without the snippet we'd lose the title, publish time, channel and thumbnail - not worth
+            # showing an almost-empty row, so the whole video is skipped.
+            self.warnings.append(f"Video '{video_id}' was skipped: the response item is missing 'snippet'.")
+            return None
 
-        video_title = snippet["title"]
-        video_published_time = datetime.strptime(snippet[publish_time_key], "%Y-%m-%dT%H:%M:%SZ")
-        video_published_time_str = video_published_time.strftime(PublishedDateFormat)
-        video_duration_td = timedelta(seconds=isodate.parse_duration(content_details["duration"]).total_seconds())
+        content_details = video_item.get("contentDetails", {})
+        statistics = video_item.get("statistics", {})
+        video_snippet = video_item.get("snippet", {})
+
+        video_title = snippet.get("title", "")
+
+        published_time_raw = snippet.get(publish_time_key)
+        if published_time_raw:
+            video_published_time = datetime.strptime(published_time_raw, "%Y-%m-%dT%H:%M:%SZ")
+            video_published_time_str = video_published_time.strftime(PublishedDateFormat)
+        else:
+            video_published_time_str = ""
+
+        duration_raw = content_details.get("duration")
+        video_duration_td = (
+            timedelta(seconds=isodate.parse_duration(duration_raw).total_seconds())
+            if duration_raw else timedelta(seconds=0)
+        )
         video_duration = timedelta_to_str(video_duration_td)
         views = int(statistics.get("viewCount", 0))
         video_link = "https://www.youtube.com/watch?v=" + video_id
-        channel_title = snippet["channelTitle"]
-        channel_url = "https://www.youtube.com/channel/" + snippet["channelId"]
+        channel_title = snippet.get("channelTitle", "")
+        channel_id = snippet.get("channelId", "")
+        channel_url = "https://www.youtube.com/channel/" + channel_id if channel_id else ""
 
-        channel_item = channels.get(snippet["channelId"], {})
+        channel_item = channels.get(channel_id, {})
         channel_stats = channel_item.get("statistics", {})
         channel_subscribers = int(channel_stats.get("subscriberCount", 0))
         channel_views = int(channel_stats.get("viewCount", 0))
         channel_joined_date = ""
 
-        video_preview_link = snippet["thumbnails"]["medium"]["url"]
+        video_preview_link = ""
+        thumbnails = snippet.get("thumbnails", {})
+        for size in ("medium", "high", "default"):
+            if size in thumbnails:
+                video_preview_link = thumbnails[size].get("url", "")
+                break
 
         channel_logo_link = ""
         channel_snippet = channel_item.get("snippet", {})
