@@ -21,7 +21,7 @@ from youtubeanalyzer.engine import (
 from youtubeanalyzer.widgets import (
     critical_message,
     critical_detailed_message,
-    warning_detailed_message
+    warning_detailed_message_dont_show_again
 )
 from youtubeanalyzer.workspace import (
     TabWorkspaceFactory
@@ -95,7 +95,9 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
         if len(categories) == 0:
             critical_detailed_message(self, self.tr("Unable to get video categories"), engine.errorDetails)
         elif engine.warnings:
-            warning_detailed_message(self, self.tr("Some video categories were skipped"), "\n".join(engine.warnings))
+            warning_detailed_message_dont_show_again(
+                self, self._settings, Settings.DontShowSkippedItemsWarning,
+                self.tr("Some video categories were skipped"), "\n".join(engine.warnings))
         self._category_combo_box.addItem(self.tr("All"), 0)
         for category in categories:
             self._category_combo_box.addItem(category.text, category.id)
@@ -136,7 +138,9 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
                 self._on_insert_widgets()
                 self._table_view.resizeColumnsToContents()
                 if engine.warnings:
-                    warning_detailed_message(self, self.tr("Some items were skipped"), "\n".join(engine.warnings))
+                    warning_detailed_message_dont_show_again(
+                        self, self._settings, Settings.DontShowSkippedItemsWarning,
+                        self.tr("Some items were skipped"), "\n".join(engine.warnings))
             else:
                 text = self.tr("Trends searching failed")
                 if engine.errorReason is not None:
