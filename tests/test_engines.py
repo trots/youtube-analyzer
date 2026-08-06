@@ -124,6 +124,22 @@ class MockGrepEngine(YoutubeGrepEngine):
         }
 
 
+class MockYoutubeClient:
+    """Minimal stub for the googleapiclient youtube resource, covering only videoCategories().list().execute()."""
+
+    def __init__(self, category_responce):
+        self._category_responce = category_responce
+
+    def videoCategories(self):
+        return self
+
+    def list(self, **_kwargs):
+        return self
+
+    def execute(self):
+        return self._category_responce
+
+
 class MockApiEngine(YoutubeApiEngine):
     def __init__(self, empty=False, exception=False):
         super().__init__("", ResultTableModel(None), 2)
@@ -135,6 +151,9 @@ class MockApiEngine(YoutubeApiEngine):
             "items": []
         }
         self._channel_responce = {
+            "items": []
+        }
+        self._category_responce = {
             "items": []
         }
         if empty:
@@ -172,6 +191,7 @@ class MockApiEngine(YoutubeApiEngine):
             }
         })
         self._video_responce["items"].append({
+            "id": "video1",
             "contentDetails": {
                 "duration": "PT16M40S"
             },
@@ -183,6 +203,7 @@ class MockApiEngine(YoutubeApiEngine):
             }
         })
         self._video_responce["items"].append({
+            "id": "video2",
             "contentDetails": {
                 "duration": "PT24M31S"
             },
@@ -226,7 +247,7 @@ class MockApiEngine(YoutubeApiEngine):
         return self._model
 
     def _create_youtube_client(self):
-        return None
+        return MockYoutubeClient(self._category_responce)
 
     def _request_videos(self, request_handler, video_id_getter, published_time_key):
         if self._exception:
@@ -436,6 +457,214 @@ class TestStringMethods(unittest.TestCase):
         self.assertFalse(engine.search("request"))
         model = engine.model()
         self.assertEqual(model.rowCount(), 0)
+
+    def test_youtube_api_engine_skips_video_without_id(self):
+        engine = MockApiEngine(empty=True)
+        engine._search_responce["items"].append({
+            "id": {
+                "kind": "youtube#video",
+                "videoId": "video1"
+            },
+            "snippet": {
+                "title": "First video",
+                "publishTime": "2024-06-05T13:01:03Z",
+                "channelId": "channel1",
+                "channelTitle": "First channel"
+            }
+        })
+        # A real-world case: the search response occasionally contains a channel entry
+        # instead of a video. It has an "id", but no nested "videoId".
+        engine._search_responce["items"].append({
+            "id": {
+                "kind": "youtube#channel",
+                "channelId": "channelX"
+            },
+            "snippet": {
+                "title": "A channel that leaked into search results",
+                "channelId": "channelX"
+            }
+        })
+        engine._video_responce["items"].append({
+            "id": "video1",
+            "contentDetails": {"duration": "PT16M40S"},
+            "statistics": {"viewCount": "589025"},
+            "snippet": {"tags": ["word1", "word2"]}
+        })
+        engine._channel_responce["items"].append({
+            "id": "channel1",
+            "statistics": {"viewCount": "76177771", "subscriberCount": "77900"},
+            "snippet": {}
+        })
+
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(model.rowCount(), 1)
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoTitle), "First video")
+        self.assertEqual(len(engine.warnings), 1)
+
+    def test_youtube_api_engine_skips_video_without_details(self):
+        engine = MockApiEngine(empty=True)
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video1"},
+            "snippet": {
+                "title": "First video",
+                "publishTime": "2024-06-05T13:01:03Z",
+                "channelId": "channel1",
+                "channelTitle": "First channel"
+            }
+        })
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video2"},
+            "snippet": {
+                "title": "Second video",
+                "publishTime": "2023-04-12T15:12:43Z",
+                "channelId": "channel2",
+                "channelTitle": "Second channel"
+            }
+        })
+        # video2 disappeared (deleted/region-blocked) by the time details are fetched.
+        engine._video_responce["items"].append({
+            "id": "video1",
+            "contentDetails": {"duration": "PT16M40S"},
+            "statistics": {"viewCount": "589025"},
+            "snippet": {"tags": ["word1", "word2"]}
+        })
+        engine._channel_responce["items"].append({
+            "id": "channel1",
+            "statistics": {"viewCount": "76177771", "subscriberCount": "77900"},
+            "snippet": {}
+        })
+
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(model.rowCount(), 1)
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoTitle), "First video")
+        self.assertEqual(len(engine.warnings), 1)
+
+    def test_youtube_api_engine_skips_video_without_snippet(self):
+        engine = MockApiEngine(empty=True)
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video1"}
+            # "snippet" is missing entirely
+        })
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video2"},
+            "snippet": {
+                "title": "Second video",
+                "publishTime": "2023-04-12T15:12:43Z",
+                "channelId": "channel2",
+                "channelTitle": "Second channel"
+            }
+        })
+        engine._video_responce["items"].append({"id": "video1"})
+        engine._video_responce["items"].append({"id": "video2"})
+
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(model.rowCount(), 1)
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoTitle), "Second video")
+        self.assertEqual(len(engine.warnings), 1)
+
+    def test_youtube_api_engine_missing_top_level_items(self):
+        engine = MockApiEngine(empty=True)
+        engine._search_responce = {}  # no "items" key at all
+
+        self.assertFalse(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(model.rowCount(), 0)
+        self.assertTrue(engine.errorDetails)
+
+    def test_youtube_api_engine_missing_optional_fields_uses_defaults(self):
+        engine = MockApiEngine(empty=True)
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video1"},
+            "snippet": {}
+            # no title, publishTime, channelId, channelTitle, thumbnails
+        })
+        engine._video_responce["items"].append({
+            "id": "video1"
+            # no contentDetails, statistics, snippet
+        })
+
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(model.rowCount(), 1)
+        self.assertEqual(len(engine.warnings), 0)
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoTitle), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoPublishedTime), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoDuration), "00:00:00")
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoDurationTimedelta), timedelta(seconds=0))
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoViews), 0)
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoLink), "https://www.youtube.com/watch?v=video1")
+        self.assertEqual(model.get_field_data(0, ResultFields.ChannelTitle), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.ChannelLink), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.ChannelSubscribers), 0)
+        self.assertEqual(model.get_field_data(0, ResultFields.ChannelJoinedDate), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.ViewRate), "-")
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoPreviewLink), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.ChannelLogoLink), "")
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoTags), [])
+
+    def test_youtube_api_engine_thumbnail_fallback(self):
+        engine = MockApiEngine(empty=True)
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video1"},
+            "snippet": {
+                "thumbnails": {
+                    "high": {"url": "https://yt3.com/high1.png"}
+                }
+            }
+        })
+        engine._search_responce["items"].append({
+            "id": {"videoId": "video2"},
+            "snippet": {
+                "thumbnails": {
+                    "default": {"url": "https://yt3.com/default2.png"}
+                }
+            }
+        })
+        engine._video_responce["items"].append({"id": "video1"})
+        engine._video_responce["items"].append({"id": "video2"})
+
+        self.assertTrue(engine.search("request"))
+        model = engine.model()
+        self.assertEqual(model.rowCount(), 2)
+        self.assertEqual(model.get_field_data(0, ResultFields.VideoPreviewLink), "https://yt3.com/high1.png")
+        self.assertEqual(model.get_field_data(1, ResultFields.VideoPreviewLink), "https://yt3.com/default2.png")
+
+    def test_youtube_api_engine_video_categories_skips_invalid_and_defaults_title(self):
+        engine = MockApiEngine(empty=True)
+        engine._category_responce["items"].append({
+            "id": "1",
+            "snippet": {"title": "Film & Animation"}
+        })
+        # Missing "id" and "snippet" entirely - should be skipped.
+        engine._category_responce["items"].append({
+            "kind": "youtube#videoCategory"
+        })
+        engine._category_responce["items"].append({
+            "id": "2",
+            "snippet": {}
+            # missing "title" -> defaults to ""
+        })
+
+        categories = engine.get_video_categories()
+
+        self.assertEqual(len(categories), 2)
+        self.assertEqual(categories[0].id, "1")
+        self.assertEqual(categories[0].text, "Film & Animation")
+        self.assertEqual(categories[1].id, "2")
+        self.assertEqual(categories[1].text, "")
+        self.assertEqual(len(engine.warnings), 1)
+
+    def test_youtube_api_engine_video_categories_missing_items(self):
+        engine = MockApiEngine(empty=True)
+        engine._category_responce = {}  # no "items" key at all
+
+        categories = engine.get_video_categories()
+
+        self.assertEqual(categories, [])
+        self.assertTrue(engine.errorDetails)
 
 
 if __name__ == "__main__":
