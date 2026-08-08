@@ -1,0 +1,94 @@
+name: Build macOS bundle
+
+# Manual-only: run from the Actions tab when a macOS build is needed.
+# Produces a downloadable workflow artifact, does not publish anything.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka
+
+      - name: Compile translations
+        run: |
+          pyside6-lrelease translations/ru.ts -qm translations/ru.qm
+          pyside6-lrelease plugins/autocomplete_plugin/translations/autocomplete_plugin_ru.ts \
+            -qm translations/autocomplete_plugin_ru.qm
+
+      - name: Build app bundle with Nuitka
+        run: |
+          python -m nuitka \
+            --standalone \
+            --macos-create-app-bundle \
+            --include-package-data=googleapiclient \
+            --enable-plugin=pyside6 \
+            --include-module=PySide6.support.deprecated \
+            --macos-app-icon=logo.png \
+            --output-filename=youtube-analyzer \
+            --include-package=youtubeanalyzer \
+            --include-package=plugins \
+            youtubeanalyzer/__main__.py
+
+      - name: Build autocomplete_plugin module
+        run: |
+          python -m nuitka \
+            --module plugins/autocomplete_plugin/autocomplete_plugin.py \
+            --output-dir=__main__.dist/plugins
+
+      - name: Debug - list build output
+        # NOTE: the exact location of the produced .app bundle under Nuitka's
+        # macOS standalone mode has not been verified on a real macOS runner
+        # (this workflow was authored without one). If the "Locate app
+        # bundle" step below fails, inspect this listing and fix the search
+        # path accordingly.
+        run: |
+          find . -maxdepth 3 -iname "*.app" -type d
+          find __main__.dist -maxdepth 2
+
+      - name: Locate app bundle and copy extra files
+        run: |
+          APP_BUNDLE=$(find . -maxdepth 3 -iname "*.app" -type d | head -n 1)
+          if [ -z "$APP_BUNDLE" ]; then
+            echo "No .app bundle found, see the debug listing above" >&2
+            exit 1
+          fi
+          echo "Found app bundle: $APP_BUNDLE"
+          MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
+
+          # Files are placed next to the executable (Contents/MacOS), because
+          # the app resolves plugins/license paths via Path(sys.executable).parent
+          # (see youtubeanalyzer/plugins.py).
+          mkdir -p "$MACOS_DIR/plugins" "$MACOS_DIR/translations"
+          cp -R __main__.dist/plugins/. "$MACOS_DIR/plugins/"
+          cp logo.png "$MACOS_DIR/logo.png"
+          cp LICENSE "$MACOS_DIR/LICENSE"
+          cp LICENSE_RU "$MACOS_DIR/LICENSE_RU"
+          cp translations/ru.qm "$MACOS_DIR/translations/ru.qm"
+          cp translations/autocomplete_plugin_ru.qm "$MACOS_DIR/translations/autocomplete_plugin_ru.qm"
+
+          echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+
+      - name: Archive app bundle
+        run: |
+          ditto -c -k --keepParent "$APP_BUNDLE" youtube-analyzer-macos.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-analyzer-macos
+          path: youtube-analyzer-macos.zip
+          retention-days: 14

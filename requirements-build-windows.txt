@@ -1,0 +1,4 @@
+Nuitka==2.5.9
+pywin32==306
+pywin32-ctypes==0.2.2
+pefile==2023.2.7
