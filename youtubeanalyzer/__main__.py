@@ -182,6 +182,9 @@ class MainWindow(StateSaveable, QMainWindow):
         exit_action.triggered.connect(self.close)
 
         edit_menu = self.menuBar().addMenu(self.tr("Edit"))
+        clear_selection_action = edit_menu.addAction(self.tr("Reset selection"))
+        clear_selection_action.triggered.connect(self._on_clear_selection)
+        edit_menu.addSeparator()
         preferences_action = edit_menu.addAction(self.tr("Preferences..."))
         preferences_action.triggered.connect(self._on_preferences)
 
@@ -319,6 +322,13 @@ class MainWindow(StateSaveable, QMainWindow):
             current_workspace = self._main_tab_widget.currentWidget().current_workspace()
             if current_workspace:
                 export_to_html(file_path, current_workspace.model)
+
+    def _on_clear_selection(self):
+        tab_widget = self._main_tab_widget.currentWidget()
+        if tab_widget:
+            current_workspace = tab_widget.current_workspace()
+            if current_workspace:
+                current_workspace.clear_selection()
 
     def _on_preferences(self):
         global app_need_restart
