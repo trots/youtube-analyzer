@@ -28,6 +28,9 @@ class WorkspaceWidget(StateSaveable, QWidget):
     def set_workspace_data(self, workspace_data: object):
         pass
 
+    def clear_selection(self):
+        pass
+
 
 class TabWorkspaceFactory(QObject):
     def __init__(self, parent: QObject = None):
