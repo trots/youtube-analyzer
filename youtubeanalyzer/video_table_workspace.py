@@ -594,6 +594,10 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
     def add_context_menu_action(self, action_text: str) -> QAction:
         return self._table_view.addAction(action_text)
 
+    def clear_selection(self):
+        self._table_view.clearSelection()
+        self._table_view.setCurrentIndex(QModelIndex())
+
     def get_current_row_data(self) -> list | None:
         current_index: QModelIndex = self._table_view.currentIndex()
         if not current_index.isValid():
