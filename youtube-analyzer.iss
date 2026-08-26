@@ -76,6 +76,8 @@ Source: "{#MyAppDistDir}\shiboken6.abi3.dll"; DestDir: "{app}"; Flags: ignorever
 Source: "{#MyAppDistDir}\unicodedata.pyd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyAppDistDir}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyAppDistDir}\LICENSE_RU"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\certifi\*"; DestDir: "{app}\certifi"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\charset_normalizer\*"; DestDir: "{app}\charset_normalizer"; Flags: ignoreversion recursesubdirs createallsubdirs
