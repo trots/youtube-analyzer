@@ -68,6 +68,9 @@ class PluginManager:
             message: str = QObject.tr("Path '{}' is not found")
             raise FileNotFoundError(message.format(plugin_path))
 
+        if str(base_dir) not in sys.path:
+            sys.path.insert(0, str(base_dir))
+
         discovered_plugins: dict[str, AbstractPlugin] = self._discover_plugins(plugin_path)
         self._plugins = self._resolve_dependencies(discovered_plugins)
 
@@ -91,8 +94,13 @@ class PluginManager:
                 return QObject.tr("Unable to read license file: " + str(e))
         return QObject.tr("License file is not exist")
 
+    def _is_compiled_executable(self) -> bool:
+        # Nuitka doesn't set sys.frozen; it injects __compiled__ into
+        # the globals of every module it compiles.
+        return "__compiled__" in globals()
+
     def _get_base_dir(self):
-        is_compiled_executable = getattr(sys, "frozen", False)
+        is_compiled_executable = self._is_compiled_executable()
         if is_compiled_executable:  # For exe
             return Path(sys.executable).parent
         else:
@@ -100,16 +108,19 @@ class PluginManager:
 
     def _discover_plugins(self, plugin_path: Path) -> dict[str, AbstractPlugin]:
         discovered_plugins: dict[str, AbstractPlugin] = {}
-        is_compiled_executable: bool = getattr(sys, "frozen", False)
 
         for _, name, _ in pkgutil.iter_modules([str(plugin_path)]):
             try:
-                if is_compiled_executable:
-                    module_path: str = f"{self._plugin_dir}.{name}"
-                else:
-                    module_path: str = f"{self._plugin_dir}.{name}.{name}"
-
+                module_path: str = f"{self._plugin_dir}.{name}"
                 module = importlib.import_module(module_path)
+
+                if hasattr(module, "__path__"):
+                    # The plugin is a package (a real package tree in dev
+                    # mode, or a Nuitka build that bundles the whole
+                    # package into one compiled module) - the actual
+                    # plugin code lives one level deeper, in a submodule
+                    # with the same name.
+                    module = importlib.import_module(f"{module_path}.{name}")
 
                 for item in dir(module):
                     obj = getattr(module, item)
