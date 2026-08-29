@@ -116,39 +116,39 @@
     </message>
     <message>
         <source>Copy video title</source>
-        <translation>Скопировать название видео</translation>
+        <translation>Копировать название видео</translation>
     </message>
     <message>
         <source>Copy video link</source>
-        <translation>Скопировать ссылку на видео</translation>
+        <translation>Копировать ссылку на видео</translation>
     </message>
     <message>
         <source>Copy channel title</source>
-        <translation>Скопировать название канала</translation>
+        <translation>Копировать название канала</translation>
     </message>
     <message>
         <source>Copy channel link</source>
-        <translation>Скопировать ссылку на канал</translation>
+        <translation>Копировать ссылку на канал</translation>
     </message>
     <message>
         <source>Copy published time</source>
-        <translation>Скопировать время публикации</translation>
+        <translation>Копировать время публикации</translation>
     </message>
     <message>
         <source>Copy duration</source>
-        <translation>Скопировать продолжительность</translation>
+        <translation>Копировать продолжительность</translation>
     </message>
     <message>
         <source>Copy views</source>
-        <translation>Скопировать количество просмотров</translation>
+        <translation>Копировать количество просмотров</translation>
     </message>
     <message>
         <source>Copy subscribers</source>
-        <translation>Скопировать количество подписчиков</translation>
+        <translation>Копировать количество подписчиков</translation>
     </message>
     <message>
         <source>Copy views/subscribers</source>
-        <translation>Скопировать просмотры/подписчики</translation>
+        <translation>Копировать просмотры/подписчики</translation>
     </message>
     <message>
         <source>Details</source>
@@ -409,6 +409,37 @@
     </message>
 </context>
 <context>
+    <name>PreviewActionsMenu</name>
+    <message>
+        <source>Download preview</source>
+        <translation>Скачать превью</translation>
+    </message>
+    <message>
+        <source>Copy preview</source>
+        <translation>Копировать превью</translation>
+    </message>
+    <message>
+        <source>Save preview image</source>
+        <translation>Сохранить превью</translation>
+    </message>
+    <message>
+        <source>Images</source>
+        <translation>Изображения</translation>
+    </message>
+    <message>
+        <source>Failed to save preview image</source>
+        <translation>Не удалось сохранить превью</translation>
+    </message>
+    <message>
+        <source>Failed to download preview image</source>
+        <translation>Не удалось скачать превью</translation>
+    </message>
+    <message>
+        <source>Failed to copy preview image</source>
+        <translation>Не удалось скопировать превью</translation>
+    </message>
+</context>
+<context>
     <name>PublishedDateFilterWidget</name>
     <message>
         <source>Select table filtering by video publication time</source>
@@ -616,6 +647,14 @@
         <source>Video preview image</source>
         <translation>Превью изображение для видео</translation>
     </message>
+    <message>
+        <source>Preview sizes</source>
+        <translation>Размеры превью</translation>
+    </message>
+    <message>
+        <source>Available preview image sizes for downloading</source>
+        <translation>Доступные размеры превью для скачивания</translation>
+    </message>
 </context>
 <context>
     <name>SearchLineEdit</name>
@@ -752,6 +791,10 @@
     <message>
         <source>Download error: </source>
         <translation>Ошибка загрузки: </translation>
+    </message>
+    <message>
+        <source>Download or copy preview image</source>
+        <translation>Скачать или скопировать превью</translation>
     </message>
 </context>
 <context>

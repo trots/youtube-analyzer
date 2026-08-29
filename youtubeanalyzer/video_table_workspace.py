@@ -1,9 +1,13 @@
+from typing import Optional
+import re
 from PySide6.QtCore import (
     Signal,
     QSize,
     Qt,
+    QEvent,
     QModelIndex,
     QUrl,
+    QFileInfo,
     QItemSelection
 )
 from PySide6.QtGui import (
@@ -30,7 +34,11 @@ from PySide6.QtWidgets import (
     QButtonGroup,
     QRadioButton,
     QListView,
-    QSlider
+    QSlider,
+    QMenu,
+    QToolButton,
+    QFileDialog,
+    QStyle
 )
 from PySide6.QtCharts import (
     QChartView,
@@ -44,7 +52,8 @@ from youtubeanalyzer.settings import (
     StateSaveable
 )
 from youtubeanalyzer.engine import (
-    ImageDownloader
+    ImageDownloader,
+    FileDownloader
 )
 from youtubeanalyzer.model import (
     ResultFields,
@@ -61,6 +70,7 @@ from youtubeanalyzer.chart import (
 )
 from youtubeanalyzer.widgets import (
     create_link_label,
+    critical_detailed_message,
     PixmapLabel,
     FixedTabWidget
 )
@@ -69,9 +79,108 @@ from youtubeanalyzer.workspace import (
 )
 
 
-class VideoDetailsWidget(QWidget):
-    def __init__(self, model: ResultTableModel, parent: QWidget = None):
+class PreviewActionsMenu(QMenu):
+    class Actions:
+        Copy: int = 1
+        Download: int = 2
+        All: int = Copy | Download
+
+    def __init__(self, settings: Settings, actions: int = Actions.All, parent: QWidget = None):
         super().__init__(parent)
+        self._settings: Settings = settings
+        self._video_title: str = ""
+        self._preview_sizes: list[dict] = []
+        self._pending_downloads: dict[str, str] = {}  # {url: save file path}
+
+        self._download_submenu: Optional[QMenu] = None
+        self._download_downloader: Optional[FileDownloader] = None
+        if actions & PreviewActionsMenu.Actions.Download:
+            self._download_submenu = self.addMenu(self.tr("Download preview"))
+            self._download_downloader = FileDownloader(self)
+            self._download_downloader.finished.connect(self._on_file_downloaded)
+            self._download_downloader.error.connect(self._on_download_error)
+
+        self._copy_submenu: Optional[QMenu] = None
+        self._copy_downloader: Optional[ImageDownloader] = None
+        if actions & PreviewActionsMenu.Actions.Copy:
+            self._copy_submenu = self.addMenu(self.tr("Copy preview"))
+            self._copy_downloader = ImageDownloader(self)
+            self._copy_downloader.finished.connect(self._on_image_downloaded)
+            self._copy_downloader.error.connect(self._on_copy_error)
+
+    def set_current_video(self, video_title: str, preview_sizes: list[dict]):
+        self._video_title = video_title
+        self._preview_sizes = preview_sizes or []
+        self._rebuild_submenus()
+
+    def has_sizes(self) -> bool:
+        return bool(self._preview_sizes)
+
+    def _rebuild_submenus(self):
+        if self._download_submenu is not None:
+            self._download_submenu.clear()
+        if self._copy_submenu is not None:
+            self._copy_submenu.clear()
+        for size in self._preview_sizes:
+            label = f"{size['width']}×{size['height']}"
+            if self._download_submenu is not None:
+                action = self._download_submenu.addAction(label)
+                action.triggered.connect(lambda checked=False, s=size: self._download(s))
+            if self._copy_submenu is not None:
+                action = self._copy_submenu.addAction(label)
+                action.triggered.connect(lambda checked=False, s=size: self._copy(s))
+
+    def _download(self, size: dict):
+        url = size["url"]
+        extension = QUrl(url).path().rsplit(".", 1)[-1] if "." in QUrl(url).path() else "jpg"
+        default_name = self._sanitize_filename(self._video_title) + "." + extension
+        last_save_dir = self._settings.get(Settings.LastPreviewSaveDir)
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, self.tr("Save preview image"), last_save_dir + "/" + default_name,
+            self.tr("Images") + f" (*.{extension})")
+        if not file_path:
+            return
+        self._settings.set(Settings.LastPreviewSaveDir, QFileInfo(file_path).dir().absolutePath())
+
+        request_url = QUrl(url)
+        self._pending_downloads[request_url.toString()] = file_path
+        self._download_downloader.start_download(request_url)
+
+    def _on_file_downloaded(self, url: QUrl, data: bytes):
+        file_path = self._pending_downloads.pop(url.toString(), None)
+        if file_path is None:
+            return
+        try:
+            with open(file_path, "wb") as preview_file:
+                preview_file.write(data)
+        except OSError as exc:
+            critical_detailed_message(self, self.tr("Failed to save preview image"), exc)
+
+    def _on_download_error(self, url: QUrl, error: str):
+        if self._pending_downloads.pop(url.toString(), None) is None:
+            return
+        critical_detailed_message(self, self.tr("Failed to download preview image"), error)
+
+    def _copy(self, size: dict):
+        self._copy_downloader.start_download(QUrl(size["url"]))
+
+    def _on_image_downloaded(self, image):
+        if not image.isNull():
+            QGuiApplication.clipboard().setImage(image)
+
+    def _on_copy_error(self, error: str):
+        critical_detailed_message(self, self.tr("Failed to copy preview image"), error)
+
+    @staticmethod
+    def _sanitize_filename(name: str) -> str:
+        sanitized = re.sub(r'[\\/*?:"<>|]', "_", name).strip()
+        return sanitized or "preview"
+
+
+class VideoDetailsWidget(QWidget):
+    def __init__(self, settings: Settings, model: ResultTableModel, parent: QWidget = None):
+        super().__init__(parent)
+        self._settings: Settings = settings
         self._model: ResultTableModel = model
         self._model.dataChanged.connect(self._on_model_data_changed)
         self._current_index: QModelIndex = None
@@ -79,13 +188,25 @@ class VideoDetailsWidget(QWidget):
         self._logo_downloader.finished.connect(self._on_logo_download_finished)
         self._logo_downloader.error.connect(self._on_download_error)
 
+        self._preview_actions_menu = PreviewActionsMenu(self._settings, PreviewActionsMenu.Actions.All, self)
+
         spacing = 10
         main_widget = QWidget(self)
         main_layout = QVBoxLayout()
 
         self._preview_label = PixmapLabel(main_widget)
         self._preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._preview_label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._preview_label.customContextMenuRequested.connect(self._show_preview_actions_menu)
+        self._preview_label.installEventFilter(self)
         main_layout.addWidget(self._preview_label)
+
+        self._preview_actions_button = QToolButton(self._preview_label)
+        self._preview_actions_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
+        self._preview_actions_button.setToolTip(self.tr("Download or copy preview image"))
+        self._preview_actions_button.setAutoRaise(True)
+        self._preview_actions_button.clicked.connect(self._show_preview_actions_menu_at_button)
+        self._preview_actions_button.hide()
 
         self._title_label = QLabel(main_widget)
         self._title_label.setStyleSheet("font-weight: bold")
@@ -189,6 +310,13 @@ class VideoDetailsWidget(QWidget):
         preview_image = self._model.get_video_preview_image(index.row())
         if preview_image:
             self._preview_label.setPixmap(QPixmap.fromImage(preview_image))
+        self._preview_actions_menu.set_current_video(
+            row_data[ResultFields.VideoTitle], self._model.get_video_preview_sizes(index.row()))
+        if self._preview_actions_menu.has_sizes():
+            self._reposition_preview_actions_button()
+            self._preview_actions_button.show()
+        else:
+            self._preview_actions_button.hide()
         logo_url = QUrl.fromUserInput(row_data[ResultFields.ChannelLogoLink])
         self._logo_downloader.start_download(logo_url)
 
@@ -202,6 +330,8 @@ class VideoDetailsWidget(QWidget):
 
     def clear(self):
         self._current_index = None
+        self._preview_actions_menu.set_current_video("", [])
+        self._preview_actions_button.hide()
         self._logo_downloader.clear_cache()
         self._title_label.clear()
         self._duration_label.clear()
@@ -232,6 +362,26 @@ class VideoDetailsWidget(QWidget):
 
     def _on_download_error(self, error):
         print(self.tr("Download error: ") + error)
+
+    def eventFilter(self, obj, event):
+        if obj is self._preview_label and event.type() == QEvent.Type.Resize:
+            self._reposition_preview_actions_button()
+        return super().eventFilter(obj, event)
+
+    def _reposition_preview_actions_button(self):
+        margin = 4
+        button_size = self._preview_actions_button.sizeHint()
+        x = self._preview_label.width() - button_size.width() - margin
+        self._preview_actions_button.move(max(0, x), margin)
+
+    def _show_preview_actions_menu(self, pos):
+        if self._preview_actions_menu.has_sizes():
+            self._preview_actions_menu.exec(self._preview_label.mapToGlobal(pos))
+
+    def _show_preview_actions_menu_at_button(self):
+        if self._preview_actions_menu.has_sizes():
+            self._preview_actions_menu.exec(
+                self._preview_actions_button.mapToGlobal(self._preview_actions_button.rect().bottomLeft()))
 
 
 class AnalyticsWidget(QWidget):
@@ -506,6 +656,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         copy_view_subscribers_action.setData(ResultFields.ViewRate)
         copy_view_subscribers_action.triggered.connect(self._on_copy_action)
 
+        self._preview_actions_menu = PreviewActionsMenu(self._settings, PreviewActionsMenu.Actions.Copy, self._table_view)
+        self._table_view.addActions(self._preview_actions_menu.actions())
+
         self._list_vew = QListView()
         self._list_vew.setViewMode(QListView.ViewMode.IconMode)
         self._list_vew.setResizeMode(QListView.ResizeMode.Adjust)
@@ -526,7 +679,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
         self._side_tab_widget = FixedTabWidget()
 
-        self._details_widget = VideoDetailsWidget(self.model, self)
+        self._details_widget = VideoDetailsWidget(self._settings, self.model, self)
         self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
 
         self._analytics_widget = AnalyticsWidget(self._sort_model, self)
@@ -661,9 +814,14 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             source_index = self._sort_model.mapToSource(proxy_indexes[0])
             self._details_widget.set_current_index(source_index)
             self._analytics_widget.set_current_index(proxy_indexes[0])
+            row_data = self.model.get_row_data(source_index.row())
+            video_title = row_data[ResultFields.VideoTitle] if row_data else ""
+            self._preview_actions_menu.set_current_video(
+                video_title, self.model.get_video_preview_sizes(source_index.row()))
         else:
             self._details_widget.set_current_index(None)
             self._analytics_widget.set_current_index(None)
+            self._preview_actions_menu.set_current_video("", [])
 
     def _on_copy_action(self):
         field = self.sender().data()

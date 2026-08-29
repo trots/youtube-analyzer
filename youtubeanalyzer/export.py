@@ -14,6 +14,7 @@ def exception_column(column: ResultFields):
             column == ResultFields.ChannelLogoLink or
             column == ResultFields.VideoTags or
             column == ResultFields.VideoPreviewImage or
+            column == ResultFields.VideoPreviewSizes or
             column == ResultFields.VideoType):
         return True
     else:
