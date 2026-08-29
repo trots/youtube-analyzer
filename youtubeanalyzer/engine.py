@@ -102,6 +102,7 @@ class ImageDownloader(QObject):
     def _handle_finished(self, reply: QNetworkReply):
         if reply.error() != QNetworkReply.NoError:
             self.error.emit(reply.errorString())
+            reply.deleteLater()
             return
         image = QImage()
         image.loadFromData(reply.readAll())
@@ -112,6 +113,7 @@ class ImageDownloader(QObject):
         self._try_again = True
         self._data_cache.cache_image(url.toString(), image)
         self.finished.emit(image)
+        reply.deleteLater()
 
 
 class FileDownloader(QObject):
