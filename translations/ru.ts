@@ -162,6 +162,14 @@
         <source>YouTube API key is not set. Please set it in the preferences</source>
         <translation>Ключ YouTube API не установлен. Пожалуйста, установите его в настройках</translation>
     </message>
+    <message>
+        <source>Go to the previous results</source>
+        <translation>Перейти к предыдущим результатам</translation>
+    </message>
+    <message>
+        <source>Go to the next results</source>
+        <translation>Перейти к следующим результатам</translation>
+    </message>
 </context>
 <context>
     <name>AdvancedTab</name>
@@ -188,6 +196,14 @@
     <message>
         <source>Request timeout in seconds:</source>
         <translation>Время ожидания запроса в секундах:</translation>
+    </message>
+    <message>
+        <source>Search history limit per tab:</source>
+        <translation>Лимит истории поиска на вкладку:</translation>
+    </message>
+    <message>
+        <source>Set the maximum number of search results kept in the back/forward history for each tab. Default is 200</source>
+        <translation>Установить максимальное количество результатов поиска, хранимых в истории переходов назад/вперёд для каждой вкладки. По умолчанию 200</translation>
     </message>
 </context>
 <context>

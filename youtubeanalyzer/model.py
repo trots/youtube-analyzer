@@ -142,12 +142,15 @@ class ResultTableModel(QAbstractTableModel):
 
     def clear(self):
         self.beginResetModel()
-        self._result.clear()
+        self._result = []
         self._network_manager.clearConnectionCache()
         self._network_manager.clearAccessCache()
         self._pending_requests.clear()
         self._pending_replies.clear()
         self.endResetModel()
+
+    def get_data(self) -> list:
+        return self._result
 
     def set_mode(self, mode: Mode):
         self.beginResetModel()

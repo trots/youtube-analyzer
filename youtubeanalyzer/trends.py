@@ -107,6 +107,20 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
                 self._category_combo_box.setCurrentIndex(index)
             self._loaded_category_id = None
 
+    def _get_history_context(self):
+        return (self._category_combo_box.currentData(), self._region_combo_box.currentData())
+
+    def _restore_history_context(self, context):
+        if context is None:
+            return
+        category_id, region_code = context
+        region_index = self._region_combo_box.findData(region_code)
+        if region_index >= 0:
+            self._region_combo_box.setCurrentIndex(region_index)  # synchronously reloads categories for the region
+        category_index = self._category_combo_box.findData(category_id)
+        if category_index >= 0:
+            self._category_combo_box.setCurrentIndex(category_index)
+
     def _on_search_clicked(self):
         self.setDisabled(True)
         QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
@@ -141,6 +155,7 @@ class TrendsWorkspace(AbstractVideoTableWorkspace):
                     warning_detailed_message_dont_show_again(
                         self, self._settings, Settings.DontShowSkippedItemsWarning,
                         self.tr("Some items were skipped"), "\n".join(engine.warnings))
+                self._push_history()
             else:
                 text = self.tr("Trends searching failed")
                 if engine.errorReason is not None:

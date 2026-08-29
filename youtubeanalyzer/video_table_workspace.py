@@ -117,18 +117,28 @@ class PreviewActionsMenu(QMenu):
         return bool(self._preview_sizes)
 
     def _rebuild_submenus(self):
+        # Reuse existing QAction objects instead of clear()+addAction() on every call: tearing down and
+        # recreating Qt objects on every row selection was hitting a rare PySide/shiboken object-identity
+        # bug when colliding with QNetworkReply objects freed around the same time (deleteLater()).
         if self._download_submenu is not None:
-            self._download_submenu.clear()
+            self._sync_submenu_actions(self._download_submenu, self._download)
         if self._copy_submenu is not None:
-            self._copy_submenu.clear()
-        for size in self._preview_sizes:
+            self._sync_submenu_actions(self._copy_submenu, self._copy)
+
+    def _sync_submenu_actions(self, submenu: QMenu, on_size_selected) -> None:
+        actions = submenu.actions()
+        for i, size in enumerate(self._preview_sizes):
             label = f"{size['width']}×{size['height']}"
-            if self._download_submenu is not None:
-                action = self._download_submenu.addAction(label)
-                action.triggered.connect(lambda checked=False, s=size: self._download(s))
-            if self._copy_submenu is not None:
-                action = self._copy_submenu.addAction(label)
-                action.triggered.connect(lambda checked=False, s=size: self._copy(s))
+            if i < len(actions):
+                action = actions[i]
+                action.setText(label)
+                action.setVisible(True)
+                action.triggered.disconnect()
+            else:
+                action = submenu.addAction(label)
+            action.triggered.connect(lambda checked=False, s=size: on_size_selected(s))
+        for extra_action in actions[len(self._preview_sizes):]:
+            extra_action.setVisible(False)
 
     def _download(self, size: dict):
         url = size["url"]
@@ -576,7 +586,25 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
     def __init__(self, settings: Settings, parent: QWidget = None):
         WorkspaceWidget.__init__(self, settings, parent)
 
+        self._history: list[tuple] = []  # [(row_data, context)]
+        self._history_index: int = -1
+
         h_layout: QHBoxLayout = QHBoxLayout()
+
+        self._history_back_button = QToolButton()
+        self._history_back_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack))
+        self._history_back_button.setToolTip(self.tr("Go to the previous results"))
+        self._history_back_button.setEnabled(False)
+        self._history_back_button.clicked.connect(self._on_history_back)
+        h_layout.addWidget(self._history_back_button)
+
+        self._history_forward_button = QToolButton()
+        self._history_forward_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
+        self._history_forward_button.setToolTip(self.tr("Go to the next results"))
+        self._history_forward_button.setEnabled(False)
+        self._history_forward_button.clicked.connect(self._on_history_forward)
+        h_layout.addWidget(self._history_forward_button)
+
         self._create_toolbar(h_layout)
 
         self._search_limit_spin_box = QSpinBox()
@@ -793,6 +821,50 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
     def _on_search_clicked(self):
         raise "AbstractVideoTableWorkspace._on_search_clicked is not implemented"
+
+    def _get_history_context(self):
+        return None
+
+    def _restore_history_context(self, context):
+        pass
+
+    def _push_history(self):
+        if self._history_index < len(self._history) - 1:
+            self._history = self._history[:self._history_index + 1]
+        self._history.append((self.model.get_data(), self._get_history_context()))
+
+        history_limit: int = int(self._settings.get(Settings.HistoryLimit))
+        if history_limit > 0 and len(self._history) > history_limit:
+            self._history = self._history[-history_limit:]
+
+        self._history_index = len(self._history) - 1
+        self._update_history_buttons()
+
+    def _on_history_back(self):
+        if self._history_index <= 0:
+            return
+        self._history_index -= 1
+        self._apply_history_entry()
+
+    def _on_history_forward(self):
+        if self._history_index >= len(self._history) - 1:
+            return
+        self._history_index += 1
+        self._apply_history_entry()
+
+    def _apply_history_entry(self):
+        row_data, context = self._history[self._history_index]
+        self.model.set_data(row_data)
+        self._sort_model.sort(-1)
+        self._details_widget.clear()
+        self._on_insert_widgets()
+        self._table_view.resizeColumnsToContents()
+        self._restore_history_context(context)
+        self._update_history_buttons()
+
+    def _update_history_buttons(self):
+        self._history_back_button.setEnabled(self._history_index > 0)
+        self._history_forward_button.setEnabled(self._history_index < len(self._history) - 1)
 
     def _on_view_mode_changed(self, mode: ResultTableModel.Mode):
         self.model.set_mode(mode)
