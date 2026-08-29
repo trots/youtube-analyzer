@@ -24,11 +24,13 @@ def make_result_row(video_title: str, video_published_time: str, video_duration:
                     views: int, video_link: str, channel_title: str, channel_link: str,
                     channel_subscribers: int, channel_views: int, channel_joined_date: str,
                     video_preview_link: str, channel_logo_link: str, video_tags: list[str],
-                    video_duration_timedelta, video_relevance_number, video_type):
+                    video_duration_timedelta, video_relevance_number, video_type,
+                    video_preview_sizes: list[dict]):
     view_rate = (str(round(views / channel_subscribers * 100, 2)) + "%") if channel_subscribers > 0 else "-"
     return [video_title, video_published_time, video_duration, views, video_link, channel_title,
             channel_link, channel_subscribers, channel_views, channel_joined_date, view_rate, video_preview_link,
-            channel_logo_link, video_tags, video_duration_timedelta, video_relevance_number, video_type, None]
+            channel_logo_link, video_tags, video_duration_timedelta, video_relevance_number, video_type, None,
+            video_preview_sizes]
 
 
 class ResultFields:
@@ -50,7 +52,8 @@ class ResultFields:
     VideoRelevanceNumber: int = 15
     VideoType: int = 16
     VideoPreviewImage: int = 17
-    MaxFieldsCount: int = 18  # Add new items before this line
+    VideoPreviewSizes: int = 18
+    MaxFieldsCount: int = 19  # Add new items before this line
 
 
 class ResultTableModel(QAbstractTableModel):
@@ -92,7 +95,8 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Video Duration Timedelta"),
             self.tr("#"),
             self.tr("Type"),
-            self.tr("Preview image")
+            self.tr("Preview image"),
+            self.tr("Preview sizes")
             ]
         self.FieldTooltips = [
             self.tr("Video title"),
@@ -111,7 +115,8 @@ class ResultTableModel(QAbstractTableModel):
             self.tr("Video tag list"),
             self.tr("Video duration timedelta"),
             self.tr("Video relevance in search output (0 is the higest relevance)"),
-            self.tr("Video preview image")
+            self.tr("Video preview image"),
+            self.tr("Available preview image sizes for downloading")
             ]
         self._fields = [
             ResultFields.VideoRelevanceNumber,
@@ -190,6 +195,9 @@ class ResultTableModel(QAbstractTableModel):
             self._pending_replies[url] = reply
             self._pending_requests[url] = row
         return None
+
+    def get_video_preview_sizes(self, row: int) -> list[dict]:
+        return self._result[row][ResultFields.VideoPreviewSizes] or []
 
     def rowCount(self, parent=None):
         return len(self._result)

@@ -114,6 +114,27 @@ class ImageDownloader(QObject):
         self.finished.emit(image)
 
 
+class FileDownloader(QObject):
+    finished = Signal(QUrl, bytes)
+    error = Signal(QUrl, str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._manager = QNetworkAccessManager()
+        self._manager.finished.connect(self._handle_finished)
+
+    def start_download(self, url: QUrl):
+        self._manager.get(QNetworkRequest(url))
+
+    def _handle_finished(self, reply: QNetworkReply):
+        url = reply.url()
+        if reply.error() != QNetworkReply.NetworkError.NoError:
+            self.error.emit(url, reply.errorString())
+        else:
+            self.finished.emit(url, bytes(reply.readAll()))
+        reply.deleteLater()
+
+
 class SearchAutocompleteDownloader(QObject):
     finished = Signal(list)
     error = Signal(str)
@@ -212,7 +233,7 @@ class YoutubeGrepEngine(AbstractYoutubeEngine):
                             video["title"], video["publishedTime"], video_duration,
                             views, video["link"], channel_info["title"], channel_info["url"],
                             channel_subscribers, channel_views, channel_info["joinedDate"], preview_link, channel_logo_link,
-                            video_info["keywords"], video_duration_d, counter, video["type"]))
+                            video_info["keywords"], video_duration_d, counter, video["type"], []))
                     counter = counter + 1
                     if counter == self._request_limit:
                         break
@@ -537,6 +558,12 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
                 video_preview_link = thumbnails[size].get("url", "")
                 break
 
+        video_preview_sizes = [
+            {"width": thumbnail.get("width", 0), "height": thumbnail.get("height", 0), "url": thumbnail["url"]}
+            for thumbnail in thumbnails.values() if thumbnail.get("url")
+        ]
+        video_preview_sizes.sort(key=lambda thumbnail: thumbnail["width"])
+
         channel_logo_link = ""
         channel_snippet = channel_item.get("snippet", {})
         if channel_snippet:
@@ -552,4 +579,4 @@ class YoutubeApiEngine(AbstractYoutubeEngine):
         return make_result_row(video_title, video_published_time_str, video_duration, views,
                                video_link, channel_title, channel_url, channel_subscribers,
                                channel_views, channel_joined_date, video_preview_link, channel_logo_link, tags,
-                               video_duration_td, result_index + 1, video_type)
+                               video_duration_td, result_index + 1, video_type, video_preview_sizes)

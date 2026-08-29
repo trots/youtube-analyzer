@@ -33,6 +33,7 @@ class Settings:
     MainWindowGeometry = SettingsKey("main_window_geometry", QByteArray())
     RequestLimit = SettingsKey("request_limit", 10)
     LastSaveDir = SettingsKey("last_save_dir", "")
+    LastPreviewSaveDir = SettingsKey("last_preview_save_dir", "")
     DontAskAgainExit = SettingsKey("dont_ask_again_exit", 0)
     YouTubeApiKey = SettingsKey("youtube_api_key", "")
     Language = SettingsKey("language", "")
