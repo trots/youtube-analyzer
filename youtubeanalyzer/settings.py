@@ -57,6 +57,7 @@ class Settings:
     VideoTableMode = SettingsKey("video_table_mode", 0)
     PreviewScaleIndex = SettingsKey("preview_scale_index", 100)
     DontShowSkippedItemsWarning = SettingsKey("dont_show_skipped_items_warning", 0)
+    HistoryLimit = SettingsKey("history_limit", 200)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
@@ -223,6 +224,16 @@ class AdvancedTab(QWidget):
         self._request_timeout_sec_edit.setValue(int(self._settings.get(Settings.RequestTimeoutSec)))
         layout.addWidget(self._request_timeout_sec_edit)
 
+        layout.addWidget(QLabel(self.tr("Search history limit per tab:")))
+        self._history_limit_edit = QSpinBox()
+        self._history_limit_edit.setMinimum(1)
+        self._history_limit_edit.setMaximum(1000)
+        self._history_limit_edit.setToolTip(
+            self.tr("Set the maximum number of search results kept in the back/forward history for each tab. "
+                     "Default is 200"))
+        self._history_limit_edit.setValue(int(self._settings.get(Settings.HistoryLimit)))
+        layout.addWidget(self._history_limit_edit)
+
         self._reset_dont_show_again_button = QPushButton(self.tr("Reset all \"don't show again\" dialogs"))
         self._reset_dont_show_again_button.setToolTip(
             self.tr("Show confirmation and warning dialogs again that were previously dismissed with "
@@ -236,6 +247,7 @@ class AdvancedTab(QWidget):
     def save_settings(self):
         self._settings.set(Settings.RequestPageLimit, self._request_page_limit_edit.value())
         self._settings.set(Settings.RequestTimeoutSec, self._request_timeout_sec_edit.value())
+        self._settings.set(Settings.HistoryLimit, self._history_limit_edit.value())
 
     def _on_reset_dont_show_again(self):
         self._settings.set(Settings.DontAskAgainExit, 0)

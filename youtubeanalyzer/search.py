@@ -68,6 +68,7 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
                     warning_detailed_message_dont_show_again(
                         self, self._settings, Settings.DontShowSkippedItemsWarning,
                         self.tr("Some items were skipped"), "\n".join(engine.warnings))
+                self._push_history()
             else:
                 text = self.tr("Error in the searching process")
                 if engine.errorReason is not None:
@@ -80,6 +81,13 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
 
         QApplication.restoreOverrideCursor()
         self.setDisabled(False)
+
+    def _get_history_context(self):
+        return self.request_text
+
+    def _restore_history_context(self, context):
+        self.request_text = context or ""
+        self._search_line_edit.setText(self.request_text)
 
     def _create_engine(self):
         request_limit: int = self._get_request_limit()
