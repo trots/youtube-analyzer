@@ -38,19 +38,28 @@ class ChannelsPieChart(QChart):
         self.addSeries(self._series)
         self._last_pen = None
         self._last_brush = None
+        self._slices_by_channel_link = {}
         self.legend().setAlignment(Qt.AlignmentFlag.AlignLeft)
 
     def rebuild(self):
         self._series.clear()
+        self._slices_by_channel_link.clear()
         if self._proxy_model.rowCount() == 0:
             return
 
-        channel_names = [
-            self._proxy_model.get_field_data(row, ResultFields.ChannelTitle) for row in range(self._proxy_model.rowCount())
+        channel_links = [
+            self._proxy_model.get_field_data(row, ResultFields.ChannelLink) for row in range(self._proxy_model.rowCount())
         ]
-        counter = Counter(channel_names)
-        for name in counter:
-            self._series.append(name, counter[name])
+        counter = Counter(channel_links)
+        channel_titles = {}
+        for row in range(self._proxy_model.rowCount()):
+            channel_link = channel_links[row]
+            if channel_link not in channel_titles:
+                channel_titles[channel_link] = self._proxy_model.get_field_data(row, ResultFields.ChannelTitle)
+
+        for channel_link in counter:
+            slice = self._series.append(channel_titles[channel_link], counter[channel_link])
+            self._slices_by_channel_link[channel_link] = slice
 
         current_index = self._current_index
         self._current_index = None
@@ -71,18 +80,16 @@ class ChannelsPieChart(QChart):
                 slice.setBrush(self._last_brush)
                 break
 
-        channel_name = self._proxy_model.get_field_data(row, ResultFields.ChannelTitle)
+        channel_link = self._proxy_model.get_field_data(row, ResultFields.ChannelLink)
 
-        if channel_name is not None:
-            for slice in self._series.slices():
-                if slice.label() == channel_name:
-                    slice.setExploded()
-                    slice.setLabelVisible()
-                    self._last_pen = slice.pen()
-                    self._last_brush = slice.brush()
-                    slice.setPen(QPen(Qt.darkGreen, 2))
-                    slice.setBrush(Qt.green)
-                    break
+        if channel_link is not None and channel_link in self._slices_by_channel_link:
+            slice = self._slices_by_channel_link[channel_link]
+            slice.setExploded()
+            slice.setLabelVisible()
+            self._last_pen = slice.pen()
+            self._last_brush = slice.brush()
+            slice.setPen(QPen(Qt.darkGreen, 2))
+            slice.setBrush(Qt.green)
 
         self._current_index = index
 
@@ -92,8 +99,9 @@ class ChannelsPieChart(QChart):
 
     def _on_slice_hovered(self, pie_slice, state):
         row = self._current_index.row() if self._current_index is not None else None
-        channel_name = self._proxy_model.get_field_data(row, ResultFields.ChannelTitle)
-        if pie_slice.label() == channel_name:
+        channel_link = self._proxy_model.get_field_data(row, ResultFields.ChannelLink)
+        current_slice = self._slices_by_channel_link.get(channel_link)
+        if pie_slice is current_slice:
             return
         pie_slice.setLabelVisible(state)
 
