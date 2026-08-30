@@ -4,9 +4,16 @@ if "QT_QPA_PLATFORM" not in os.environ:
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import unittest
+from unittest.mock import patch
 from datetime import timedelta
+from PySide6.QtCore import (
+    Qt
+)
 from PySide6.QtWidgets import (
     QApplication
+)
+from PySide6.QtGui import (
+    QGuiApplication
 )
 from youtubeanalyzer.model import (
     ResultTableModel,
@@ -134,6 +141,54 @@ class TestChannelsPieChart(unittest.TestCase):
         # Hovering another slice must toggle its label visibility as usual.
         chart._on_slice_hovered(channel2_slice, True)
         self.assertTrue(channel2_slice.isLabelVisible())
+
+    def test_legend_marker_click_opens_channel_link(self):
+        rows = [
+            make_result_row("Video1", "8 hours ago", "00:34", 1234, "https://video1", "Chan A",
+                             "https://channel1", 123, 12345, "2020-05-18", "https://preview1.jpg",
+                             "https://logo1.jpg", ["word1"], timedelta(seconds=34), 0, "shorts", []),
+            make_result_row("Video2", "9 hours ago", "00:35", 1235, "https://video2", "Chan B",
+                             "https://channel2", 124, 12346, "2020-05-19", "https://preview2.jpg",
+                             "https://logo2.jpg", ["word2"], timedelta(seconds=35), 1, "shorts", []),
+        ]
+        proxy_model = create_proxy_model(rows)
+        chart = ChannelsPieChart(proxy_model)
+        chart.rebuild()
+
+        markers = {marker.label(): marker for marker in chart.legend().markers(chart._series)}
+
+        with patch("youtubeanalyzer.chart.QDesktopServices.openUrl") as mock_open_url:
+            markers["Chan B"].clicked.emit()
+
+        mock_open_url.assert_called_once()
+        self.assertEqual(mock_open_url.call_args[0][0].toString(), "https://channel2")
+
+    def test_legend_marker_hover_sets_and_restores_cursor(self):
+        rows = [
+            make_result_row("Video1", "8 hours ago", "00:34", 1234, "https://video1", "Chan A",
+                             "https://channel1", 123, 12345, "2020-05-18", "https://preview1.jpg",
+                             "https://logo1.jpg", ["word1"], timedelta(seconds=34), 0, "shorts", []),
+        ]
+        proxy_model = create_proxy_model(rows)
+        chart = ChannelsPieChart(proxy_model)
+        chart.rebuild()
+
+        marker = chart.legend().markers(chart._series)[0]
+
+        self.assertIsNone(QGuiApplication.overrideCursor())
+
+        marker.hovered.emit(True)
+        self.assertIsNotNone(QGuiApplication.overrideCursor())
+        self.assertEqual(QGuiApplication.overrideCursor().shape(), Qt.CursorShape.PointingHandCursor)
+
+        marker.hovered.emit(False)
+        self.assertIsNone(QGuiApplication.overrideCursor())
+
+        # A rebuild while hover is "stuck" active must not leave the override cursor dangling.
+        marker.hovered.emit(True)
+        self.assertIsNotNone(QGuiApplication.overrideCursor())
+        chart.rebuild()
+        self.assertIsNone(QGuiApplication.overrideCursor())
 
 
 if __name__ == "__main__":

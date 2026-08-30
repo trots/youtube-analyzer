@@ -2,10 +2,14 @@ from collections import (
     Counter
 )
 from PySide6.QtCore import (
-    Qt
+    Qt,
+    QUrl
 )
 from PySide6.QtGui import (
-    QPen
+    QPen,
+    QDesktopServices,
+    QGuiApplication,
+    QPalette
 )
 from PySide6.QtCharts import (
     QPieSeries,
@@ -39,9 +43,13 @@ class ChannelsPieChart(QChart):
         self._last_pen = None
         self._last_brush = None
         self._slices_by_channel_link = {}
+        self._legend_hover_active = False
         self.legend().setAlignment(Qt.AlignmentFlag.AlignLeft)
 
     def rebuild(self):
+        if self._legend_hover_active:
+            self._legend_hover_active = False
+            QGuiApplication.restoreOverrideCursor()
         self._series.clear()
         self._slices_by_channel_link.clear()
         if self._proxy_model.rowCount() == 0:
@@ -60,6 +68,15 @@ class ChannelsPieChart(QChart):
         for channel_link in counter:
             slice = self._series.append(channel_titles[channel_link], counter[channel_link])
             self._slices_by_channel_link[channel_link] = slice
+
+        link_color = QGuiApplication.palette().color(QPalette.ColorRole.Link)
+        for marker in self.legend().markers(self._series):
+            marker.clicked.connect(self._on_legend_marker_clicked)
+            marker.hovered.connect(self._on_legend_marker_hovered)
+            marker.setLabelBrush(link_color)
+            font = marker.font()
+            font.setUnderline(True)
+            marker.setFont(font)
 
         current_index = self._current_index
         self._current_index = None
@@ -104,6 +121,21 @@ class ChannelsPieChart(QChart):
         if pie_slice is current_slice:
             return
         pie_slice.setLabelVisible(state)
+
+    def _on_legend_marker_clicked(self):
+        pie_slice = self.sender().slice()
+        for channel_link, slice in self._slices_by_channel_link.items():
+            if slice is pie_slice and channel_link:
+                QDesktopServices.openUrl(QUrl(channel_link))
+                break
+
+    def _on_legend_marker_hovered(self, state):
+        if state and not self._legend_hover_active:
+            self._legend_hover_active = True
+            QGuiApplication.setOverrideCursor(Qt.CursorShape.PointingHandCursor)
+        elif not state and self._legend_hover_active:
+            self._legend_hover_active = False
+            QGuiApplication.restoreOverrideCursor()
 
 
 class VideoDurationChart(QChart):
