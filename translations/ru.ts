@@ -170,6 +170,10 @@
         <source>Go to the next results</source>
         <translation>Перейти к следующим результатам</translation>
     </message>
+    <message>
+        <source>Export</source>
+        <translation>Экспорт</translation>
+    </message>
 </context>
 <context>
     <name>AdvancedTab</name>
@@ -260,6 +264,41 @@
     </message>
 </context>
 <context>
+    <name>ExportPanel</name>
+    <message>
+        <source>Format:</source>
+        <translation>Формат:</translation>
+    </message>
+    <message>
+        <source>Save XLSX</source>
+        <translation>Сохранить XLSX</translation>
+    </message>
+    <message>
+        <source>Xlsx File (*.xlsx)</source>
+        <translation>Xlsx-файл (*.xlsx)</translation>
+    </message>
+    <message>
+        <source>Save CSV</source>
+        <translation>Сохранить CSV</translation>
+    </message>
+    <message>
+        <source>Csv File (*.csv)</source>
+        <translation>Csv-файл (*.csv)</translation>
+    </message>
+    <message>
+        <source>Save HTML</source>
+        <translation>Сохранить HTML</translation>
+    </message>
+    <message>
+        <source>Html File (*.html)</source>
+        <translation>Html-файл (*.html)</translation>
+    </message>
+    <message>
+        <source>Export...</source>
+        <translation>Экспорт...</translation>
+    </message>
+</context>
+<context>
     <name>GeneralTab</name>
     <message>
         <source>YouTube API Key:</source>
@@ -301,18 +340,6 @@
         <translation>Файл</translation>
     </message>
     <message>
-        <source>Export to XLSX...</source>
-        <translation>Экспорт в XLSX...</translation>
-    </message>
-    <message>
-        <source>Export to CSV...</source>
-        <translation>Экспорт в CSV...</translation>
-    </message>
-    <message>
-        <source>Export to HTML...</source>
-        <translation>Экспорт в HTML...</translation>
-    </message>
-    <message>
         <source>Exit</source>
         <translation>Выход</translation>
     </message>
@@ -345,14 +372,6 @@
         <translation>Новая вкладка</translation>
     </message>
     <message>
-        <source>Export is not supported for this tab</source>
-        <translation>Экспорт не поддерживается для этой вкладки</translation>
-    </message>
-    <message>
-        <source>There is no data to export</source>
-        <translation>Нет данных для экспорта</translation>
-    </message>
-    <message>
         <source>Help</source>
         <translation>Справка</translation>
     </message>
@@ -369,28 +388,8 @@
         <translation>Выйти?</translation>
     </message>
     <message>
-        <source>Save XLSX</source>
-        <translation>Сохранить XLSX</translation>
-    </message>
-    <message>
-        <source>Xlsx File (*.xlsx)</source>
-        <translation>Xlsx-файл (*.xlsx)</translation>
-    </message>
-    <message>
-        <source>Save CSV</source>
-        <translation>Сохранить CSV</translation>
-    </message>
-    <message>
-        <source>Csv File (*.csv)</source>
-        <translation>Csv-файл (*.csv)</translation>
-    </message>
-    <message>
-        <source>Save HTML</source>
-        <translation>Сохранить HTML</translation>
-    </message>
-    <message>
-        <source>Html File (*.html)</source>
-        <translation>Html-файл (*.html)</translation>
+        <source>Export...</source>
+        <translation>Экспорт...</translation>
     </message>
 </context>
 <context>

@@ -3,7 +3,6 @@ import traceback
 
 from PySide6.QtCore import (
     Qt,
-    QFileInfo,
     QTranslator,
     QLibraryInfo,
     QKeyCombination,
@@ -19,7 +18,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
     QWidget,
-    QFileDialog,
     QDialog,
     QGridLayout,
     QLabel,
@@ -55,11 +53,6 @@ from youtubeanalyzer.search import (
 )
 from youtubeanalyzer.trends import (
     TrendsWorkspaceFactory
-)
-from youtubeanalyzer.export import (
-    export_to_xlsx,
-    export_to_csv,
-    export_to_html
 )
 from youtubeanalyzer.plugins import (
     PluginManager,
@@ -169,12 +162,9 @@ class MainWindow(StateSaveable, QMainWindow):
         self.setWindowTitle(app_name + " " + version)
 
         file_menu = self.menuBar().addMenu(self.tr("File"))
-        export_xlsx_action = file_menu.addAction(self.tr("Export to XLSX..."))
-        export_xlsx_action.triggered.connect(self._on_export_xlsx)
-        export_csv_action = file_menu.addAction(self.tr("Export to CSV..."))
-        export_csv_action.triggered.connect(self._on_export_csv)
-        export_html_action = file_menu.addAction(self.tr("Export to HTML..."))
-        export_html_action.triggered.connect(self._on_export_html)
+        self._export_action = file_menu.addAction(self.tr("Export..."))
+        self._export_action.setEnabled(False)
+        self._export_action.triggered.connect(self._on_export)
 
         file_menu.addSeparator()
         exit_action = file_menu.addAction(self.tr("Exit"))
@@ -208,6 +198,7 @@ class MainWindow(StateSaveable, QMainWindow):
         self._main_tab_widget.setMovable(True)
         self._main_tab_widget.setTabsClosable(True)
         self._main_tab_widget.tabCloseRequested.connect(self._on_close_tab_requested)
+        self._main_tab_widget.currentChanged.connect(self._update_export_action_state)
         v_layout.addWidget(self._main_tab_widget)
         self._close_tab_shortcut = QShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_W), self, self._on_close_tab_action)
 
@@ -224,6 +215,7 @@ class MainWindow(StateSaveable, QMainWindow):
 
         self._create_new_tab()
         event_bus.create_new_tab.connect(self._create_new_tab)
+        event_bus.workspace_created.connect(self._update_export_action_state)
 
     def showEvent(self, _event: QShowEvent):
         if self._restore_geometry_on_show:
@@ -281,47 +273,16 @@ class MainWindow(StateSaveable, QMainWindow):
         if self._main_tab_widget.count() > 1:
             self._main_tab_widget.removeTab(self._main_tab_widget.currentIndex())
 
-    def _get_file_path_to_export(self, caption: str, filter: str, file_suffix: str):
-        current_workspace: WorkspaceWidget = self._main_tab_widget.currentWidget().current_workspace()
-        if not current_workspace or not current_workspace.has_data_to_export():
-            QMessageBox.warning(self, app_name, self.tr("Export is not supported for this tab"))
-            return ""
+    def _on_export(self):
+        tab_widget = self._main_tab_widget.currentWidget()
+        current_workspace: WorkspaceWidget = tab_widget.current_workspace() if tab_widget else None
+        if current_workspace:
+            current_workspace.show_export_tab()
 
-        data_name = current_workspace.get_data_name()
-        if not data_name:
-            data_name = "export"
-        if not current_workspace or current_workspace.model.rowCount() == 0:
-            QMessageBox.warning(self, app_name, self.tr("There is no data to export"))
-            return ""
-
-        last_save_dir = self._settings.get(Settings.LastSaveDir)
-        file_name = QFileDialog.getSaveFileName(self, caption=caption, filter=filter,
-                                                dir=(last_save_dir + "/" + data_name + file_suffix))
-        if not file_name[0]:
-            return ""
-        self._settings.set(Settings.LastSaveDir, QFileInfo(file_name[0]).dir().absolutePath())
-        return file_name[0]
-
-    def _on_export_xlsx(self):
-        file_path = self._get_file_path_to_export(self.tr("Save XLSX"), self.tr("Xlsx File (*.xlsx)"), ".xlsx")
-        if file_path:
-            current_workspace = self._main_tab_widget.currentWidget().current_workspace()
-            if current_workspace:
-                export_to_xlsx(file_path, current_workspace.model)
-
-    def _on_export_csv(self):
-        file_path = self._get_file_path_to_export(self.tr("Save CSV"), self.tr("Csv File (*.csv)"), ".csv")
-        if file_path:
-            current_workspace = self._main_tab_widget.currentWidget().current_workspace()
-            if current_workspace:
-                export_to_csv(file_path, current_workspace.model)
-
-    def _on_export_html(self):
-        file_path = self._get_file_path_to_export(self.tr("Save HTML"), self.tr("Html File (*.html)"), ".html")
-        if file_path:
-            current_workspace = self._main_tab_widget.currentWidget().current_workspace()
-            if current_workspace:
-                export_to_html(file_path, current_workspace.model)
+    def _update_export_action_state(self, *_args):
+        tab_widget = self._main_tab_widget.currentWidget()
+        current_workspace: WorkspaceWidget = tab_widget.current_workspace() if tab_widget else None
+        self._export_action.setEnabled(current_workspace is not None and current_workspace.has_data_to_export())
 
     def _on_clear_selection(self):
         tab_widget = self._main_tab_widget.currentWidget()
