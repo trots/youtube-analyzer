@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QStackedLayout,
     QComboBox,
+    QCheckBox,
     QPushButton,
     QSpinBox,
     QTableView,
@@ -71,6 +72,7 @@ from youtubeanalyzer.chart import (
 from youtubeanalyzer.widgets import (
     create_link_label,
     critical_detailed_message,
+    warning_message,
     PixmapLabel,
     FixedTabWidget
 )
@@ -457,10 +459,12 @@ class AnalyticsWidget(QWidget):
 
 
 class ExportPanel(QWidget):
-    def __init__(self, settings: Settings, model: ResultTableModel, get_data_name, parent: QWidget = None):
+    def __init__(self, settings: Settings, model: ResultTableModel, sort_model: ResultSortFilterProxyModel,
+                 get_data_name, parent: QWidget = None):
         super().__init__(parent)
         self._settings: Settings = settings
         self._model: ResultTableModel = model
+        self._sort_model: ResultSortFilterProxyModel = sort_model
         self._get_data_name = get_data_name
 
         main_layout = QVBoxLayout()
@@ -474,15 +478,28 @@ class ExportPanel(QWidget):
         self._format_combo.addItem("HTML", ("html", self.tr("Save HTML"), self.tr("Html File (*.html)"), ".html"))
         main_layout.addWidget(self._format_combo)
 
+        self._follow_table_filters_checkbox = QCheckBox(self.tr("Follow table filters and sort order"))
+        self._follow_table_filters_checkbox.setChecked(self._settings.get(Settings.ExportFollowTableFilters))
+        self._follow_table_filters_checkbox.toggled.connect(self._on_follow_table_filters_toggled)
+        main_layout.addWidget(self._follow_table_filters_checkbox)
+
         export_button = QPushButton(self.tr("Export..."))
         export_button.clicked.connect(self._export)
         main_layout.addWidget(export_button)
 
         main_layout.addStretch()
 
+    def _on_follow_table_filters_toggled(self, checked: bool):
+        self._settings.set(Settings.ExportFollowTableFilters, checked)
+
     def _export(self):
         export_format, caption, filter, file_suffix = self._format_combo.currentData()
         export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html}[export_format]
+        follow_table_filters = self._follow_table_filters_checkbox.isChecked()
+        export_model = self._sort_model if follow_table_filters else self._model
+        if follow_table_filters and self._sort_model.rowCount() == 0:
+            warning_message(self, self.tr("No rows match the current table filters"))
+            return
         data_name = self._get_data_name() or "export"
         last_save_dir = self._settings.get(Settings.LastSaveDir)
         file_name, _ = QFileDialog.getSaveFileName(
@@ -490,7 +507,7 @@ class ExportPanel(QWidget):
         if not file_name:
             return
         self._settings.set(Settings.LastSaveDir, QFileInfo(file_name).dir().absolutePath())
-        export_func(file_name, self._model)
+        export_func(file_name, export_model)
 
 
 class VideoTableToolsPanel(StateSaveable, QWidget):
@@ -761,7 +778,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
         self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
 
-        self._export_panel = ExportPanel(self._settings, self.model, self.get_data_name, self)
+        self._export_panel = ExportPanel(self._settings, self.model, self._sort_model, self.get_data_name, self)
         self._side_tab_widget.addTab(self._export_panel, self.tr("Export"))
         self._export_panel.setEnabled(self.model.rowCount() > 0)
         self.model.rowsInserted.connect(self._update_export_panel_enabled)

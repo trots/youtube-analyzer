@@ -51,6 +51,14 @@ def critical_message(parent, text):
     return dialog.exec()
 
 
+def warning_message(parent, text):
+    dialog = QMessageBox(parent)
+    dialog.setIcon(QMessageBox.Warning)
+    dialog.setWindowTitle(app_name)
+    dialog.setText(text)
+    return dialog.exec()
+
+
 def print_exception_chain(exception: BaseException):
     output = ""
     if hasattr(exception, "__cause__") and exception.__cause__:

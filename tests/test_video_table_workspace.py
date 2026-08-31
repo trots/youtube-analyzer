@@ -17,6 +17,9 @@ from youtubeanalyzer.settings import (
 from youtubeanalyzer.model import (
     make_result_row
 )
+from youtubeanalyzer.filters import (
+    AbstractFilter
+)
 from youtubeanalyzer.video_table_workspace import (
     AbstractVideoTableWorkspace
 )
@@ -33,6 +36,11 @@ class _StubVideoTableWorkspace(AbstractVideoTableWorkspace):
 
     def _on_search_clicked(self):
         pass
+
+
+class _RejectAllFilter(AbstractFilter):
+    def filter_accepts_row(self, source_row, source_parent):
+        return False
 
 
 def make_rows(count=1):
@@ -56,6 +64,7 @@ class TestExportPanel(unittest.TestCase):
         if os.path.isfile(self._settings_file):
             os.remove(self._settings_file)
         self._settings = Settings("test", self._settings_file)
+        self._settings._impl.clear()  # QSettings caches values in-process across instances for the same file
         self._workspace = _StubVideoTableWorkspace(self._settings)
 
     def tearDown(self):
@@ -68,6 +77,9 @@ class TestExportPanel(unittest.TestCase):
 
     def _select_format(self, format_text):
         self._workspace._export_panel._format_combo.setCurrentText(format_text)
+
+    def _set_follow_table_filters(self, checked: bool):
+        self._workspace._export_panel._follow_table_filters_checkbox.setChecked(checked)
 
     def test_export_tab_present_after_analytics_tab(self):
         side_tab_widget = self._workspace._side_tab_widget
@@ -159,6 +171,53 @@ class TestExportPanel(unittest.TestCase):
             self._export_button().click()
 
         self.assertTrue(self._settings.get(Settings.LastSaveDir).endswith("some_dir"))
+
+    def test_follow_table_filters_checkbox_unchecked_by_default(self):
+        self.assertFalse(self._settings.get(Settings.ExportFollowTableFilters))
+        self.assertFalse(self._workspace._export_panel._follow_table_filters_checkbox.isChecked())
+
+    def test_follow_table_filters_checkbox_restored_from_settings(self):
+        self._settings.set(Settings.ExportFollowTableFilters, True)
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            self.assertTrue(workspace._export_panel._follow_table_filters_checkbox.isChecked())
+        finally:
+            workspace.deleteLater()
+
+    def test_checking_follow_table_filters_checkbox_saves_setting(self):
+        self._set_follow_table_filters(True)
+        self.assertTrue(self._settings.get(Settings.ExportFollowTableFilters))
+
+        self._set_follow_table_filters(False)
+        self.assertFalse(self._settings.get(Settings.ExportFollowTableFilters))
+
+    def test_export_uses_sort_model_when_follow_table_filters_checked(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._select_format("XLSX")
+        self._set_follow_table_filters(True)
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace._sort_model)
+
+    def test_export_shows_warning_and_skips_dialog_when_filtered_result_is_empty(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._workspace._sort_model.add_filter(_RejectAllFilter())
+        self.assertEqual(self._workspace._sort_model.rowCount(), 0)
+        self._select_format("XLSX")
+        self._set_follow_table_filters(True)
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName") as mock_dialog, \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export, \
+             patch("youtubeanalyzer.video_table_workspace.warning_message") as mock_warning:
+            self._export_button().click()
+
+        mock_warning.assert_called_once()
+        mock_dialog.assert_not_called()
+        mock_export.assert_not_called()
 
 
 if __name__ == "__main__":

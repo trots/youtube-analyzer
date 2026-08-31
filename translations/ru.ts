@@ -297,6 +297,14 @@
         <source>Export...</source>
         <translation>Экспорт...</translation>
     </message>
+    <message>
+        <source>Follow table filters and sort order</source>
+        <translation>Учитывать фильтры и сортировку таблицы</translation>
+    </message>
+    <message>
+        <source>No rows match the current table filters</source>
+        <translation>Ни одна строка не проходит текущие фильтры таблицы</translation>
+    </message>
 </context>
 <context>
     <name>GeneralTab</name>

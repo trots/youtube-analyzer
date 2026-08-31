@@ -58,6 +58,7 @@ class Settings:
     PreviewScaleIndex = SettingsKey("preview_scale_index", 100)
     DontShowSkippedItemsWarning = SettingsKey("dont_show_skipped_items_warning", 0)
     HistoryLimit = SettingsKey("history_limit", 200)
+    ExportFollowTableFilters = SettingsKey("export_follow_table_filters", False)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
