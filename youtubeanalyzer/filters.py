@@ -55,6 +55,10 @@ class ResultSortFilterProxyModel(QSortFilterProxyModel):
     def has_data(self):
         return self.rowCount() > 0
 
+    @property
+    def FieldNames(self):
+        return self.sourceModel().FieldNames
+
     def get_field_data(self, proxy_row: int, result_field: ResultFields):
         if proxy_row is None or proxy_row < 0 or proxy_row >= self.rowCount():
             return None
