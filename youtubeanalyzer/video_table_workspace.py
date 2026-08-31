@@ -77,6 +77,11 @@ from youtubeanalyzer.widgets import (
 from youtubeanalyzer.workspace import (
     WorkspaceWidget
 )
+from youtubeanalyzer.export import (
+    export_to_xlsx,
+    export_to_csv,
+    export_to_html
+)
 
 
 class PreviewActionsMenu(QMenu):
@@ -451,6 +456,43 @@ class AnalyticsWidget(QWidget):
         self._chart_view.setChart(self._charts[chart_index])
 
 
+class ExportPanel(QWidget):
+    def __init__(self, settings: Settings, model: ResultTableModel, get_data_name, parent: QWidget = None):
+        super().__init__(parent)
+        self._settings: Settings = settings
+        self._model: ResultTableModel = model
+        self._get_data_name = get_data_name
+
+        main_layout = QVBoxLayout()
+        self.setLayout(main_layout)
+
+        main_layout.addWidget(QLabel(self.tr("Format:")))
+
+        self._format_combo = QComboBox()
+        self._format_combo.addItem("XLSX", ("xlsx", self.tr("Save XLSX"), self.tr("Xlsx File (*.xlsx)"), ".xlsx"))
+        self._format_combo.addItem("CSV", ("csv", self.tr("Save CSV"), self.tr("Csv File (*.csv)"), ".csv"))
+        self._format_combo.addItem("HTML", ("html", self.tr("Save HTML"), self.tr("Html File (*.html)"), ".html"))
+        main_layout.addWidget(self._format_combo)
+
+        export_button = QPushButton(self.tr("Export..."))
+        export_button.clicked.connect(self._export)
+        main_layout.addWidget(export_button)
+
+        main_layout.addStretch()
+
+    def _export(self):
+        export_format, caption, filter, file_suffix = self._format_combo.currentData()
+        export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html}[export_format]
+        data_name = self._get_data_name() or "export"
+        last_save_dir = self._settings.get(Settings.LastSaveDir)
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, caption=caption, filter=filter, dir=(last_save_dir + "/" + data_name + file_suffix))
+        if not file_name:
+            return
+        self._settings.set(Settings.LastSaveDir, QFileInfo(file_name).dir().absolutePath())
+        export_func(file_name, self._model)
+
+
 class VideoTableToolsPanel(StateSaveable, QWidget):
     def __init__(self, settings: Settings, parent: QWidget = None):
         StateSaveable.__init__(self, settings)
@@ -719,6 +761,13 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
         self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
 
+        self._export_panel = ExportPanel(self._settings, self.model, self.get_data_name, self)
+        self._side_tab_widget.addTab(self._export_panel, self.tr("Export"))
+        self._export_panel.setEnabled(self.model.rowCount() > 0)
+        self.model.rowsInserted.connect(self._update_export_panel_enabled)
+        self.model.rowsRemoved.connect(self._update_export_panel_enabled)
+        self.model.modelReset.connect(self._update_export_panel_enabled)
+
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._main_splitter.addWidget(central_widget)
         self._main_splitter.addWidget(self._side_tab_widget)
@@ -778,6 +827,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
     def clear_selection(self):
         self._table_view.clearSelection()
         self._table_view.setCurrentIndex(QModelIndex())
+
+    def show_export_tab(self):
+        self._side_tab_widget.setCurrentWidget(self._export_panel)
 
     def get_current_row_data(self) -> list | None:
         current_index: QModelIndex = self._table_view.currentIndex()
@@ -894,6 +946,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._details_widget.set_current_index(None)
             self._analytics_widget.set_current_index(None)
             self._preview_actions_menu.set_current_video("", [])
+
+    def _update_export_panel_enabled(self, *_args):
+        self._export_panel.setEnabled(self.model.rowCount() > 0)
 
     def _on_copy_action(self):
         field = self.sender().data()
