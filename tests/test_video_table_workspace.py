@@ -69,17 +69,28 @@ class TestExportPanel(unittest.TestCase):
 
     def tearDown(self):
         self._workspace.deleteLater()
+        # deleteLater() only schedules destruction; without pumping the event loop the underlying
+        # C++ objects survive until some later test happens to process events, and freed memory can
+        # get reused by newly-created Qt objects in the meantime (same PySide/shiboken object-identity
+        # hazard already noted in PreviewActionsMenu._rebuild_submenus).
+        QApplication.processEvents()
         if os.path.isfile(self._settings_file):
             os.remove(self._settings_file)
 
     def _export_button(self):
-        return self._workspace._export_panel.findChildren(QPushButton)[0]
+        for button in self._workspace._export_panel.findChildren(QPushButton):
+            if button.text() == "Export...":
+                return button
+        raise AssertionError("Export button not found")
 
     def _select_format(self, format_text):
         self._workspace._export_panel._format_combo.setCurrentText(format_text)
 
     def _set_follow_table_filters(self, checked: bool):
         self._workspace._export_panel._follow_table_filters_checkbox.setChecked(checked)
+
+    def _all_columns(self):
+        return list(self._workspace._export_panel._exportable_columns)
 
     def test_export_tab_present_after_analytics_tab(self):
         side_tab_widget = self._workspace._side_tab_widget
@@ -126,7 +137,7 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.xlsx", self._workspace.model)
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, self._all_columns())
 
     def test_export_to_csv_button_calls_export_to_csv_with_model(self):
         self._workspace.model.set_data(make_rows(1))
@@ -137,7 +148,7 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.csv", self._workspace.model)
+        mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns())
 
     def test_export_to_html_button_calls_export_to_html_with_model(self):
         self._workspace.model.set_data(make_rows(1))
@@ -148,7 +159,7 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_html") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.html", self._workspace.model)
+        mock_export.assert_called_once_with("out.html", self._workspace.model, self._all_columns())
 
     def test_export_cancelled_dialog_does_not_call_export(self):
         self._workspace.model.set_data(make_rows(1))
@@ -183,6 +194,7 @@ class TestExportPanel(unittest.TestCase):
             self.assertTrue(workspace._export_panel._follow_table_filters_checkbox.isChecked())
         finally:
             workspace.deleteLater()
+            QApplication.processEvents()
 
     def test_checking_follow_table_filters_checkbox_saves_setting(self):
         self._set_follow_table_filters(True)
@@ -201,7 +213,7 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.xlsx", self._workspace._sort_model)
+        mock_export.assert_called_once_with("out.xlsx", self._workspace._sort_model, self._all_columns())
 
     def test_export_shows_warning_and_skips_dialog_when_filtered_result_is_empty(self):
         self._workspace.model.set_data(make_rows(2))
@@ -209,6 +221,86 @@ class TestExportPanel(unittest.TestCase):
         self.assertEqual(self._workspace._sort_model.rowCount(), 0)
         self._select_format("XLSX")
         self._set_follow_table_filters(True)
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName") as mock_dialog, \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export, \
+             patch("youtubeanalyzer.video_table_workspace.warning_message") as mock_warning:
+            self._export_button().click()
+
+        mock_warning.assert_called_once()
+        mock_dialog.assert_not_called()
+        mock_export.assert_not_called()
+
+    def test_all_column_checkboxes_checked_by_default(self):
+        checkboxes = self._workspace._export_panel._column_checkboxes
+        self.assertEqual(len(checkboxes), len(self._all_columns()))
+        self.assertTrue(all(checkbox.isChecked() for checkbox in checkboxes))
+
+    def test_column_selection_restored_from_settings(self):
+        export_panel = self._workspace._export_panel
+        export_panel._column_checkboxes[0].setChecked(False)
+        export_panel._column_checkboxes[1].setChecked(False)
+
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            checkboxes = workspace._export_panel._column_checkboxes
+            self.assertFalse(checkboxes[0].isChecked())
+            self.assertFalse(checkboxes[1].isChecked())
+            for checkbox in checkboxes[2:]:
+                self.assertTrue(checkbox.isChecked())
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_toggling_column_checkbox_saves_setting(self):
+        export_panel = self._workspace._export_panel
+        export_panel._column_checkboxes[0].setChecked(False)
+
+        stored = self._settings.get(Settings.ExportSelectedColumns)
+        selected_columns = set(int(column) for column in stored.split(","))
+        self.assertNotIn(export_panel._exportable_columns[0], selected_columns)
+        for column in export_panel._exportable_columns[1:]:
+            self.assertIn(column, selected_columns)
+
+    def test_select_none_unchecks_all_columns(self):
+        self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
+        export_panel = self._workspace._export_panel
+
+        export_panel._select_none_columns_button.click()
+
+        self.assertTrue(all(not checkbox.isChecked() for checkbox in export_panel._column_checkboxes))
+        self.assertEqual(self._settings.get(Settings.ExportSelectedColumns), "")
+
+    def test_select_all_checks_all_columns(self):
+        self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
+        export_panel = self._workspace._export_panel
+        export_panel._select_none_columns_button.click()
+
+        export_panel._select_all_columns_button.click()
+
+        self.assertTrue(all(checkbox.isChecked() for checkbox in export_panel._column_checkboxes))
+        stored = self._settings.get(Settings.ExportSelectedColumns)
+        self.assertEqual(set(int(column) for column in stored.split(",")), set(self._all_columns()))
+
+    def test_export_with_partial_columns_selected_calls_export_func_with_subset(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        export_panel = self._workspace._export_panel
+        export_panel._column_checkboxes[0].setChecked(False)
+        expected_columns = self._all_columns()[1:]
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_columns)
+
+    def test_export_with_no_columns_selected_shows_warning_and_skips_export(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        export_panel = self._workspace._export_panel
+        export_panel._select_none_columns_button.click()
 
         with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName") as mock_dialog, \
              patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export, \

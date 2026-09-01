@@ -82,7 +82,8 @@ from youtubeanalyzer.workspace import (
 from youtubeanalyzer.export import (
     export_to_xlsx,
     export_to_csv,
-    export_to_html
+    export_to_html,
+    get_exportable_columns
 )
 
 
@@ -483,6 +484,27 @@ class ExportPanel(QWidget):
         self._follow_table_filters_checkbox.toggled.connect(self._on_follow_table_filters_toggled)
         main_layout.addWidget(self._follow_table_filters_checkbox)
 
+        main_layout.addWidget(QLabel(self.tr("Columns:")))
+
+        columns_buttons_layout = QHBoxLayout()
+        self._select_all_columns_button = QPushButton(self.tr("Select All"))
+        self._select_all_columns_button.clicked.connect(self._on_select_all_columns_clicked)
+        columns_buttons_layout.addWidget(self._select_all_columns_button)
+        self._select_none_columns_button = QPushButton(self.tr("Select None"))
+        self._select_none_columns_button.clicked.connect(self._on_select_none_columns_clicked)
+        columns_buttons_layout.addWidget(self._select_none_columns_button)
+        main_layout.addLayout(columns_buttons_layout)
+
+        self._exportable_columns: list[int] = get_exportable_columns()
+        selected_columns = self._load_selected_columns()
+        self._column_checkboxes: list[QCheckBox] = []
+        for column in self._exportable_columns:
+            checkbox = QCheckBox(model.FieldNames[column])
+            checkbox.setChecked(column in selected_columns)
+            checkbox.toggled.connect(self._on_column_checkbox_toggled)
+            main_layout.addWidget(checkbox)
+            self._column_checkboxes.append(checkbox)
+
         export_button = QPushButton(self.tr("Export..."))
         export_button.clicked.connect(self._export)
         main_layout.addWidget(export_button)
@@ -492,6 +514,38 @@ class ExportPanel(QWidget):
     def _on_follow_table_filters_toggled(self, checked: bool):
         self._settings.set(Settings.ExportFollowTableFilters, checked)
 
+    def _load_selected_columns(self) -> set[int]:
+        stored = self._settings.get(Settings.ExportSelectedColumns)
+        if stored is None:
+            return set(self._exportable_columns)
+        if stored == "":
+            return set()
+        return set(int(column) for column in stored.split(","))
+
+    def _selected_columns(self) -> list[int]:
+        return [column for column, checkbox in zip(self._exportable_columns, self._column_checkboxes)
+                if checkbox.isChecked()]
+
+    def _save_selected_columns(self):
+        selected = self._selected_columns()
+        self._settings.set(Settings.ExportSelectedColumns, ",".join(str(column) for column in selected))
+
+    def _on_column_checkbox_toggled(self, checked: bool):
+        self._save_selected_columns()
+
+    def _on_select_all_columns_clicked(self):
+        self._set_all_columns_checked(True)
+
+    def _on_select_none_columns_clicked(self):
+        self._set_all_columns_checked(False)
+
+    def _set_all_columns_checked(self, checked: bool):
+        for checkbox in self._column_checkboxes:
+            checkbox.blockSignals(True)
+            checkbox.setChecked(checked)
+            checkbox.blockSignals(False)
+        self._save_selected_columns()
+
     def _export(self):
         export_format, caption, filter, file_suffix = self._format_combo.currentData()
         export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html}[export_format]
@@ -500,6 +554,10 @@ class ExportPanel(QWidget):
         if follow_table_filters and self._sort_model.rowCount() == 0:
             warning_message(self, self.tr("No rows match the current table filters"))
             return
+        selected_columns = self._selected_columns()
+        if not selected_columns:
+            warning_message(self, self.tr("Select at least one column to export"))
+            return
         data_name = self._get_data_name() or "export"
         last_save_dir = self._settings.get(Settings.LastSaveDir)
         file_name, _ = QFileDialog.getSaveFileName(
@@ -507,7 +565,7 @@ class ExportPanel(QWidget):
         if not file_name:
             return
         self._settings.set(Settings.LastSaveDir, QFileInfo(file_name).dir().absolutePath())
-        export_func(file_name, export_model)
+        export_func(file_name, export_model, selected_columns)
 
 
 class VideoTableToolsPanel(StateSaveable, QWidget):

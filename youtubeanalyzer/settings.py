@@ -59,6 +59,7 @@ class Settings:
     DontShowSkippedItemsWarning = SettingsKey("dont_show_skipped_items_warning", 0)
     HistoryLimit = SettingsKey("history_limit", 200)
     ExportFollowTableFilters = SettingsKey("export_follow_table_filters", False)
+    ExportSelectedColumns = SettingsKey("export_selected_columns", None)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
