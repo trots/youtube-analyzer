@@ -1,14 +1,17 @@
+import csv
 import os
 import unittest
 from datetime import timedelta
 from youtubeanalyzer.model import (
+    ResultFields,
     ResultTableModel,
     make_result_row
 )
 from youtubeanalyzer.export import (
     export_to_xlsx,
     export_to_csv,
-    export_to_html
+    export_to_html,
+    get_exportable_columns
 )
 
 
@@ -53,6 +56,37 @@ class TestExportModule(unittest.TestCase):
         model = create_test_model()
         export_to_html(file, model)
         self.assertGreater(os.path.getsize(file), 0)
+
+    def test_get_exportable_columns_matches_default_export_order(self):
+        self.assertEqual(get_exportable_columns(), [
+            ResultFields.VideoTitle,
+            ResultFields.VideoPublishedTime,
+            ResultFields.VideoDuration,
+            ResultFields.VideoViews,
+            ResultFields.VideoLink,
+            ResultFields.ChannelTitle,
+            ResultFields.ChannelLink,
+            ResultFields.ChannelSubscribers,
+            ResultFields.ViewRate,
+            ResultFields.VideoRelevanceNumber,
+        ])
+
+    def test_export_to_csv_with_selected_columns_exports_only_subset(self):
+        file = "unit_test_file_subset.csv"
+        if os.path.isfile(file):
+            os.remove(file)
+        model = create_test_model()
+        columns = [ResultFields.VideoTitle, ResultFields.VideoViews]
+
+        export_to_csv(file, model, columns)
+
+        with open(file, newline='', encoding='utf-8') as csvfile:
+            rows = list(csv.reader(csvfile))
+        self.assertEqual(rows[0], [model.FieldNames[ResultFields.VideoTitle], model.FieldNames[ResultFields.VideoViews]])
+        self.assertEqual(rows[1], ["Video1", "1234"])
+        self.assertEqual(rows[2], ["Video2", "1235"])
+        self.assertEqual(rows[3], ["Video3", "1236"])
+        os.remove(file)
 
 
 if __name__ == "__main__":

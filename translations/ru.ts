@@ -305,6 +305,22 @@
         <source>No rows match the current table filters</source>
         <translation>Ни одна строка не проходит текущие фильтры таблицы</translation>
     </message>
+    <message>
+        <source>Columns:</source>
+        <translation>Столбцы:</translation>
+    </message>
+    <message>
+        <source>Select All</source>
+        <translation>Выбрать все</translation>
+    </message>
+    <message>
+        <source>Select None</source>
+        <translation>Снять выбор</translation>
+    </message>
+    <message>
+        <source>Select at least one column to export</source>
+        <translation>Выберите хотя бы один столбец для экспорта</translation>
+    </message>
 </context>
 <context>
     <name>GeneralTab</name>
