@@ -27,6 +27,7 @@ CurrentSettingsVersion = 1
 class SettingsKey:
     key: str
     default_value: any
+    is_global: bool = False
 
 
 class Settings:
@@ -36,8 +37,8 @@ class Settings:
     LastPreviewSaveDir = SettingsKey("last_preview_save_dir", "")
     DontAskAgainExit = SettingsKey("dont_ask_again_exit", 0)
     YouTubeApiKey = SettingsKey("youtube_api_key", "")
-    Language = SettingsKey("language", "")
-    Theme = SettingsKey("theme", 0)
+    Language = SettingsKey("language", "", is_global=True)
+    Theme = SettingsKey("theme", 0, is_global=True)
     MainSplitterState = SettingsKey("main_splitter_state", QByteArray())
     DetailsVisible = SettingsKey("details", True)  # Not used
     LastActiveDetailsTab = SettingsKey("last_active_details_tab", 0)
@@ -54,28 +55,32 @@ class Settings:
     RequestPageLimit = SettingsKey("request_page_limit", 25)
     PublishedTimeFilter = SettingsKey("published_time_filter", "")
     ActiveToolPanelIndex = SettingsKey("active_tool_panel_index", -1)
-    VideoTableMode = SettingsKey("video_table_mode", 0)
-    PreviewScaleIndex = SettingsKey("preview_scale_index", 100)
+    VideoTableMode = SettingsKey("video_table_mode", 0, is_global=True)
+    PreviewScaleIndex = SettingsKey("preview_scale_index", 100, is_global=True)
     DontShowSkippedItemsWarning = SettingsKey("dont_show_skipped_items_warning", 0)
     HistoryLimit = SettingsKey("history_limit", 200)
-    ExportFollowTableFilters = SettingsKey("export_follow_table_filters", False)
-    ExportSelectedColumns = SettingsKey("export_selected_columns", None)
+    ExportFollowTableFilters = SettingsKey("export_follow_table_filters", False, is_global=True)
+    ExportSelectedColumns = SettingsKey("export_selected_columns", None, is_global=True)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
             self._impl = QSettings(filename, QSettings.Format.IniFormat)
+            self._global_impl = QSettings(filename, QSettings.Format.IniFormat)
         else:
             self._impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
+            self._global_impl = QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, app_name)
         print(self._impl.fileName())
         self._upgrade_settings()
 
     def get(self, key: SettingsKey):
+        impl = self._global_impl if key.is_global else self._impl
         if type(key.default_value) is bool:
-            return self._impl.value(key.key, key.default_value, type=bool)
-        return self._impl.value(key.key, key.default_value)
+            return impl.value(key.key, key.default_value, type=bool)
+        return impl.value(key.key, key.default_value)
 
     def set(self, key: SettingsKey, value: any):
-        self._impl.setValue(key.key, value)
+        impl = self._global_impl if key.is_global else self._impl
+        impl.setValue(key.key, value)
 
     def begin_read_array(self, key: SettingsKey):
         return self._impl.beginReadArray(key.key)

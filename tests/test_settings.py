@@ -3,6 +3,7 @@ import shutil
 import unittest
 from youtubeanalyzer.settings import (
     Settings,
+    SettingsKey,
     CurrentSettingsVersion
 )
 
@@ -57,6 +58,40 @@ class TestSettingsModule(unittest.TestCase):
         self.assertEqual(int(settings.get(Settings.ActiveTabIndex)), 0)
         # Check version
         self.assertEqual(int(settings.get(Settings.Version)), CurrentSettingsVersion)
+
+    def test_global_key_isolated_from_active_array_context(self):
+        # Regression test for the bug fixed by SettingsKey.is_global: reading/writing a
+        # global (non-array) key while begin_read_array/begin_write_array + set_array_index
+        # is active on the same Settings object must still resolve to the top-level key,
+        # not get nested under the currently active "main_tabs/<index>/" group.
+        test_file = "test_settings_global_key_isolation.ini"
+        if os.path.isfile(test_file):
+            os.remove(test_file)
+        settings = Settings("test", test_file)
+        settings._impl.clear()
+        settings._global_impl.clear()
+        try:
+            global_key = SettingsKey("test_global_key_isolation", "default", is_global=True)
+
+            # Write the global key while a write-array context with an active index is open.
+            settings.begin_write_array(Settings.MainTabsArray)
+            settings.set_array_index(0)
+            settings.set(global_key, "written_during_array")
+            settings.end_array()
+
+            self.assertEqual(settings.get(global_key), "written_during_array")
+
+            # Reading it back while a read-array context with an active index is open must
+            # also resolve to the top-level key, not silently fall back to the default.
+            settings.begin_read_array(Settings.MainTabsArray)
+            settings.set_array_index(0)
+            value_during_read = settings.get(global_key)
+            settings.end_array()
+
+            self.assertEqual(value_during_read, "written_during_array")
+        finally:
+            if os.path.isfile(test_file):
+                os.remove(test_file)
 
     @classmethod
     def tearDownClass(cls):
