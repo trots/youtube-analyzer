@@ -137,7 +137,8 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, self._all_columns())
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, self._all_columns(),
+                                             include_header=True)
 
     def test_export_to_csv_button_calls_export_to_csv_with_model(self):
         self._workspace.model.set_data(make_rows(1))
@@ -148,7 +149,8 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns())
+        mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns(),
+                                             include_header=True)
 
     def test_export_to_html_button_calls_export_to_html_with_model(self):
         self._workspace.model.set_data(make_rows(1))
@@ -159,7 +161,20 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_html") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.html", self._workspace.model, self._all_columns())
+        mock_export.assert_called_once_with("out.html", self._workspace.model, self._all_columns(),
+                                             include_header=True)
+
+    def test_export_to_txt_button_calls_export_to_txt_with_model(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("TXT")
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.txt", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_txt") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.txt", self._workspace.model, self._all_columns(),
+                                             delimiter=" ", include_header=True)
 
     def test_export_cancelled_dialog_does_not_call_export(self):
         self._workspace.model.set_data(make_rows(1))
@@ -213,7 +228,8 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.xlsx", self._workspace._sort_model, self._all_columns())
+        mock_export.assert_called_once_with("out.xlsx", self._workspace._sort_model, self._all_columns(),
+                                             include_header=True)
 
     def test_export_shows_warning_and_skips_dialog_when_filtered_result_is_empty(self):
         self._workspace.model.set_data(make_rows(2))
@@ -294,7 +310,8 @@ class TestExportPanel(unittest.TestCase):
              patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
             self._export_button().click()
 
-        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_columns)
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_columns,
+                                             include_header=True)
 
     def test_export_with_no_columns_selected_shows_warning_and_skips_export(self):
         self._workspace.model.set_data(make_rows(1))
@@ -310,6 +327,82 @@ class TestExportPanel(unittest.TestCase):
         mock_warning.assert_called_once()
         mock_dialog.assert_not_called()
         mock_export.assert_not_called()
+
+    def test_include_header_checkbox_checked_by_default(self):
+        self.assertTrue(self._settings.get(Settings.ExportIncludeHeader))
+        self.assertTrue(self._workspace._export_panel._include_header_checkbox.isChecked())
+
+    def test_include_header_checkbox_restored_from_settings(self):
+        self._settings.set(Settings.ExportIncludeHeader, False)
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            self.assertFalse(workspace._export_panel._include_header_checkbox.isChecked())
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_unchecking_include_header_checkbox_saves_setting(self):
+        self._workspace._export_panel._include_header_checkbox.setChecked(False)
+        self.assertFalse(self._settings.get(Settings.ExportIncludeHeader))
+
+        self._workspace._export_panel._include_header_checkbox.setChecked(True)
+        self.assertTrue(self._settings.get(Settings.ExportIncludeHeader))
+
+    def test_unchecking_include_header_checkbox_is_passed_to_export_func(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        self._workspace._export_panel._include_header_checkbox.setChecked(False)
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, self._all_columns(),
+                                             include_header=False)
+
+    def test_txt_delimiter_default_from_settings(self):
+        self.assertEqual(self._settings.get(Settings.ExportTxtDelimiter), " ")
+        self.assertEqual(self._workspace._export_panel._txt_delimiter_edit.text(), " ")
+
+    def test_txt_delimiter_restored_from_settings(self):
+        self._settings.set(Settings.ExportTxtDelimiter, "|")
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            self.assertEqual(workspace._export_panel._txt_delimiter_edit.text(), "|")
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_changing_txt_delimiter_saves_setting(self):
+        self._workspace._export_panel._txt_delimiter_edit.setText("|")
+        self.assertEqual(self._settings.get(Settings.ExportTxtDelimiter), "|")
+
+    def test_txt_delimiter_is_passed_to_export_to_txt(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("TXT")
+        self._workspace._export_panel._txt_delimiter_edit.setText("|")
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.txt", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_txt") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.txt", self._workspace.model, self._all_columns(),
+                                             delimiter="|", include_header=True)
+
+    def test_txt_delimiter_not_passed_to_non_txt_export_funcs(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("CSV")
+        self._workspace._export_panel._txt_delimiter_edit.setText("|")
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.csv", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns(),
+                                             include_header=True)
 
 
 if __name__ == "__main__":

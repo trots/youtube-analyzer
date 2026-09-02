@@ -321,6 +321,22 @@
         <source>Select at least one column to export</source>
         <translation>Выберите хотя бы один столбец для экспорта</translation>
     </message>
+    <message>
+        <source>Save TXT</source>
+        <translation>Сохранить TXT</translation>
+    </message>
+    <message>
+        <source>Text File (*.txt)</source>
+        <translation>Txt-файл (*.txt)</translation>
+    </message>
+    <message>
+        <source>Include header row</source>
+        <translation>Включать строку заголовков</translation>
+    </message>
+    <message>
+        <source>TXT delimiter:</source>
+        <translation>Разделитель TXT:</translation>
+    </message>
 </context>
 <context>
     <name>GeneralTab</name>
