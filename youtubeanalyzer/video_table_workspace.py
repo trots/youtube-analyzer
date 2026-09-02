@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QTextEdit,
+    QLineEdit,
     QStackedLayout,
     QComboBox,
     QCheckBox,
@@ -83,6 +84,7 @@ from youtubeanalyzer.export import (
     export_to_xlsx,
     export_to_csv,
     export_to_html,
+    export_to_txt,
     get_exportable_columns
 )
 
@@ -477,12 +479,18 @@ class ExportPanel(QWidget):
         self._format_combo.addItem("XLSX", ("xlsx", self.tr("Save XLSX"), self.tr("Xlsx File (*.xlsx)"), ".xlsx"))
         self._format_combo.addItem("CSV", ("csv", self.tr("Save CSV"), self.tr("Csv File (*.csv)"), ".csv"))
         self._format_combo.addItem("HTML", ("html", self.tr("Save HTML"), self.tr("Html File (*.html)"), ".html"))
+        self._format_combo.addItem("TXT", ("txt", self.tr("Save TXT"), self.tr("Text File (*.txt)"), ".txt"))
         main_layout.addWidget(self._format_combo)
 
         self._follow_table_filters_checkbox = QCheckBox(self.tr("Follow table filters and sort order"))
         self._follow_table_filters_checkbox.setChecked(self._settings.get(Settings.ExportFollowTableFilters))
         self._follow_table_filters_checkbox.toggled.connect(self._on_follow_table_filters_toggled)
         main_layout.addWidget(self._follow_table_filters_checkbox)
+
+        self._include_header_checkbox = QCheckBox(self.tr("Include header row"))
+        self._include_header_checkbox.setChecked(self._settings.get(Settings.ExportIncludeHeader))
+        self._include_header_checkbox.toggled.connect(self._on_include_header_toggled)
+        main_layout.addWidget(self._include_header_checkbox)
 
         main_layout.addWidget(QLabel(self.tr("Columns:")))
 
@@ -505,14 +513,34 @@ class ExportPanel(QWidget):
             main_layout.addWidget(checkbox)
             self._column_checkboxes.append(checkbox)
 
+        self._txt_delimiter_label = QLabel(self.tr("TXT delimiter:"))
+        main_layout.addWidget(self._txt_delimiter_label)
+        self._txt_delimiter_edit = QLineEdit(self._settings.get(Settings.ExportTxtDelimiter))
+        self._txt_delimiter_edit.textChanged.connect(self._on_txt_delimiter_changed)
+        main_layout.addWidget(self._txt_delimiter_edit)
+
         export_button = QPushButton(self.tr("Export..."))
         export_button.clicked.connect(self._export)
         main_layout.addWidget(export_button)
 
         main_layout.addStretch()
 
+        self._format_combo.currentIndexChanged.connect(self._update_txt_delimiter_visibility)
+        self._update_txt_delimiter_visibility()
+
     def _on_follow_table_filters_toggled(self, checked: bool):
         self._settings.set(Settings.ExportFollowTableFilters, checked)
+
+    def _on_include_header_toggled(self, checked: bool):
+        self._settings.set(Settings.ExportIncludeHeader, checked)
+
+    def _on_txt_delimiter_changed(self, text: str):
+        self._settings.set(Settings.ExportTxtDelimiter, text)
+
+    def _update_txt_delimiter_visibility(self):
+        is_txt = self._format_combo.currentData()[0] == "txt"
+        self._txt_delimiter_label.setVisible(is_txt)
+        self._txt_delimiter_edit.setVisible(is_txt)
 
     def _load_selected_columns(self) -> set[int]:
         stored = self._settings.get(Settings.ExportSelectedColumns)
@@ -548,7 +576,8 @@ class ExportPanel(QWidget):
 
     def _export(self):
         export_format, caption, filter, file_suffix = self._format_combo.currentData()
-        export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html}[export_format]
+        export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html,
+                       "txt": export_to_txt}[export_format]
         follow_table_filters = self._follow_table_filters_checkbox.isChecked()
         export_model = self._sort_model if follow_table_filters else self._model
         if follow_table_filters and self._sort_model.rowCount() == 0:
@@ -565,7 +594,12 @@ class ExportPanel(QWidget):
         if not file_name:
             return
         self._settings.set(Settings.LastSaveDir, QFileInfo(file_name).dir().absolutePath())
-        export_func(file_name, export_model, selected_columns)
+        include_header = self._include_header_checkbox.isChecked()
+        if export_format == "txt":
+            export_func(file_name, export_model, selected_columns,
+                        delimiter=self._txt_delimiter_edit.text(), include_header=include_header)
+        else:
+            export_func(file_name, export_model, selected_columns, include_header=include_header)
 
 
 class VideoTableToolsPanel(StateSaveable, QWidget):
