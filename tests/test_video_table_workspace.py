@@ -6,6 +6,7 @@ if "QT_QPA_PLATFORM" not in os.environ:
 import unittest
 from datetime import timedelta
 from unittest.mock import patch
+from PySide6.QtCore import Qt, QModelIndex
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -91,6 +92,23 @@ class TestExportPanel(unittest.TestCase):
 
     def _all_columns(self):
         return list(self._workspace._export_panel._exportable_columns)
+
+    def _column_ids(self, export_panel):
+        column_list = export_panel._column_list
+        return [column_list.item(i).data(Qt.ItemDataRole.UserRole) for i in range(column_list.count())]
+
+    def _column_checked_states(self, export_panel):
+        column_list = export_panel._column_list
+        return [column_list.item(i).checkState() == Qt.CheckState.Checked for i in range(column_list.count())]
+
+    def _set_column_checked(self, export_panel, index, checked):
+        item = export_panel._column_list.item(index)
+        item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+
+    def _move_column(self, export_panel, from_index, to_index):
+        column_list = export_panel._column_list
+        item = column_list.takeItem(from_index)
+        column_list.insertItem(to_index, item)
 
     def test_export_tab_present_after_analytics_tab(self):
         side_tab_widget = self._workspace._side_tab_widget
@@ -248,29 +266,44 @@ class TestExportPanel(unittest.TestCase):
         mock_export.assert_not_called()
 
     def test_all_column_checkboxes_checked_by_default(self):
-        checkboxes = self._workspace._export_panel._column_checkboxes
-        self.assertEqual(len(checkboxes), len(self._all_columns()))
-        self.assertTrue(all(checkbox.isChecked() for checkbox in checkboxes))
+        export_panel = self._workspace._export_panel
+        self.assertEqual(export_panel._column_list.count(), len(self._all_columns()))
+        self.assertTrue(all(self._column_checked_states(export_panel)))
+        self.assertEqual(self._column_ids(export_panel), self._all_columns())
 
     def test_column_selection_restored_from_settings(self):
         export_panel = self._workspace._export_panel
-        export_panel._column_checkboxes[0].setChecked(False)
-        export_panel._column_checkboxes[1].setChecked(False)
+        original_order = self._column_ids(export_panel)
+        self._set_column_checked(export_panel, 0, False)
+        self._set_column_checked(export_panel, 1, False)
 
         workspace = _StubVideoTableWorkspace(self._settings)
         try:
-            checkboxes = workspace._export_panel._column_checkboxes
-            self.assertFalse(checkboxes[0].isChecked())
-            self.assertFalse(checkboxes[1].isChecked())
-            for checkbox in checkboxes[2:]:
-                self.assertTrue(checkbox.isChecked())
+            restored_panel = workspace._export_panel
+            checked_states = self._column_checked_states(restored_panel)
+            self.assertFalse(checked_states[0])
+            self.assertFalse(checked_states[1])
+            for checked in checked_states[2:]:
+                self.assertTrue(checked)
+            # Unchecking columns must not move them in the list, neither immediately nor after the
+            # panel (and thus the underlying settings-backed order) is recreated.
+            self.assertEqual(self._column_ids(restored_panel), original_order)
         finally:
             workspace.deleteLater()
             QApplication.processEvents()
 
+    def test_unchecking_column_does_not_change_its_position(self):
+        export_panel = self._workspace._export_panel
+        original_order = self._column_ids(export_panel)
+
+        self._set_column_checked(export_panel, 0, False)
+
+        self.assertEqual(self._column_ids(export_panel), original_order)
+        self.assertIsNone(self._settings.get(Settings.ExportColumnOrder))
+
     def test_toggling_column_checkbox_saves_setting(self):
         export_panel = self._workspace._export_panel
-        export_panel._column_checkboxes[0].setChecked(False)
+        self._set_column_checked(export_panel, 0, False)
 
         stored = self._settings.get(Settings.ExportSelectedColumns)
         selected_columns = set(int(column) for column in stored.split(","))
@@ -284,7 +317,7 @@ class TestExportPanel(unittest.TestCase):
 
         export_panel._select_none_columns_button.click()
 
-        self.assertTrue(all(not checkbox.isChecked() for checkbox in export_panel._column_checkboxes))
+        self.assertTrue(all(not checked for checked in self._column_checked_states(export_panel)))
         self.assertEqual(self._settings.get(Settings.ExportSelectedColumns), "")
 
     def test_select_all_checks_all_columns(self):
@@ -294,15 +327,27 @@ class TestExportPanel(unittest.TestCase):
 
         export_panel._select_all_columns_button.click()
 
-        self.assertTrue(all(checkbox.isChecked() for checkbox in export_panel._column_checkboxes))
+        self.assertTrue(all(self._column_checked_states(export_panel)))
         stored = self._settings.get(Settings.ExportSelectedColumns)
         self.assertEqual(set(int(column) for column in stored.split(",")), set(self._all_columns()))
+
+    def test_select_all_and_select_none_do_not_change_column_order(self):
+        self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
+        export_panel = self._workspace._export_panel
+        self._move_column(export_panel, 0, len(self._all_columns()) - 1)
+        expected_order = self._column_ids(export_panel)
+
+        export_panel._select_none_columns_button.click()
+        self.assertEqual(self._column_ids(export_panel), expected_order)
+
+        export_panel._select_all_columns_button.click()
+        self.assertEqual(self._column_ids(export_panel), expected_order)
 
     def test_export_with_partial_columns_selected_calls_export_func_with_subset(self):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("XLSX")
         export_panel = self._workspace._export_panel
-        export_panel._column_checkboxes[0].setChecked(False)
+        self._set_column_checked(export_panel, 0, False)
         expected_columns = self._all_columns()[1:]
 
         with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
@@ -327,6 +372,87 @@ class TestExportPanel(unittest.TestCase):
         mock_warning.assert_called_once()
         mock_dialog.assert_not_called()
         mock_export.assert_not_called()
+
+    def test_column_list_built_in_saved_order_with_new_column_appended(self):
+        # Simulate a previously-saved order that differs from canonical order and omits one column,
+        # together with an independently-saved selection.
+        all_columns = self._all_columns()
+        saved_order = list(reversed(all_columns[1:]))
+        self._settings.set(Settings.ExportColumnOrder, ",".join(str(c) for c in saved_order))
+        saved_selection = saved_order[:-1]  # all but the last of the saved-order columns are checked
+        self._settings.set(Settings.ExportSelectedColumns, ",".join(str(c) for c in saved_selection))
+
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            export_panel = workspace._export_panel
+            # The new column (all_columns[0]), absent from the saved order, is appended at the end.
+            expected_order = saved_order + [all_columns[0]]
+            self.assertEqual(self._column_ids(export_panel), expected_order)
+            checked_states = self._column_checked_states(export_panel)
+            expected_checked = [column in saved_selection for column in expected_order]
+            self.assertEqual(checked_states, expected_checked)
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_reordering_columns_saves_new_order_to_settings(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+
+        self._move_column(export_panel, 0, len(all_columns) - 1)
+        export_panel._save_column_order()
+
+        expected_order = all_columns[1:] + [all_columns[0]]
+        stored = self._settings.get(Settings.ExportColumnOrder)
+        self.assertEqual([int(c) for c in stored.split(",")], expected_order)
+        # Reordering must not touch the independently-persisted selection.
+        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumns))
+
+    def test_reordering_columns_persists_across_panel_recreation(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+        self._move_column(export_panel, 0, len(all_columns) - 1)
+        export_panel._save_column_order()
+        expected_order = all_columns[1:] + [all_columns[0]]
+
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            self.assertEqual(self._column_ids(workspace._export_panel), expected_order)
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_drag_and_drop_move_triggers_save_via_rows_moved_signal(self):
+        # Emulates the actual drag & drop mechanism (QAbstractItemModel.moveRow), rather than calling
+        # _save_column_order() directly, to exercise the rowsMoved wiring itself.
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+
+        list_model = export_panel._column_list.model()
+        list_model.moveRow(QModelIndex(), 0, QModelIndex(), len(all_columns))
+
+        expected_order = all_columns[1:] + [all_columns[0]]
+        self.assertEqual(self._column_ids(export_panel), expected_order)
+        stored = self._settings.get(Settings.ExportColumnOrder)
+        self.assertEqual([int(c) for c in stored.split(",")], expected_order)
+        # Moving a column must not touch the independently-persisted selection.
+        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumns))
+
+    def test_export_uses_columns_in_list_order_not_canonical_order(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+        self._move_column(export_panel, 0, len(all_columns) - 1)
+        expected_order = all_columns[1:] + [all_columns[0]]
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_order,
+                                             include_header=True)
 
     def test_include_header_checkbox_checked_by_default(self):
         self.assertTrue(self._settings.get(Settings.ExportIncludeHeader))

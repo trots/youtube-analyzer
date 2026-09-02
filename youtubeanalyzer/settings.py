@@ -61,6 +61,7 @@ class Settings:
     HistoryLimit = SettingsKey("history_limit", 200)
     ExportFollowTableFilters = SettingsKey("export_follow_table_filters", False, is_global=True)
     ExportSelectedColumns = SettingsKey("export_selected_columns", None, is_global=True)
+    ExportColumnOrder = SettingsKey("export_column_order", None, is_global=True)
     ExportTxtDelimiter = SettingsKey("export_txt_delimiter", " ", is_global=True)
     ExportIncludeHeader = SettingsKey("export_include_header", True, is_global=True)
 

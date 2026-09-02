@@ -36,6 +36,9 @@ from PySide6.QtWidgets import (
     QButtonGroup,
     QRadioButton,
     QListView,
+    QListWidget,
+    QListWidgetItem,
+    QAbstractItemView,
     QSlider,
     QMenu,
     QToolButton,
@@ -504,14 +507,17 @@ class ExportPanel(QWidget):
         main_layout.addLayout(columns_buttons_layout)
 
         self._exportable_columns: list[int] = get_exportable_columns()
-        selected_columns = self._load_selected_columns()
-        self._column_checkboxes: list[QCheckBox] = []
-        for column in self._exportable_columns:
-            checkbox = QCheckBox(model.FieldNames[column])
-            checkbox.setChecked(column in selected_columns)
-            checkbox.toggled.connect(self._on_column_checkbox_toggled)
-            main_layout.addWidget(checkbox)
-            self._column_checkboxes.append(checkbox)
+        self._column_list = QListWidget()
+        self._column_list.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        for column, checked in self._build_ordered_columns():
+            item = QListWidgetItem(model.FieldNames[column])
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+            item.setData(Qt.ItemDataRole.UserRole, column)
+            self._column_list.addItem(item)
+        self._column_list.itemChanged.connect(self._on_column_item_changed)
+        self._column_list.model().rowsMoved.connect(self._on_columns_reordered)
+        main_layout.addWidget(self._column_list)
 
         self._txt_delimiter_label = QLabel(self.tr("TXT delimiter:"))
         main_layout.addWidget(self._txt_delimiter_label)
@@ -542,24 +548,70 @@ class ExportPanel(QWidget):
         self._txt_delimiter_label.setVisible(is_txt)
         self._txt_delimiter_edit.setVisible(is_txt)
 
+    def _build_ordered_columns(self) -> list[tuple[int, bool]]:
+        """Returns (column_id, checked) pairs in the order the column list should be built: columns from
+        the stored order first (in the stored order), then any remaining exportable columns that were
+        not in the stored order (in canonical order) at the end. Checked state is determined separately,
+        by membership in the stored set of selected columns."""
+        order = self._load_column_order()
+        selected = self._load_selected_columns()
+        return [(column, column in selected) for column in order]
+
+    def _load_column_order(self) -> list[int]:
+        """Returns the order of all exportable columns: columns from the stored setting first (in the
+        stored order), then any remaining exportable columns that were not in the stored setting (in
+        canonical order)."""
+        stored = self._settings.get(Settings.ExportColumnOrder)
+        if not stored:
+            return list(self._exportable_columns)
+        saved_order = [int(column) for column in stored.split(",")]
+
+        ordered: list[int] = []
+        seen: set[int] = set()
+        for column in saved_order:
+            if column in self._exportable_columns and column not in seen:
+                ordered.append(column)
+                seen.add(column)
+        for column in self._exportable_columns:
+            if column not in seen:
+                ordered.append(column)
+        return ordered
+
     def _load_selected_columns(self) -> set[int]:
+        """Returns the set of columns that should be checked, based on Settings.ExportSelectedColumns:
+        None means all exportable columns are checked, "" means none are checked, otherwise the stored
+        comma-separated list of IDs."""
         stored = self._settings.get(Settings.ExportSelectedColumns)
         if stored is None:
             return set(self._exportable_columns)
-        if stored == "":
+        if not stored:
             return set()
-        return set(int(column) for column in stored.split(","))
+        return {int(column) for column in stored.split(",")}
 
     def _selected_columns(self) -> list[int]:
-        return [column for column, checkbox in zip(self._exportable_columns, self._column_checkboxes)
-                if checkbox.isChecked()]
+        columns = []
+        for i in range(self._column_list.count()):
+            item = self._column_list.item(i)
+            if item.checkState() == Qt.CheckState.Checked:
+                columns.append(item.data(Qt.ItemDataRole.UserRole))
+        return columns
+
+    def _all_columns_in_order(self) -> list[int]:
+        return [self._column_list.item(i).data(Qt.ItemDataRole.UserRole) for i in range(self._column_list.count())]
 
     def _save_selected_columns(self):
         selected = self._selected_columns()
         self._settings.set(Settings.ExportSelectedColumns, ",".join(str(column) for column in selected))
 
-    def _on_column_checkbox_toggled(self, checked: bool):
+    def _save_column_order(self):
+        order = self._all_columns_in_order()
+        self._settings.set(Settings.ExportColumnOrder, ",".join(str(column) for column in order))
+
+    def _on_column_item_changed(self, _item: QListWidgetItem):
         self._save_selected_columns()
+
+    def _on_columns_reordered(self, *_args):
+        self._save_column_order()
 
     def _on_select_all_columns_clicked(self):
         self._set_all_columns_checked(True)
@@ -568,10 +620,11 @@ class ExportPanel(QWidget):
         self._set_all_columns_checked(False)
 
     def _set_all_columns_checked(self, checked: bool):
-        for checkbox in self._column_checkboxes:
-            checkbox.blockSignals(True)
-            checkbox.setChecked(checked)
-            checkbox.blockSignals(False)
+        state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
+        self._column_list.blockSignals(True)
+        for i in range(self._column_list.count()):
+            self._column_list.item(i).setCheckState(state)
+        self._column_list.blockSignals(False)
         self._save_selected_columns()
 
     def _export(self):
