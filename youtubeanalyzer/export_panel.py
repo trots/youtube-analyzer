@@ -93,6 +93,10 @@ class ExportPanel(QWidget):
         self._format_combo.addItem("TXT", ("txt", self.tr("Save TXT"), self.tr("Text File (*.txt)"), ".txt"))
         main_layout.addWidget(self._format_combo)
 
+        saved_format_index = self._find_format_index(self._settings.get(Settings.ExportSelectedFormat))
+        if saved_format_index is not None:
+            self._format_combo.setCurrentIndex(saved_format_index)
+
         self._follow_table_filters_checkbox = QCheckBox(self.tr("Follow table filters and sort order"))
         self._follow_table_filters_checkbox.setChecked(self._settings.get(self._current_keys()["follow_table_filters"]))
         self._follow_table_filters_checkbox.toggled.connect(self._on_follow_table_filters_toggled)
@@ -150,6 +154,12 @@ class ExportPanel(QWidget):
     def _current_keys(self) -> dict:
         return ExportPanel._FORMAT_SETTINGS_KEYS[self._current_format()]
 
+    def _find_format_index(self, format_id: str) -> int | None:
+        for i in range(self._format_combo.count()):
+            if self._format_combo.itemData(i)[0] == format_id:
+                return i
+        return None
+
     def _populate_column_list(self):
         for column, checked in self._build_ordered_columns():
             item = QListWidgetItem(self._model.FieldNames[column])
@@ -159,6 +169,7 @@ class ExportPanel(QWidget):
             self._column_list.addItem(item)
 
     def _on_format_changed(self, _index: int):
+        self._settings.set(Settings.ExportSelectedFormat, self._current_format())
         keys = self._current_keys()
 
         self._follow_table_filters_checkbox.blockSignals(True)

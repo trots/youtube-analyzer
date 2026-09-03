@@ -567,6 +567,27 @@ class TestExportPanel(unittest.TestCase):
             self.assertTrue(export_panel._include_header_checkbox.isChecked())
             self.assertFalse(export_panel._follow_table_filters_checkbox.isChecked())
 
+    def test_selected_format_defaults_to_xlsx(self):
+        self.assertEqual(self._settings.get(Settings.ExportSelectedFormat), "xlsx")
+        self.assertEqual(self._workspace._export_panel._format_combo.currentText(), "XLSX")
+
+    def test_switching_format_saves_setting(self):
+        self._select_format("TXT")
+        self.assertEqual(self._settings.get(Settings.ExportSelectedFormat), "txt")
+
+        self._select_format("CSV")
+        self.assertEqual(self._settings.get(Settings.ExportSelectedFormat), "csv")
+
+    def test_selected_format_restored_across_workspace_recreation(self):
+        self._select_format("HTML")
+
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            self.assertEqual(workspace._export_panel._format_combo.currentText(), "HTML")
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
     def test_switching_format_restores_saved_column_selection_and_order(self):
         export_panel = self._workspace._export_panel
         all_columns = self._all_columns()
