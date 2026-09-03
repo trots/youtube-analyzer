@@ -465,6 +465,36 @@ class AnalyticsWidget(QWidget):
 
 
 class ExportPanel(QWidget):
+    # Maps each export format to the SettingsKey quadruple ("follow_table_filters" / "selected_columns" /
+    # "column_order" / "include_header") that stores the settings for that format. Used as the single
+    # point of "format -> SettingsKey" lookup, instead of scattering per-format branches through the code.
+    _FORMAT_SETTINGS_KEYS = {
+        "xlsx": {
+            "follow_table_filters": Settings.ExportFollowTableFiltersXlsx,
+            "selected_columns": Settings.ExportSelectedColumnsXlsx,
+            "column_order": Settings.ExportColumnOrderXlsx,
+            "include_header": Settings.ExportIncludeHeaderXlsx,
+        },
+        "csv": {
+            "follow_table_filters": Settings.ExportFollowTableFiltersCsv,
+            "selected_columns": Settings.ExportSelectedColumnsCsv,
+            "column_order": Settings.ExportColumnOrderCsv,
+            "include_header": Settings.ExportIncludeHeaderCsv,
+        },
+        "html": {
+            "follow_table_filters": Settings.ExportFollowTableFiltersHtml,
+            "selected_columns": Settings.ExportSelectedColumnsHtml,
+            "column_order": Settings.ExportColumnOrderHtml,
+            "include_header": Settings.ExportIncludeHeaderHtml,
+        },
+        "txt": {
+            "follow_table_filters": Settings.ExportFollowTableFiltersTxt,
+            "selected_columns": Settings.ExportSelectedColumnsTxt,
+            "column_order": Settings.ExportColumnOrderTxt,
+            "include_header": Settings.ExportIncludeHeaderTxt,
+        },
+    }
+
     def __init__(self, settings: Settings, model: ResultTableModel, sort_model: ResultSortFilterProxyModel,
                  get_data_name, parent: QWidget = None):
         super().__init__(parent)
@@ -486,12 +516,12 @@ class ExportPanel(QWidget):
         main_layout.addWidget(self._format_combo)
 
         self._follow_table_filters_checkbox = QCheckBox(self.tr("Follow table filters and sort order"))
-        self._follow_table_filters_checkbox.setChecked(self._settings.get(Settings.ExportFollowTableFilters))
+        self._follow_table_filters_checkbox.setChecked(self._settings.get(self._current_keys()["follow_table_filters"]))
         self._follow_table_filters_checkbox.toggled.connect(self._on_follow_table_filters_toggled)
         main_layout.addWidget(self._follow_table_filters_checkbox)
 
         self._include_header_checkbox = QCheckBox(self.tr("Include header row"))
-        self._include_header_checkbox.setChecked(self._settings.get(Settings.ExportIncludeHeader))
+        self._include_header_checkbox.setChecked(self._settings.get(self._current_keys()["include_header"]))
         self._include_header_checkbox.toggled.connect(self._on_include_header_toggled)
         main_layout.addWidget(self._include_header_checkbox)
 
@@ -509,19 +539,14 @@ class ExportPanel(QWidget):
         self._exportable_columns: list[int] = get_exportable_columns()
         self._column_list = QListWidget()
         self._column_list.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
-        for column, checked in self._build_ordered_columns():
-            item = QListWidgetItem(model.FieldNames[column])
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
-            item.setData(Qt.ItemDataRole.UserRole, column)
-            self._column_list.addItem(item)
+        self._populate_column_list()
         self._column_list.itemChanged.connect(self._on_column_item_changed)
         self._column_list.model().rowsMoved.connect(self._on_columns_reordered)
         main_layout.addWidget(self._column_list)
 
         self._txt_delimiter_label = QLabel(self.tr("TXT delimiter:"))
         main_layout.addWidget(self._txt_delimiter_label)
-        self._txt_delimiter_edit = QLineEdit(self._settings.get(Settings.ExportTxtDelimiter))
+        self._txt_delimiter_edit = QLineEdit(self._settings.get(Settings.ExportDelimiterTxt))
         self._txt_delimiter_edit.textChanged.connect(self._on_txt_delimiter_changed)
         main_layout.addWidget(self._txt_delimiter_edit)
 
@@ -532,16 +557,47 @@ class ExportPanel(QWidget):
         main_layout.addStretch()
 
         self._format_combo.currentIndexChanged.connect(self._update_txt_delimiter_visibility)
+        self._format_combo.currentIndexChanged.connect(self._on_format_changed)
         self._update_txt_delimiter_visibility()
 
+    def _current_format(self) -> str:
+        return self._format_combo.currentData()[0]
+
+    def _current_keys(self) -> dict:
+        return ExportPanel._FORMAT_SETTINGS_KEYS[self._current_format()]
+
+    def _populate_column_list(self):
+        for column, checked in self._build_ordered_columns():
+            item = QListWidgetItem(self._model.FieldNames[column])
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked)
+            item.setData(Qt.ItemDataRole.UserRole, column)
+            self._column_list.addItem(item)
+
+    def _on_format_changed(self, _index: int):
+        keys = self._current_keys()
+
+        self._follow_table_filters_checkbox.blockSignals(True)
+        self._follow_table_filters_checkbox.setChecked(self._settings.get(keys["follow_table_filters"]))
+        self._follow_table_filters_checkbox.blockSignals(False)
+
+        self._include_header_checkbox.blockSignals(True)
+        self._include_header_checkbox.setChecked(self._settings.get(keys["include_header"]))
+        self._include_header_checkbox.blockSignals(False)
+
+        self._column_list.blockSignals(True)
+        self._column_list.clear()
+        self._populate_column_list()
+        self._column_list.blockSignals(False)
+
     def _on_follow_table_filters_toggled(self, checked: bool):
-        self._settings.set(Settings.ExportFollowTableFilters, checked)
+        self._settings.set(self._current_keys()["follow_table_filters"], checked)
 
     def _on_include_header_toggled(self, checked: bool):
-        self._settings.set(Settings.ExportIncludeHeader, checked)
+        self._settings.set(self._current_keys()["include_header"], checked)
 
     def _on_txt_delimiter_changed(self, text: str):
-        self._settings.set(Settings.ExportTxtDelimiter, text)
+        self._settings.set(Settings.ExportDelimiterTxt, text)
 
     def _update_txt_delimiter_visibility(self):
         is_txt = self._format_combo.currentData()[0] == "txt"
@@ -561,7 +617,7 @@ class ExportPanel(QWidget):
         """Returns the order of all exportable columns: columns from the stored setting first (in the
         stored order), then any remaining exportable columns that were not in the stored setting (in
         canonical order)."""
-        stored = self._settings.get(Settings.ExportColumnOrder)
+        stored = self._settings.get(self._current_keys()["column_order"])
         if not stored:
             return list(self._exportable_columns)
         saved_order = [int(column) for column in stored.split(",")]
@@ -578,10 +634,10 @@ class ExportPanel(QWidget):
         return ordered
 
     def _load_selected_columns(self) -> set[int]:
-        """Returns the set of columns that should be checked, based on Settings.ExportSelectedColumns:
-        None means all exportable columns are checked, "" means none are checked, otherwise the stored
-        comma-separated list of IDs."""
-        stored = self._settings.get(Settings.ExportSelectedColumns)
+        """Returns the set of columns that should be checked, based on the "selected_columns" setting of
+        the current format: None means all exportable columns are checked, "" means none are checked,
+        otherwise the stored comma-separated list of IDs."""
+        stored = self._settings.get(self._current_keys()["selected_columns"])
         if stored is None:
             return set(self._exportable_columns)
         if not stored:
@@ -601,11 +657,11 @@ class ExportPanel(QWidget):
 
     def _save_selected_columns(self):
         selected = self._selected_columns()
-        self._settings.set(Settings.ExportSelectedColumns, ",".join(str(column) for column in selected))
+        self._settings.set(self._current_keys()["selected_columns"], ",".join(str(column) for column in selected))
 
     def _save_column_order(self):
         order = self._all_columns_in_order()
-        self._settings.set(Settings.ExportColumnOrder, ",".join(str(column) for column in order))
+        self._settings.set(self._current_keys()["column_order"], ",".join(str(column) for column in order))
 
     def _on_column_item_changed(self, _item: QListWidgetItem):
         self._save_selected_columns()
