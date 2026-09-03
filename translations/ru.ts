@@ -337,6 +337,10 @@
         <source>TXT delimiter:</source>
         <translation>Разделитель TXT:</translation>
     </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Копировать в буфер обмена</translation>
+    </message>
 </context>
 <context>
     <name>GeneralTab</name>
