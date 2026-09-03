@@ -56,6 +56,20 @@ def make_rows(count=1):
 
 class TestExportPanel(unittest.TestCase):
 
+    # Maps each format's combo box label to the SettingsKey quadruple used to persist its settings,
+    # mirroring ExportPanel._FORMAT_SETTINGS_KEYS, for tests that check per-format independence directly
+    # against QSettings.
+    _FORMAT_KEYS = {
+        "XLSX": (Settings.ExportFollowTableFiltersXlsx, Settings.ExportSelectedColumnsXlsx,
+                 Settings.ExportColumnOrderXlsx, Settings.ExportIncludeHeaderXlsx),
+        "CSV": (Settings.ExportFollowTableFiltersCsv, Settings.ExportSelectedColumnsCsv,
+                Settings.ExportColumnOrderCsv, Settings.ExportIncludeHeaderCsv),
+        "HTML": (Settings.ExportFollowTableFiltersHtml, Settings.ExportSelectedColumnsHtml,
+                 Settings.ExportColumnOrderHtml, Settings.ExportIncludeHeaderHtml),
+        "TXT": (Settings.ExportFollowTableFiltersTxt, Settings.ExportSelectedColumnsTxt,
+                Settings.ExportColumnOrderTxt, Settings.ExportIncludeHeaderTxt),
+    }
+
     @classmethod
     def setUpClass(cls):
         cls._app = QApplication.instance() or QApplication([])
@@ -85,7 +99,10 @@ class TestExportPanel(unittest.TestCase):
         raise AssertionError("Export button not found")
 
     def _select_format(self, format_text):
-        self._workspace._export_panel._format_combo.setCurrentText(format_text)
+        self._select_format_on(self._workspace._export_panel, format_text)
+
+    def _select_format_on(self, export_panel, format_text):
+        export_panel._format_combo.setCurrentText(format_text)
 
     def _set_follow_table_filters(self, checked: bool):
         self._workspace._export_panel._follow_table_filters_checkbox.setChecked(checked)
@@ -217,11 +234,11 @@ class TestExportPanel(unittest.TestCase):
         self.assertTrue(self._settings.get(Settings.LastSaveDir).endswith("some_dir"))
 
     def test_follow_table_filters_checkbox_unchecked_by_default(self):
-        self.assertFalse(self._settings.get(Settings.ExportFollowTableFilters))
+        self.assertFalse(self._settings.get(Settings.ExportFollowTableFiltersXlsx))
         self.assertFalse(self._workspace._export_panel._follow_table_filters_checkbox.isChecked())
 
     def test_follow_table_filters_checkbox_restored_from_settings(self):
-        self._settings.set(Settings.ExportFollowTableFilters, True)
+        self._settings.set(Settings.ExportFollowTableFiltersXlsx, True)
         workspace = _StubVideoTableWorkspace(self._settings)
         try:
             self.assertTrue(workspace._export_panel._follow_table_filters_checkbox.isChecked())
@@ -231,10 +248,10 @@ class TestExportPanel(unittest.TestCase):
 
     def test_checking_follow_table_filters_checkbox_saves_setting(self):
         self._set_follow_table_filters(True)
-        self.assertTrue(self._settings.get(Settings.ExportFollowTableFilters))
+        self.assertTrue(self._settings.get(Settings.ExportFollowTableFiltersXlsx))
 
         self._set_follow_table_filters(False)
-        self.assertFalse(self._settings.get(Settings.ExportFollowTableFilters))
+        self.assertFalse(self._settings.get(Settings.ExportFollowTableFiltersXlsx))
 
     def test_export_uses_sort_model_when_follow_table_filters_checked(self):
         self._workspace.model.set_data(make_rows(2))
@@ -299,13 +316,13 @@ class TestExportPanel(unittest.TestCase):
         self._set_column_checked(export_panel, 0, False)
 
         self.assertEqual(self._column_ids(export_panel), original_order)
-        self.assertIsNone(self._settings.get(Settings.ExportColumnOrder))
+        self.assertIsNone(self._settings.get(Settings.ExportColumnOrderXlsx))
 
     def test_toggling_column_checkbox_saves_setting(self):
         export_panel = self._workspace._export_panel
         self._set_column_checked(export_panel, 0, False)
 
-        stored = self._settings.get(Settings.ExportSelectedColumns)
+        stored = self._settings.get(Settings.ExportSelectedColumnsXlsx)
         selected_columns = set(int(column) for column in stored.split(","))
         self.assertNotIn(export_panel._exportable_columns[0], selected_columns)
         for column in export_panel._exportable_columns[1:]:
@@ -318,7 +335,7 @@ class TestExportPanel(unittest.TestCase):
         export_panel._select_none_columns_button.click()
 
         self.assertTrue(all(not checked for checked in self._column_checked_states(export_panel)))
-        self.assertEqual(self._settings.get(Settings.ExportSelectedColumns), "")
+        self.assertEqual(self._settings.get(Settings.ExportSelectedColumnsXlsx), "")
 
     def test_select_all_checks_all_columns(self):
         self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
@@ -328,7 +345,7 @@ class TestExportPanel(unittest.TestCase):
         export_panel._select_all_columns_button.click()
 
         self.assertTrue(all(self._column_checked_states(export_panel)))
-        stored = self._settings.get(Settings.ExportSelectedColumns)
+        stored = self._settings.get(Settings.ExportSelectedColumnsXlsx)
         self.assertEqual(set(int(column) for column in stored.split(",")), set(self._all_columns()))
 
     def test_select_all_and_select_none_do_not_change_column_order(self):
@@ -378,9 +395,9 @@ class TestExportPanel(unittest.TestCase):
         # together with an independently-saved selection.
         all_columns = self._all_columns()
         saved_order = list(reversed(all_columns[1:]))
-        self._settings.set(Settings.ExportColumnOrder, ",".join(str(c) for c in saved_order))
+        self._settings.set(Settings.ExportColumnOrderXlsx, ",".join(str(c) for c in saved_order))
         saved_selection = saved_order[:-1]  # all but the last of the saved-order columns are checked
-        self._settings.set(Settings.ExportSelectedColumns, ",".join(str(c) for c in saved_selection))
+        self._settings.set(Settings.ExportSelectedColumnsXlsx, ",".join(str(c) for c in saved_selection))
 
         workspace = _StubVideoTableWorkspace(self._settings)
         try:
@@ -403,10 +420,10 @@ class TestExportPanel(unittest.TestCase):
         export_panel._save_column_order()
 
         expected_order = all_columns[1:] + [all_columns[0]]
-        stored = self._settings.get(Settings.ExportColumnOrder)
+        stored = self._settings.get(Settings.ExportColumnOrderXlsx)
         self.assertEqual([int(c) for c in stored.split(",")], expected_order)
         # Reordering must not touch the independently-persisted selection.
-        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumns))
+        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumnsXlsx))
 
     def test_reordering_columns_persists_across_panel_recreation(self):
         export_panel = self._workspace._export_panel
@@ -433,10 +450,10 @@ class TestExportPanel(unittest.TestCase):
 
         expected_order = all_columns[1:] + [all_columns[0]]
         self.assertEqual(self._column_ids(export_panel), expected_order)
-        stored = self._settings.get(Settings.ExportColumnOrder)
+        stored = self._settings.get(Settings.ExportColumnOrderXlsx)
         self.assertEqual([int(c) for c in stored.split(",")], expected_order)
         # Moving a column must not touch the independently-persisted selection.
-        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumns))
+        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumnsXlsx))
 
     def test_export_uses_columns_in_list_order_not_canonical_order(self):
         self._workspace.model.set_data(make_rows(1))
@@ -455,11 +472,11 @@ class TestExportPanel(unittest.TestCase):
                                              include_header=True)
 
     def test_include_header_checkbox_checked_by_default(self):
-        self.assertTrue(self._settings.get(Settings.ExportIncludeHeader))
+        self.assertTrue(self._settings.get(Settings.ExportIncludeHeaderXlsx))
         self.assertTrue(self._workspace._export_panel._include_header_checkbox.isChecked())
 
     def test_include_header_checkbox_restored_from_settings(self):
-        self._settings.set(Settings.ExportIncludeHeader, False)
+        self._settings.set(Settings.ExportIncludeHeaderXlsx, False)
         workspace = _StubVideoTableWorkspace(self._settings)
         try:
             self.assertFalse(workspace._export_panel._include_header_checkbox.isChecked())
@@ -469,10 +486,10 @@ class TestExportPanel(unittest.TestCase):
 
     def test_unchecking_include_header_checkbox_saves_setting(self):
         self._workspace._export_panel._include_header_checkbox.setChecked(False)
-        self.assertFalse(self._settings.get(Settings.ExportIncludeHeader))
+        self.assertFalse(self._settings.get(Settings.ExportIncludeHeaderXlsx))
 
         self._workspace._export_panel._include_header_checkbox.setChecked(True)
-        self.assertTrue(self._settings.get(Settings.ExportIncludeHeader))
+        self.assertTrue(self._settings.get(Settings.ExportIncludeHeaderXlsx))
 
     def test_unchecking_include_header_checkbox_is_passed_to_export_func(self):
         self._workspace.model.set_data(make_rows(1))
@@ -488,11 +505,11 @@ class TestExportPanel(unittest.TestCase):
                                              include_header=False)
 
     def test_txt_delimiter_default_from_settings(self):
-        self.assertEqual(self._settings.get(Settings.ExportTxtDelimiter), " ")
+        self.assertEqual(self._settings.get(Settings.ExportDelimiterTxt), " ")
         self.assertEqual(self._workspace._export_panel._txt_delimiter_edit.text(), " ")
 
     def test_txt_delimiter_restored_from_settings(self):
-        self._settings.set(Settings.ExportTxtDelimiter, "|")
+        self._settings.set(Settings.ExportDelimiterTxt, "|")
         workspace = _StubVideoTableWorkspace(self._settings)
         try:
             self.assertEqual(workspace._export_panel._txt_delimiter_edit.text(), "|")
@@ -502,7 +519,7 @@ class TestExportPanel(unittest.TestCase):
 
     def test_changing_txt_delimiter_saves_setting(self):
         self._workspace._export_panel._txt_delimiter_edit.setText("|")
-        self.assertEqual(self._settings.get(Settings.ExportTxtDelimiter), "|")
+        self.assertEqual(self._settings.get(Settings.ExportDelimiterTxt), "|")
 
     def test_txt_delimiter_is_passed_to_export_to_txt(self):
         self._workspace.model.set_data(make_rows(1))
@@ -529,6 +546,172 @@ class TestExportPanel(unittest.TestCase):
 
         mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns(),
                                              include_header=True)
+
+    def test_all_four_formats_start_with_default_values(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+        for format_label in ("XLSX", "CSV", "HTML", "TXT"):
+            self._select_format(format_label)
+            self.assertEqual(self._column_ids(export_panel), all_columns)
+            self.assertTrue(all(self._column_checked_states(export_panel)))
+            self.assertTrue(export_panel._include_header_checkbox.isChecked())
+            self.assertFalse(export_panel._follow_table_filters_checkbox.isChecked())
+
+    def test_switching_format_restores_saved_column_selection_and_order(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+
+        # XLSX (the default format): uncheck the first column and move the second column to the end.
+        self._set_column_checked(export_panel, 0, False)
+        self._move_column(export_panel, 1, len(all_columns) - 1)
+        export_panel._save_column_order()
+        xlsx_order = self._column_ids(export_panel)
+        xlsx_checked = self._column_checked_states(export_panel)
+
+        # CSV starts from its own defaults, independent of the XLSX changes above.
+        self._select_format("CSV")
+        self.assertEqual(self._column_ids(export_panel), all_columns)
+        self.assertTrue(all(self._column_checked_states(export_panel)))
+        self._set_column_checked(export_panel, 2, False)
+        csv_checked = self._column_checked_states(export_panel)
+
+        # Switching back to XLSX restores exactly the order/selection saved for XLSX.
+        self._select_format("XLSX")
+        self.assertEqual(self._column_ids(export_panel), xlsx_order)
+        self.assertEqual(self._column_checked_states(export_panel), xlsx_checked)
+
+        # Switching to CSV again restores exactly the selection saved for CSV.
+        self._select_format("CSV")
+        self.assertEqual(self._column_ids(export_panel), all_columns)
+        self.assertEqual(self._column_checked_states(export_panel), csv_checked)
+
+    def test_switching_format_restores_saved_checkboxes(self):
+        export_panel = self._workspace._export_panel
+
+        self._set_follow_table_filters(True)
+        export_panel._include_header_checkbox.setChecked(False)
+
+        self._select_format("CSV")
+        self.assertFalse(export_panel._follow_table_filters_checkbox.isChecked())
+        self.assertTrue(export_panel._include_header_checkbox.isChecked())
+
+        export_panel._follow_table_filters_checkbox.setChecked(True)
+        export_panel._include_header_checkbox.setChecked(False)
+
+        self._select_format("XLSX")
+        self.assertTrue(export_panel._follow_table_filters_checkbox.isChecked())
+        self.assertFalse(export_panel._include_header_checkbox.isChecked())
+
+        self._select_format("CSV")
+        self.assertTrue(export_panel._follow_table_filters_checkbox.isChecked())
+        self.assertFalse(export_panel._include_header_checkbox.isChecked())
+
+    def test_configuring_one_format_does_not_change_settings_of_other_formats(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+
+        # Configure XLSX (the default format) only.
+        self._set_column_checked(export_panel, 0, False)
+        self._move_column(export_panel, 1, len(all_columns) - 1)
+        export_panel._save_column_order()
+        self._set_follow_table_filters(True)
+        export_panel._include_header_checkbox.setChecked(False)
+
+        for format_label in ("CSV", "HTML", "TXT"):
+            follow_key, selected_key, order_key, header_key = self._FORMAT_KEYS[format_label]
+            self.assertFalse(self._settings.get(follow_key))
+            self.assertIsNone(self._settings.get(selected_key))
+            self.assertIsNone(self._settings.get(order_key))
+            self.assertTrue(self._settings.get(header_key))
+
+    def test_select_all_and_select_none_only_affect_current_format(self):
+        self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
+        export_panel = self._workspace._export_panel
+
+        export_panel._select_none_columns_button.click()  # Affects XLSX (the default format) only.
+
+        self._select_format("CSV")
+        self.assertTrue(all(self._column_checked_states(export_panel)))
+        self.assertIsNone(self._settings.get(Settings.ExportSelectedColumnsCsv))
+
+        self._select_format("XLSX")
+        self.assertTrue(all(not checked for checked in self._column_checked_states(export_panel)))
+
+    def test_per_format_settings_persist_across_workspace_recreation(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+
+        self._select_format("XLSX")
+        self._set_column_checked(export_panel, 0, False)
+        self._set_follow_table_filters(True)
+
+        self._select_format("CSV")
+        self._set_column_checked(export_panel, 1, False)
+        export_panel._include_header_checkbox.setChecked(False)
+
+        self._select_format("HTML")
+        self._move_column(export_panel, 0, len(all_columns) - 1)
+        export_panel._save_column_order()
+        html_order = all_columns[1:] + [all_columns[0]]
+
+        self._select_format("TXT")
+        self._set_follow_table_filters(True)
+        export_panel._include_header_checkbox.setChecked(False)
+
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            restored_panel = workspace._export_panel
+
+            self._select_format_on(restored_panel, "XLSX")
+            self.assertFalse(self._column_checked_states(restored_panel)[0])
+            self.assertTrue(restored_panel._follow_table_filters_checkbox.isChecked())
+
+            self._select_format_on(restored_panel, "CSV")
+            self.assertFalse(self._column_checked_states(restored_panel)[1])
+            self.assertFalse(restored_panel._include_header_checkbox.isChecked())
+
+            self._select_format_on(restored_panel, "HTML")
+            self.assertEqual(self._column_ids(restored_panel), html_order)
+
+            self._select_format_on(restored_panel, "TXT")
+            self.assertTrue(restored_panel._follow_table_filters_checkbox.isChecked())
+            self.assertFalse(restored_panel._include_header_checkbox.isChecked())
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_export_uses_columns_and_checkboxes_saved_for_selected_format(self):
+        self._workspace.model.set_data(make_rows(1))
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+
+        # Configure XLSX with a partial column selection and no header row.
+        self._select_format("XLSX")
+        self._set_column_checked(export_panel, 0, False)
+        export_panel._include_header_checkbox.setChecked(False)
+        xlsx_columns = all_columns[1:]
+
+        # Configure CSV differently: all columns (default), follow table filters on.
+        self._select_format("CSV")
+        self._set_follow_table_filters(True)
+
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.csv", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.csv", self._workspace._sort_model, all_columns,
+                                             include_header=True)
+
+        # Switching back to XLSX and exporting must use XLSX's own saved settings, not CSV's.
+        self._select_format("XLSX")
+        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, xlsx_columns,
+                                             include_header=False)
 
 
 if __name__ == "__main__":
