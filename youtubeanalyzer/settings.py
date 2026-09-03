@@ -76,6 +76,7 @@ class Settings:
     ExportIncludeHeaderHtml = SettingsKey("export_include_header_html", True, is_global=True)
     ExportIncludeHeaderTxt = SettingsKey("export_include_header_txt", True, is_global=True)
     ExportDelimiterTxt = SettingsKey("export_delimiter_txt", " ", is_global=True)
+    ExportSelectedFormat = SettingsKey("export_selected_format", "xlsx", is_global=True)
 
     def __init__(self, app_name: str, filename: str = None):
         if filename:
