@@ -167,9 +167,9 @@ class TestExportPanel(unittest.TestCase):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("XLSX")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace.model, self._all_columns(),
@@ -179,9 +179,9 @@ class TestExportPanel(unittest.TestCase):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("CSV")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.csv", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_csv") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns(),
@@ -191,9 +191,9 @@ class TestExportPanel(unittest.TestCase):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("HTML")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.html", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_html") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_html") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.html", self._workspace.model, self._all_columns(),
@@ -203,9 +203,9 @@ class TestExportPanel(unittest.TestCase):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("TXT")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.txt", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_txt") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_txt") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.txt", self._workspace.model, self._all_columns(),
@@ -215,9 +215,9 @@ class TestExportPanel(unittest.TestCase):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("XLSX")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_not_called()
@@ -226,9 +226,9 @@ class TestExportPanel(unittest.TestCase):
         self._workspace.model.set_data(make_rows(1))
         self._select_format("XLSX")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("some_dir/out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx"):
+             patch("youtubeanalyzer.export_panel.export_to_xlsx"):
             self._export_button().click()
 
         self.assertTrue(self._settings.get(Settings.LastSaveDir).endswith("some_dir"))
@@ -258,9 +258,9 @@ class TestExportPanel(unittest.TestCase):
         self._select_format("XLSX")
         self._set_follow_table_filters(True)
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace._sort_model, self._all_columns(),
@@ -273,9 +273,9 @@ class TestExportPanel(unittest.TestCase):
         self._select_format("XLSX")
         self._set_follow_table_filters(True)
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName") as mock_dialog, \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export, \
-             patch("youtubeanalyzer.video_table_workspace.warning_message") as mock_warning:
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName") as mock_dialog, \
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export, \
+             patch("youtubeanalyzer.export_panel.warning_message") as mock_warning:
             self._export_button().click()
 
         mock_warning.assert_called_once()
@@ -367,9 +367,9 @@ class TestExportPanel(unittest.TestCase):
         self._set_column_checked(export_panel, 0, False)
         expected_columns = self._all_columns()[1:]
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_columns,
@@ -381,9 +381,9 @@ class TestExportPanel(unittest.TestCase):
         export_panel = self._workspace._export_panel
         export_panel._select_none_columns_button.click()
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName") as mock_dialog, \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export, \
-             patch("youtubeanalyzer.video_table_workspace.warning_message") as mock_warning:
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName") as mock_dialog, \
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export, \
+             patch("youtubeanalyzer.export_panel.warning_message") as mock_warning:
             self._export_button().click()
 
         mock_warning.assert_called_once()
@@ -463,9 +463,9 @@ class TestExportPanel(unittest.TestCase):
         self._move_column(export_panel, 0, len(all_columns) - 1)
         expected_order = all_columns[1:] + [all_columns[0]]
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_order,
@@ -496,9 +496,9 @@ class TestExportPanel(unittest.TestCase):
         self._select_format("XLSX")
         self._workspace._export_panel._include_header_checkbox.setChecked(False)
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace.model, self._all_columns(),
@@ -526,9 +526,9 @@ class TestExportPanel(unittest.TestCase):
         self._select_format("TXT")
         self._workspace._export_panel._txt_delimiter_edit.setText("|")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.txt", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_txt") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_txt") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.txt", self._workspace.model, self._all_columns(),
@@ -539,9 +539,9 @@ class TestExportPanel(unittest.TestCase):
         self._select_format("CSV")
         self._workspace._export_panel._txt_delimiter_edit.setText("|")
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.csv", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_csv") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.csv", self._workspace.model, self._all_columns(),
@@ -695,9 +695,9 @@ class TestExportPanel(unittest.TestCase):
         self._select_format("CSV")
         self._set_follow_table_filters(True)
 
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.csv", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_csv") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_csv") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.csv", self._workspace._sort_model, all_columns,
@@ -705,9 +705,9 @@ class TestExportPanel(unittest.TestCase):
 
         # Switching back to XLSX and exporting must use XLSX's own saved settings, not CSV's.
         self._select_format("XLSX")
-        with patch("youtubeanalyzer.video_table_workspace.QFileDialog.getSaveFileName",
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
                    return_value=("out.xlsx", "")), \
-             patch("youtubeanalyzer.video_table_workspace.export_to_xlsx") as mock_export:
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
             self._export_button().click()
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace.model, xlsx_columns,
