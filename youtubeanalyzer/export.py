@@ -1,5 +1,6 @@
 import xlsxwriter
 import csv
+import io
 from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
@@ -44,22 +45,30 @@ def export_to_xlsx(file_path: str, model: ResultTableModel, columns: list[int] =
     workbook.close()
 
 
-def export_to_csv(file_path: str, model: ResultTableModel, columns: list[int] = None, include_header: bool = True):
+def build_csv_text(model: ResultTableModel, columns: list[int] = None, include_header: bool = True) -> str:
     if columns is None:
         columns = get_exportable_columns()
+    output = io.StringIO()
+    csv_writer = csv.writer(output, delimiter=',')
+
+    if include_header:
+        header_csv = [model.FieldNames[column] for column in columns]
+        csv_writer.writerow(header_csv)
+
+    result_csv = []
+    for row in range(model.rowCount()):
+        for column in columns:
+            result_csv.append(model.get_field_data(row, column))
+        csv_writer.writerow(result_csv)
+        result_csv.clear()
+
+    return output.getvalue()
+
+
+def export_to_csv(file_path: str, model: ResultTableModel, columns: list[int] = None, include_header: bool = True):
+    csv_text = build_csv_text(model, columns, include_header)
     with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-        csv_writer = csv.writer(csvfile, delimiter=',')
-
-        if include_header:
-            header_csv = [model.FieldNames[column] for column in columns]
-            csv_writer.writerow(header_csv)
-
-        result_csv = []
-        for row in range(model.rowCount()):
-            for column in columns:
-                result_csv.append(model.get_field_data(row, column))
-            csv_writer.writerow(result_csv)
-            result_csv.clear()
+        csvfile.write(csv_text)
 
 
 def export_to_html(file_path: str, model: ResultTableModel, columns: list[int] = None, include_header: bool = True):
@@ -95,13 +104,22 @@ def export_to_html(file_path: str, model: ResultTableModel, columns: list[int] =
         htmlfile.close()
 
 
-def export_to_txt(file_path: str, model: ResultTableModel, columns: list[int] = None, delimiter: str = " ",
-                   include_header: bool = True):
+def build_txt_text(model: ResultTableModel, columns: list[int] = None, delimiter: str = " ",
+                    include_header: bool = True) -> str:
     if columns is None:
         columns = get_exportable_columns()
-    with open(file_path, 'w', encoding='utf-8') as txtfile:
-        if include_header:
-            txtfile.write(delimiter.join(str(model.FieldNames[column]) for column in columns) + "\n")
+    lines = []
+    if include_header:
+        lines.append(delimiter.join(str(model.FieldNames[column]) for column in columns))
 
-        for row in range(model.rowCount()):
-            txtfile.write(delimiter.join(str(model.get_field_data(row, column)) for column in columns) + "\n")
+    for row in range(model.rowCount()):
+        lines.append(delimiter.join(str(model.get_field_data(row, column)) for column in columns))
+
+    return "".join(line + "\n" for line in lines)
+
+
+def export_to_txt(file_path: str, model: ResultTableModel, columns: list[int] = None, delimiter: str = " ",
+                   include_header: bool = True):
+    txt_text = build_txt_text(model, columns, delimiter, include_header)
+    with open(file_path, 'w', encoding='utf-8') as txtfile:
+        txtfile.write(txt_text)

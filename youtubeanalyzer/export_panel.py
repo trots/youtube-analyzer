@@ -2,6 +2,9 @@ from PySide6.QtCore import (
     Qt,
     QFileInfo
 )
+from PySide6.QtGui import (
+    QGuiApplication
+)
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -33,6 +36,8 @@ from youtubeanalyzer.export import (
     export_to_csv,
     export_to_html,
     export_to_txt,
+    build_csv_text,
+    build_txt_text,
     get_exportable_columns
 )
 
@@ -127,11 +132,17 @@ class ExportPanel(QWidget):
         export_button.clicked.connect(self._export)
         main_layout.addWidget(export_button)
 
+        self._copy_to_clipboard_button = QPushButton(self.tr("Copy to Clipboard"))
+        self._copy_to_clipboard_button.clicked.connect(self._copy_to_clipboard)
+        main_layout.addWidget(self._copy_to_clipboard_button)
+
         main_layout.addStretch()
 
         self._format_combo.currentIndexChanged.connect(self._update_txt_delimiter_visibility)
+        self._format_combo.currentIndexChanged.connect(self._update_copy_to_clipboard_visibility)
         self._format_combo.currentIndexChanged.connect(self._on_format_changed)
         self._update_txt_delimiter_visibility()
+        self._update_copy_to_clipboard_visibility()
 
     def _current_format(self) -> str:
         return self._format_combo.currentData()[0]
@@ -176,6 +187,9 @@ class ExportPanel(QWidget):
         is_txt = self._format_combo.currentData()[0] == "txt"
         self._txt_delimiter_label.setVisible(is_txt)
         self._txt_delimiter_edit.setVisible(is_txt)
+
+    def _update_copy_to_clipboard_visibility(self):
+        self._copy_to_clipboard_button.setVisible(self._current_format() in ("csv", "txt"))
 
     def _build_ordered_columns(self) -> list[tuple[int, bool]]:
         """Returns (column_id, checked) pairs in the order the column list should be built: columns from
@@ -256,19 +270,29 @@ class ExportPanel(QWidget):
         self._column_list.blockSignals(False)
         self._save_selected_columns()
 
-    def _export(self):
-        export_format, caption, filter, file_suffix = self._format_combo.currentData()
-        export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html,
-                       "txt": export_to_txt}[export_format]
+    def _prepare_export_data(self):
+        """Returns (export_model, selected_columns) based on the current "follow table filters" and
+        column-selection settings, or None (after showing the relevant warning) if there is nothing to
+        export. Shared by file export and copy-to-clipboard, so both apply the same checks."""
         follow_table_filters = self._follow_table_filters_checkbox.isChecked()
         export_model = self._sort_model if follow_table_filters else self._model
         if follow_table_filters and self._sort_model.rowCount() == 0:
             warning_message(self, self.tr("No rows match the current table filters"))
-            return
+            return None
         selected_columns = self._selected_columns()
         if not selected_columns:
             warning_message(self, self.tr("Select at least one column to export"))
+            return None
+        return export_model, selected_columns
+
+    def _export(self):
+        export_format, caption, filter, file_suffix = self._format_combo.currentData()
+        export_func = {"xlsx": export_to_xlsx, "csv": export_to_csv, "html": export_to_html,
+                       "txt": export_to_txt}[export_format]
+        prepared = self._prepare_export_data()
+        if prepared is None:
             return
+        export_model, selected_columns = prepared
         data_name = self._get_data_name() or "export"
         last_save_dir = self._settings.get(Settings.LastSaveDir)
         file_name, _ = QFileDialog.getSaveFileName(
@@ -282,3 +306,17 @@ class ExportPanel(QWidget):
                         delimiter=self._txt_delimiter_edit.text(), include_header=include_header)
         else:
             export_func(file_name, export_model, selected_columns, include_header=include_header)
+
+    def _copy_to_clipboard(self):
+        export_format = self._current_format()
+        prepared = self._prepare_export_data()
+        if prepared is None:
+            return
+        export_model, selected_columns = prepared
+        include_header = self._include_header_checkbox.isChecked()
+        if export_format == "txt":
+            text = build_txt_text(export_model, selected_columns,
+                                   delimiter=self._txt_delimiter_edit.text(), include_header=include_header)
+        else:
+            text = build_csv_text(export_model, selected_columns, include_header=include_header)
+        QGuiApplication.clipboard().setText(text)

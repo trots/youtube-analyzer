@@ -21,6 +21,10 @@ from youtubeanalyzer.model import (
 from youtubeanalyzer.filters import (
     AbstractFilter
 )
+from youtubeanalyzer.export import (
+    build_csv_text,
+    build_txt_text
+)
 from youtubeanalyzer.video_table_workspace import (
     AbstractVideoTableWorkspace
 )
@@ -97,6 +101,12 @@ class TestExportPanel(unittest.TestCase):
             if button.text() == "Export...":
                 return button
         raise AssertionError("Export button not found")
+
+    def _copy_to_clipboard_button(self):
+        for button in self._workspace._export_panel.findChildren(QPushButton):
+            if button.text() == "Copy to Clipboard":
+                return button
+        raise AssertionError("Copy to Clipboard button not found")
 
     def _select_format(self, format_text):
         self._select_format_on(self._workspace._export_panel, format_text)
@@ -712,6 +722,105 @@ class TestExportPanel(unittest.TestCase):
 
         mock_export.assert_called_once_with("out.xlsx", self._workspace.model, xlsx_columns,
                                              include_header=False)
+
+    def test_copy_to_clipboard_button_visible_only_for_csv_and_txt(self):
+        button = self._copy_to_clipboard_button()
+
+        self._select_format("XLSX")
+        self.assertTrue(button.isHidden())
+
+        self._select_format("CSV")
+        self.assertFalse(button.isHidden())
+
+        self._select_format("HTML")
+        self.assertTrue(button.isHidden())
+
+        self._select_format("TXT")
+        self.assertFalse(button.isHidden())
+
+    def test_copy_to_clipboard_for_csv_copies_same_text_export_would_write(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._select_format("CSV")
+        expected_text = build_csv_text(self._workspace.model, self._all_columns(), include_header=True)
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard:
+            self._copy_to_clipboard_button().click()
+
+        mock_clipboard.return_value.setText.assert_called_once_with(expected_text)
+
+    def test_copy_to_clipboard_for_txt_copies_same_text_export_would_write(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._select_format("TXT")
+        self._workspace._export_panel._txt_delimiter_edit.setText("|")
+        expected_text = build_txt_text(self._workspace.model, self._all_columns(), delimiter="|", include_header=True)
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard:
+            self._copy_to_clipboard_button().click()
+
+        mock_clipboard.return_value.setText.assert_called_once_with(expected_text)
+
+    def test_copy_to_clipboard_uses_sort_model_when_follow_table_filters_checked(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._select_format("CSV")
+        self._set_follow_table_filters(True)
+        expected_text = build_csv_text(self._workspace._sort_model, self._all_columns(), include_header=True)
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard:
+            self._copy_to_clipboard_button().click()
+
+        mock_clipboard.return_value.setText.assert_called_once_with(expected_text)
+
+    def test_copy_to_clipboard_respects_selected_columns_order_and_header_setting(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._select_format("CSV")
+        export_panel = self._workspace._export_panel
+        self._move_column(export_panel, 0, len(self._all_columns()) - 1)
+        expected_columns = self._all_columns()[1:] + [self._all_columns()[0]]
+        export_panel._include_header_checkbox.setChecked(False)
+        expected_text = build_csv_text(self._workspace.model, expected_columns, include_header=False)
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard:
+            self._copy_to_clipboard_button().click()
+
+        mock_clipboard.return_value.setText.assert_called_once_with(expected_text)
+
+    def test_copy_to_clipboard_shows_warning_and_does_not_touch_clipboard_when_filtered_result_is_empty(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._workspace._sort_model.add_filter(_RejectAllFilter())
+        self.assertEqual(self._workspace._sort_model.rowCount(), 0)
+        self._select_format("CSV")
+        self._set_follow_table_filters(True)
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard, \
+             patch("youtubeanalyzer.export_panel.warning_message") as mock_warning:
+            self._copy_to_clipboard_button().click()
+
+        mock_warning.assert_called_once()
+        mock_clipboard.return_value.setText.assert_not_called()
+
+    def test_copy_to_clipboard_shows_warning_and_does_not_touch_clipboard_when_no_columns_selected(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("CSV")
+        export_panel = self._workspace._export_panel
+        export_panel._select_none_columns_button.click()
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard, \
+             patch("youtubeanalyzer.export_panel.warning_message") as mock_warning:
+            self._copy_to_clipboard_button().click()
+
+        mock_warning.assert_called_once()
+        mock_clipboard.return_value.setText.assert_not_called()
+
+    def test_copy_to_clipboard_does_not_open_save_dialog_or_touch_last_save_dir(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("CSV")
+
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName") as mock_dialog, \
+             patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard"):
+            self._copy_to_clipboard_button().click()
+
+        mock_dialog.assert_not_called()
+        self.assertEqual(self._settings.get(Settings.LastSaveDir), "")
 
 
 if __name__ == "__main__":

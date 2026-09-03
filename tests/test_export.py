@@ -12,6 +12,8 @@ from youtubeanalyzer.export import (
     export_to_csv,
     export_to_html,
     export_to_txt,
+    build_csv_text,
+    build_txt_text,
     get_exportable_columns
 )
 
@@ -233,6 +235,97 @@ class TestExportModule(unittest.TestCase):
             rows = list(csv.reader(csvfile))
         self.assertEqual(rows[0], [model.FieldNames[ResultFields.VideoTitle], model.FieldNames[ResultFields.VideoViews]])
         os.remove(file)
+
+
+class TestBuildCsvText(unittest.TestCase):
+
+    def test_build_csv_text_matches_exported_file_content_byte_for_byte(self):
+        file = "unit_test_file_build_csv_text.csv"
+        if os.path.isfile(file):
+            os.remove(file)
+        model = create_test_model()
+
+        export_to_csv(file, model)
+        text = build_csv_text(model)
+
+        with open(file, 'rb') as csvfile:
+            file_bytes = csvfile.read()
+        self.assertEqual(file_bytes, text.encode('utf-8'))
+        os.remove(file)
+
+    def test_build_csv_text_matches_exported_file_content_with_subset_columns_and_no_header(self):
+        file = "unit_test_file_build_csv_text_subset.csv"
+        if os.path.isfile(file):
+            os.remove(file)
+        model = create_test_model()
+        columns = [ResultFields.VideoTitle, ResultFields.VideoViews]
+
+        export_to_csv(file, model, columns, include_header=False)
+        text = build_csv_text(model, columns, include_header=False)
+
+        with open(file, 'rb') as csvfile:
+            file_bytes = csvfile.read()
+        self.assertEqual(file_bytes, text.encode('utf-8'))
+        os.remove(file)
+
+    def test_build_csv_text_with_selected_columns_returns_only_subset(self):
+        model = create_test_model()
+        columns = [ResultFields.VideoTitle, ResultFields.VideoViews]
+
+        text = build_csv_text(model, columns)
+
+        rows = list(csv.reader(text.splitlines()))
+        self.assertEqual(rows[0], [model.FieldNames[ResultFields.VideoTitle], model.FieldNames[ResultFields.VideoViews]])
+        self.assertEqual(rows[1], ["Video1", "1234"])
+        self.assertEqual(rows[2], ["Video2", "1235"])
+        self.assertEqual(rows[3], ["Video3", "1236"])
+
+
+class TestBuildTxtText(unittest.TestCase):
+
+    def test_build_txt_text_matches_exported_file_content_byte_for_byte(self):
+        file = "unit_test_file_build_txt_text.txt"
+        if os.path.isfile(file):
+            os.remove(file)
+        model = create_test_model()
+
+        export_to_txt(file, model)
+        text = build_txt_text(model)
+
+        # Read back in text mode (universal newlines): export_to_txt() writes through a text-mode file
+        # handle, which translates "\n" to the platform line separator on write, while build_txt_text()
+        # returns the string as-is (no file involved) - comparing raw bytes would fail on Windows.
+        with open(file, 'r', encoding='utf-8') as txtfile:
+            file_text = txtfile.read()
+        self.assertEqual(file_text, text)
+        os.remove(file)
+
+    def test_build_txt_text_matches_exported_file_content_with_custom_delimiter_and_no_header(self):
+        file = "unit_test_file_build_txt_text_delimiter.txt"
+        if os.path.isfile(file):
+            os.remove(file)
+        model = create_test_model()
+        columns = [ResultFields.VideoTitle, ResultFields.VideoViews]
+
+        export_to_txt(file, model, columns, delimiter="|", include_header=False)
+        text = build_txt_text(model, columns, delimiter="|", include_header=False)
+
+        with open(file, 'r', encoding='utf-8') as txtfile:
+            file_text = txtfile.read()
+        self.assertEqual(file_text, text)
+        os.remove(file)
+
+    def test_build_txt_text_with_selected_columns_and_default_delimiter(self):
+        model = create_test_model()
+        columns = [ResultFields.VideoTitle, ResultFields.VideoViews]
+
+        text = build_txt_text(model, columns)
+
+        lines = text.splitlines()
+        self.assertEqual(lines[0], f"{model.FieldNames[ResultFields.VideoTitle]} {model.FieldNames[ResultFields.VideoViews]}")
+        self.assertEqual(lines[1], "Video1 1234")
+        self.assertEqual(lines[2], "Video2 1235")
+        self.assertEqual(lines[3], "Video3 1236")
 
 
 if __name__ == "__main__":
