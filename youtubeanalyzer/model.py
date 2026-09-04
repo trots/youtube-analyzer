@@ -1,4 +1,6 @@
 import operator
+import re
+from datetime import datetime
 from PySide6.QtCore import (
     Qt,
     QAbstractTableModel,
@@ -18,6 +20,8 @@ from PySide6.QtNetwork import (
 
 
 PublishedDateFormat: str = "%Y-%m-%d %H:%M:%S"
+
+_PublishedDateRe = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def make_result_row(video_title: str, video_published_time: str, video_duration: str,
@@ -224,7 +228,19 @@ class ResultTableModel(QAbstractTableModel):
                     return float(self._result[row][column][:-1])
                 return self._result[row][column]
             case Qt.ItemDataRole.DisplayRole:
-                if column == ResultFields.VideoTitle or column == ResultFields.ChannelTitle:
+                if column == ResultFields.VideoTitle:
+                    if self._mode == ResultTableModel.Mode.Image:
+                        title = self._elide_two_lines(self._result[row][column], preview_size.width())
+                        channel_title = self._result[row][ResultFields.ChannelTitle]
+                        subscribers = '{0:,}'.format(self._result[row][ResultFields.ChannelSubscribers]).replace(',', ' ')
+                        views = '{0:,}'.format(self._result[row][ResultFields.VideoViews]).replace(',', ' ')
+                        published_date = self._format_published_date(self._result[row][ResultFields.VideoPublishedTime])
+                        subscribers_line = f"{subscribers}{self.tr(' subscribers')}"
+                        views_line = f"{views}{self.tr(' views')} · {published_date}"
+                        return f"{title}\n{channel_title}\n{subscribers_line}\n{views_line}"
+                    else:
+                        return None
+                if column == ResultFields.ChannelTitle:
                     if self._mode == ResultTableModel.Mode.Image:
                         return self._elide_two_lines(self._result[row][column], preview_size.width())
                     else:
@@ -279,6 +295,19 @@ class ResultTableModel(QAbstractTableModel):
             del self._pending_requests[url]
 
         reply.deleteLater()
+
+    def _format_published_date(self, video_published_time: str) -> str:
+        if not video_published_time:
+            return ""
+
+        date_part = video_published_time[:10]
+        if _PublishedDateRe.match(date_part):
+            return date_part
+
+        try:
+            return datetime.strptime(video_published_time, PublishedDateFormat).date().isoformat()
+        except ValueError:
+            return video_published_time
 
     def _elide_two_lines(self, text: str, width: int) -> str:
         if not text:
