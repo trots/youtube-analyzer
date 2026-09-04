@@ -20,7 +20,9 @@ from PySide6.QtWidgets import (
     QFrame,
     QListView,
     QToolButton,
-    QStyle
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionViewItem
 )
 from PySide6.QtCharts import (
     QChart
@@ -62,6 +64,14 @@ from youtubeanalyzer.video_table_tools_panel import (
     VideoTableToolsPanel,
     ViewPanel
 )
+
+
+class _LeftAlignedItemDelegate(QStyledItemDelegate):
+    """Left-aligns the text block of a QListView item instead of the default centered alignment."""
+
+    def initStyleOption(self, option: QStyleOptionViewItem, index):
+        super().initStyleOption(option, index)
+        option.displayAlignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
 
 
 class AbstractVideoTableWorkspace(WorkspaceWidget):
@@ -176,6 +186,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._list_vew.setUniformItemSizes(True)
         self._list_vew.setModel(self._sort_model)
         self._list_vew.setModelColumn(1)
+        self._list_vew.setItemDelegate(_LeftAlignedItemDelegate(self._list_vew))
         self._list_vew.setSelectionModel(self._table_view.selectionModel())
         self.model.dataChanged.connect(
             lambda s_index, e_index, roles:
@@ -367,7 +378,8 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._stacked_layout.setCurrentIndex(1)
 
     def _on_preview_scale_changed(self, scale: float):
-        TitleFieldHeightPx: int = 60
+        # Accommodates up to 2 title lines plus the 3 added stats lines (channel, subscribers, views/date).
+        TitleFieldHeightPx: int = 150
         self.model.set_preview_scale(scale)
         item_height: int = self.model.get_preview_size().height() + TitleFieldHeightPx
         self._list_vew.setStyleSheet(f"QListView::item {{ height: {item_height}; }}")

@@ -10,7 +10,8 @@ from PySide6.QtCore import Qt, QModelIndex
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
-    QPushButton
+    QPushButton,
+    QStyleOptionViewItem
 )
 from youtubeanalyzer.settings import (
     Settings
@@ -26,7 +27,8 @@ from youtubeanalyzer.export import (
     build_txt_text
 )
 from youtubeanalyzer.video_table_workspace import (
-    AbstractVideoTableWorkspace
+    AbstractVideoTableWorkspace,
+    _LeftAlignedItemDelegate
 )
 
 
@@ -842,6 +844,38 @@ class TestExportPanel(unittest.TestCase):
 
         mock_dialog.assert_not_called()
         self.assertEqual(self._settings.get(Settings.LastSaveDir), "")
+
+
+class TestGalleryView(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        self._settings_file = "test_video_table_workspace_gallery_settings.ini"
+        if os.path.isfile(self._settings_file):
+            os.remove(self._settings_file)
+        self._settings = Settings("test", self._settings_file)
+        self._settings._impl.clear()
+        self._workspace = _StubVideoTableWorkspace(self._settings)
+
+    def tearDown(self):
+        self._workspace.deleteLater()
+        QApplication.processEvents()
+        if os.path.isfile(self._settings_file):
+            os.remove(self._settings_file)
+
+    def test_list_view_uses_left_aligned_item_delegate(self):
+        self.assertIsInstance(self._workspace._list_vew.itemDelegate(), _LeftAlignedItemDelegate)
+
+    def test_left_aligned_item_delegate_sets_left_top_alignment(self):
+        delegate = _LeftAlignedItemDelegate()
+        option = QStyleOptionViewItem()
+
+        delegate.initStyleOption(option, QModelIndex())
+
+        self.assertEqual(option.displayAlignment, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
 
 if __name__ == "__main__":
