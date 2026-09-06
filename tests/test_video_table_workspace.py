@@ -11,6 +11,7 @@ from PySide6.QtGui import QFont, QMouseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
+    QMenu,
     QPushButton,
     QStyleOptionViewItem
 )
@@ -848,6 +849,129 @@ class TestExportPanel(unittest.TestCase):
 
         mock_dialog.assert_not_called()
         self.assertEqual(self._settings.get(Settings.LastSaveDir), "")
+
+
+class TestColumnVisibilityMenu(unittest.TestCase):
+    """Tests for the header context menu that toggles column visibility (table-column-visibility-spec.md)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        self._settings_file = "test_video_table_workspace_column_visibility_settings.ini"
+        if os.path.isfile(self._settings_file):
+            os.remove(self._settings_file)
+        self._settings = Settings("test", self._settings_file)
+        self._settings._impl.clear()
+        self._workspace = _StubVideoTableWorkspace(self._settings)
+
+    def tearDown(self):
+        self._workspace.deleteLater()
+        QApplication.processEvents()
+        if os.path.isfile(self._settings_file):
+            os.remove(self._settings_file)
+
+    def _open_header_context_menu(self, workspace=None) -> QMenu:
+        """Triggers the header context menu handler and returns the QMenu it built, without
+        actually showing it (QMenu.exec() would otherwise block waiting for a user click)."""
+        workspace = workspace or self._workspace
+        captured_menus = []
+
+        def fake_exec(menu_self, *args, **kwargs):
+            captured_menus.append(menu_self)
+
+        with patch.object(QMenu, "exec", fake_exec):
+            workspace._on_header_context_menu_requested(QPoint(0, 0))
+
+        return captured_menus[0]
+
+    def test_menu_has_one_checkable_action_per_column(self):
+        menu = self._open_header_context_menu()
+
+        actions = menu.actions()
+
+        self.assertEqual(len(actions), self._workspace.model.columnCount())
+        for column, action in enumerate(actions):
+            self.assertTrue(action.isCheckable())
+            self.assertTrue(action.isChecked())
+            self.assertEqual(action.data(), column)
+            expected_title = self._workspace.model.headerData(
+                column, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
+            self.assertEqual(action.text(), expected_title)
+
+    def test_unchecking_action_hides_column(self):
+        menu = self._open_header_context_menu()
+        action = menu.actions()[0]
+
+        action.setChecked(False)
+
+        self.assertTrue(self._workspace._table_view.isColumnHidden(0))
+
+    def test_rechecking_action_shows_column_again(self):
+        menu = self._open_header_context_menu()
+        menu.actions()[0].setChecked(False)
+        self.assertTrue(self._workspace._table_view.isColumnHidden(0))
+
+        menu = self._open_header_context_menu()
+        menu.actions()[0].setChecked(True)
+
+        self.assertFalse(self._workspace._table_view.isColumnHidden(0))
+
+    def test_menu_reflects_already_hidden_columns(self):
+        self._workspace._table_view.setColumnHidden(1, True)
+
+        menu = self._open_header_context_menu()
+
+        self.assertFalse(menu.actions()[1].isChecked())
+
+    def test_last_visible_column_action_is_disabled(self):
+        column_count = self._workspace.model.columnCount()
+        for column in range(1, column_count):
+            self._workspace._table_view.setColumnHidden(column, True)
+
+        menu = self._open_header_context_menu()
+
+        self.assertFalse(menu.actions()[0].isEnabled())
+        for action in menu.actions()[1:]:
+            self.assertTrue(action.isEnabled())
+
+    def test_hiding_down_to_one_column_disables_its_action_on_reopen(self):
+        column_count = self._workspace.model.columnCount()
+        for column in range(1, column_count):
+            menu = self._open_header_context_menu()
+            menu.actions()[column].setChecked(False)
+
+        menu = self._open_header_context_menu()
+
+        self.assertFalse(menu.actions()[0].isEnabled())
+
+    def test_column_visibility_persists_across_workspace_recreation(self):
+        menu = self._open_header_context_menu()
+        menu.actions()[0].setChecked(False)
+        menu.actions()[2].setChecked(False)
+
+        self._workspace.save_state()
+
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            workspace.load_state()
+            self.assertTrue(workspace._table_view.isColumnHidden(0))
+            self.assertFalse(workspace._table_view.isColumnHidden(1))
+            self.assertTrue(workspace._table_view.isColumnHidden(2))
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_gallery_mode_unaffected_by_hidden_column(self):
+        self._workspace.model.set_data(make_rows(1))
+        menu = self._open_header_context_menu()
+        menu.actions()[0].setChecked(False)
+
+        self._workspace._on_view_mode_changed(ResultTableModel.Mode.Image)
+
+        self.assertEqual(self._workspace._stacked_layout.currentIndex(), 1)
+        self.assertEqual(self._workspace._list_vew.modelColumn(), 1)
 
 
 class TestGalleryView(unittest.TestCase):
