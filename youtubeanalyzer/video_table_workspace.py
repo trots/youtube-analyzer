@@ -32,7 +32,8 @@ from PySide6.QtWidgets import (
     QToolButton,
     QStyle,
     QStyledItemDelegate,
-    QStyleOptionViewItem
+    QStyleOptionViewItem,
+    QMenu
 )
 from PySide6.QtCharts import (
     QChart
@@ -275,6 +276,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._table_view.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
         self._table_view.setSortingEnabled(True)
         self._table_view.horizontalHeader().setSectionsMovable(True)
+        self._table_view.horizontalHeader().setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._table_view.horizontalHeader().customContextMenuRequested.connect(
+            self._on_header_context_menu_requested)
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
 
         self._stacked_layout.addWidget(self._table_view)
@@ -534,6 +538,29 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
     def _update_export_panel_enabled(self, *_args):
         self._export_panel.setEnabled(self.model.rowCount() > 0)
+
+    def _on_header_context_menu_requested(self, pos: QPoint):
+        header = self._table_view.horizontalHeader()
+        column_count = self.model.columnCount()
+        visible_column_count = sum(
+            1 for column in range(column_count) if not self._table_view.isColumnHidden(column))
+
+        menu = QMenu(self)
+        for column in range(column_count):
+            title = self.model.headerData(column, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
+            action = menu.addAction(title)
+            action.setCheckable(True)
+            is_hidden = self._table_view.isColumnHidden(column)
+            action.setChecked(not is_hidden)
+            action.setEnabled(is_hidden or visible_column_count > 1)
+            action.setData(column)
+            action.toggled.connect(self._on_column_visibility_toggled)
+
+        menu.exec(header.mapToGlobal(pos))
+
+    def _on_column_visibility_toggled(self, checked: bool):
+        column = self.sender().data()
+        self._table_view.setColumnHidden(column, not checked)
 
     def _on_copy_action(self):
         field = self.sender().data()
