@@ -141,5 +141,31 @@ class TestResultTableModelGalleryDisplay(unittest.TestCase):
         self.assertNotEqual(regular, bold)
 
 
+class TestGetFieldForColumn(unittest.TestCase):
+
+    def test_get_field_for_column_is_inverse_of_map_field_to_table_column(self):
+        model = create_model()
+
+        for column in range(model.columnCount()):
+            field = model.get_field_for_column(column)
+            self.assertEqual(model.map_field_to_table_column(field), column)
+
+    def test_get_field_for_column_matches_default_table_columns(self):
+        model = create_model()
+
+        columns = [model.get_field_for_column(column) for column in range(model.columnCount())]
+
+        self.assertEqual(columns, [
+            ResultFields.VideoRelevanceNumber,
+            ResultFields.VideoTitle,
+            ResultFields.VideoPublishedTime,
+            ResultFields.VideoDuration,
+            ResultFields.VideoViews,
+            ResultFields.ChannelTitle,
+            ResultFields.ChannelSubscribers,
+            ResultFields.ViewRate,
+        ])
+
+
 if __name__ == "__main__":
     unittest.main()

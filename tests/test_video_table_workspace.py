@@ -71,14 +71,14 @@ class TestExportPanel(unittest.TestCase):
     # mirroring ExportPanel._FORMAT_SETTINGS_KEYS, for tests that check per-format independence directly
     # against QSettings.
     _FORMAT_KEYS = {
-        "XLSX": (Settings.ExportFollowTableFiltersXlsx, Settings.ExportSelectedColumnsXlsx,
-                 Settings.ExportColumnOrderXlsx, Settings.ExportIncludeHeaderXlsx),
-        "CSV": (Settings.ExportFollowTableFiltersCsv, Settings.ExportSelectedColumnsCsv,
-                Settings.ExportColumnOrderCsv, Settings.ExportIncludeHeaderCsv),
-        "HTML": (Settings.ExportFollowTableFiltersHtml, Settings.ExportSelectedColumnsHtml,
-                 Settings.ExportColumnOrderHtml, Settings.ExportIncludeHeaderHtml),
-        "TXT": (Settings.ExportFollowTableFiltersTxt, Settings.ExportSelectedColumnsTxt,
-                Settings.ExportColumnOrderTxt, Settings.ExportIncludeHeaderTxt),
+        "XLSX": (Settings.ExportFollowTableFiltersXlsx, Settings.ExportFollowTableColumnsXlsx,
+                 Settings.ExportSelectedColumnsXlsx, Settings.ExportColumnOrderXlsx, Settings.ExportIncludeHeaderXlsx),
+        "CSV": (Settings.ExportFollowTableFiltersCsv, Settings.ExportFollowTableColumnsCsv,
+                Settings.ExportSelectedColumnsCsv, Settings.ExportColumnOrderCsv, Settings.ExportIncludeHeaderCsv),
+        "HTML": (Settings.ExportFollowTableFiltersHtml, Settings.ExportFollowTableColumnsHtml,
+                 Settings.ExportSelectedColumnsHtml, Settings.ExportColumnOrderHtml, Settings.ExportIncludeHeaderHtml),
+        "TXT": (Settings.ExportFollowTableFiltersTxt, Settings.ExportFollowTableColumnsTxt,
+                Settings.ExportSelectedColumnsTxt, Settings.ExportColumnOrderTxt, Settings.ExportIncludeHeaderTxt),
     }
 
     @classmethod
@@ -123,6 +123,9 @@ class TestExportPanel(unittest.TestCase):
 
     def _set_follow_table_filters(self, checked: bool):
         self._workspace._export_panel._follow_table_filters_checkbox.setChecked(checked)
+
+    def _set_follow_table_columns(self, checked: bool):
+        self._workspace._export_panel._follow_table_columns_checkbox.setChecked(checked)
 
     def _all_columns(self):
         return list(self._workspace._export_panel._exportable_columns)
@@ -656,8 +659,9 @@ class TestExportPanel(unittest.TestCase):
         export_panel._include_header_checkbox.setChecked(False)
 
         for format_label in ("CSV", "HTML", "TXT"):
-            follow_key, selected_key, order_key, header_key = self._FORMAT_KEYS[format_label]
+            follow_key, follow_columns_key, selected_key, order_key, header_key = self._FORMAT_KEYS[format_label]
             self.assertFalse(self._settings.get(follow_key))
+            self.assertFalse(self._settings.get(follow_columns_key))
             self.assertIsNone(self._settings.get(selected_key))
             self.assertIsNone(self._settings.get(order_key))
             self.assertTrue(self._settings.get(header_key))
@@ -850,6 +854,142 @@ class TestExportPanel(unittest.TestCase):
         mock_dialog.assert_not_called()
         self.assertEqual(self._settings.get(Settings.LastSaveDir), "")
 
+    def test_follow_table_columns_checkbox_unchecked_by_default(self):
+        self.assertFalse(self._settings.get(Settings.ExportFollowTableColumnsXlsx))
+        self.assertFalse(self._workspace._export_panel._follow_table_columns_checkbox.isChecked())
+
+    def test_follow_table_columns_checkbox_restored_from_settings(self):
+        self._settings.set(Settings.ExportFollowTableColumnsXlsx, True)
+        workspace = _StubVideoTableWorkspace(self._settings)
+        try:
+            self.assertTrue(workspace._export_panel._follow_table_columns_checkbox.isChecked())
+        finally:
+            workspace.deleteLater()
+            QApplication.processEvents()
+
+    def test_checking_follow_table_columns_checkbox_saves_setting(self):
+        self._set_follow_table_columns(True)
+        self.assertTrue(self._settings.get(Settings.ExportFollowTableColumnsXlsx))
+
+        self._set_follow_table_columns(False)
+        self.assertFalse(self._settings.get(Settings.ExportFollowTableColumnsXlsx))
+
+    def test_follow_table_columns_is_independent_of_follow_table_filters(self):
+        self._set_follow_table_columns(True)
+        self._set_follow_table_filters(False)
+        self.assertTrue(self._workspace._export_panel._follow_table_columns_checkbox.isChecked())
+        self.assertFalse(self._workspace._export_panel._follow_table_filters_checkbox.isChecked())
+
+        self._set_follow_table_columns(False)
+        self._set_follow_table_filters(True)
+        self.assertFalse(self._workspace._export_panel._follow_table_columns_checkbox.isChecked())
+        self.assertTrue(self._workspace._export_panel._follow_table_filters_checkbox.isChecked())
+
+    def test_column_list_and_buttons_disabled_while_follow_table_columns_checked(self):
+        export_panel = self._workspace._export_panel
+        self.assertTrue(export_panel._column_list.isEnabled())
+        self.assertTrue(export_panel._select_all_columns_button.isEnabled())
+        self.assertTrue(export_panel._select_none_columns_button.isEnabled())
+
+        self._set_follow_table_columns(True)
+        self.assertFalse(export_panel._column_list.isEnabled())
+        self.assertFalse(export_panel._select_all_columns_button.isEnabled())
+        self.assertFalse(export_panel._select_none_columns_button.isEnabled())
+
+        self._set_follow_table_columns(False)
+        self.assertTrue(export_panel._column_list.isEnabled())
+        self.assertTrue(export_panel._select_all_columns_button.isEnabled())
+        self.assertTrue(export_panel._select_none_columns_button.isEnabled())
+
+    def test_column_list_disabled_state_restored_when_switching_format(self):
+        export_panel = self._workspace._export_panel
+        self._set_follow_table_columns(True)  # Affects XLSX (the default format) only.
+
+        self._select_format("CSV")
+        self.assertTrue(export_panel._column_list.isEnabled())
+
+        self._select_format("XLSX")
+        self.assertFalse(export_panel._column_list.isEnabled())
+
+    def test_toggling_follow_table_columns_does_not_change_saved_selection_or_order(self):
+        export_panel = self._workspace._export_panel
+        all_columns = self._all_columns()
+        self._set_column_checked(export_panel, 0, False)
+        self._move_column(export_panel, 1, len(all_columns) - 1)
+        export_panel._save_column_order()
+        expected_order = self._column_ids(export_panel)
+        expected_checked = self._column_checked_states(export_panel)
+
+        self._set_follow_table_columns(True)
+        self._set_follow_table_columns(False)
+
+        self.assertEqual(self._column_ids(export_panel), expected_order)
+        self.assertEqual(self._column_checked_states(export_panel), expected_checked)
+
+    def test_export_uses_visible_table_columns_when_follow_table_columns_checked(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        self._workspace._table_view.setColumnHidden(0, True)  # Hides the "#" (VideoRelevanceNumber) column.
+        self._set_follow_table_columns(True)
+        expected_columns = [
+            ResultFields.VideoTitle, ResultFields.VideoPublishedTime, ResultFields.VideoDuration,
+            ResultFields.VideoViews, ResultFields.ChannelTitle, ResultFields.ChannelSubscribers,
+            ResultFields.ViewRate]
+
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_columns,
+                                             include_header=True)
+
+    def test_export_uses_visible_table_columns_in_current_visual_order(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        self._workspace._table_view.horizontalHeader().moveSection(0, 1)  # Swaps the first two columns.
+        self._set_follow_table_columns(True)
+        expected_columns = [
+            ResultFields.VideoTitle, ResultFields.VideoRelevanceNumber, ResultFields.VideoPublishedTime,
+            ResultFields.VideoDuration, ResultFields.VideoViews, ResultFields.ChannelTitle,
+            ResultFields.ChannelSubscribers, ResultFields.ViewRate]
+
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with("out.xlsx", self._workspace.model, expected_columns,
+                                             include_header=True)
+
+    def test_export_ignores_manual_column_selection_when_follow_table_columns_checked(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._select_format("XLSX")
+        export_panel = self._workspace._export_panel
+        export_panel._select_none_columns_button.click()
+        self._set_follow_table_columns(True)
+
+        with patch("youtubeanalyzer.export_panel.QFileDialog.getSaveFileName",
+                   return_value=("out.xlsx", "")), \
+             patch("youtubeanalyzer.export_panel.export_to_xlsx") as mock_export:
+            self._export_button().click()
+
+        mock_export.assert_called_once_with(
+            "out.xlsx", self._workspace.model, self._workspace.get_visible_table_columns(), include_header=True)
+
+    def test_copy_to_clipboard_uses_visible_table_columns_when_follow_table_columns_checked(self):
+        self._workspace.model.set_data(make_rows(2))
+        self._select_format("CSV")
+        self._workspace._table_view.setColumnHidden(0, True)
+        self._set_follow_table_columns(True)
+        expected_columns = self._workspace.get_visible_table_columns()
+        expected_text = build_csv_text(self._workspace.model, expected_columns, include_header=True)
+
+        with patch("youtubeanalyzer.export_panel.QGuiApplication.clipboard") as mock_clipboard:
+            self._copy_to_clipboard_button().click()
+
+        mock_clipboard.return_value.setText.assert_called_once_with(expected_text)
+
 
 class TestColumnVisibilityMenu(unittest.TestCase):
     """Tests for the header context menu that toggles column visibility (table-column-visibility-spec.md)."""
@@ -972,6 +1112,29 @@ class TestColumnVisibilityMenu(unittest.TestCase):
 
         self.assertEqual(self._workspace._stacked_layout.currentIndex(), 1)
         self.assertEqual(self._workspace._list_vew.modelColumn(), 1)
+
+    def test_get_visible_table_columns_returns_all_fields_in_default_order(self):
+        expected = [self._workspace.model.get_field_for_column(column)
+                    for column in range(self._workspace.model.columnCount())]
+
+        self.assertEqual(self._workspace.get_visible_table_columns(), expected)
+
+    def test_get_visible_table_columns_excludes_hidden_columns(self):
+        self._workspace._table_view.setColumnHidden(1, True)
+
+        columns = self._workspace.get_visible_table_columns()
+
+        self.assertNotIn(self._workspace.model.get_field_for_column(1), columns)
+        self.assertEqual(len(columns), self._workspace.model.columnCount() - 1)
+
+    def test_get_visible_table_columns_reflects_visual_reorder(self):
+        header = self._workspace._table_view.horizontalHeader()
+        header.moveSection(0, 1)  # Swaps the first two columns.
+
+        columns = self._workspace.get_visible_table_columns()
+
+        self.assertEqual(columns[0], self._workspace.model.get_field_for_column(1))
+        self.assertEqual(columns[1], self._workspace.model.get_field_for_column(0))
 
 
 class TestGalleryView(unittest.TestCase):

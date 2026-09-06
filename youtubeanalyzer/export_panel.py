@@ -43,30 +43,35 @@ from youtubeanalyzer.export import (
 
 
 class ExportPanel(QWidget):
-    # Maps each export format to the SettingsKey quadruple ("follow_table_filters" / "selected_columns" /
-    # "column_order" / "include_header") that stores the settings for that format. Used as the single
-    # point of "format -> SettingsKey" lookup, instead of scattering per-format branches through the code.
+    # Maps each export format to the SettingsKey group ("follow_table_filters" / "follow_table_columns" /
+    # "selected_columns" / "column_order" / "include_header") that stores the settings for that format.
+    # Used as the single point of "format -> SettingsKey" lookup, instead of scattering per-format
+    # branches through the code.
     _FORMAT_SETTINGS_KEYS = {
         "xlsx": {
             "follow_table_filters": Settings.ExportFollowTableFiltersXlsx,
+            "follow_table_columns": Settings.ExportFollowTableColumnsXlsx,
             "selected_columns": Settings.ExportSelectedColumnsXlsx,
             "column_order": Settings.ExportColumnOrderXlsx,
             "include_header": Settings.ExportIncludeHeaderXlsx,
         },
         "csv": {
             "follow_table_filters": Settings.ExportFollowTableFiltersCsv,
+            "follow_table_columns": Settings.ExportFollowTableColumnsCsv,
             "selected_columns": Settings.ExportSelectedColumnsCsv,
             "column_order": Settings.ExportColumnOrderCsv,
             "include_header": Settings.ExportIncludeHeaderCsv,
         },
         "html": {
             "follow_table_filters": Settings.ExportFollowTableFiltersHtml,
+            "follow_table_columns": Settings.ExportFollowTableColumnsHtml,
             "selected_columns": Settings.ExportSelectedColumnsHtml,
             "column_order": Settings.ExportColumnOrderHtml,
             "include_header": Settings.ExportIncludeHeaderHtml,
         },
         "txt": {
             "follow_table_filters": Settings.ExportFollowTableFiltersTxt,
+            "follow_table_columns": Settings.ExportFollowTableColumnsTxt,
             "selected_columns": Settings.ExportSelectedColumnsTxt,
             "column_order": Settings.ExportColumnOrderTxt,
             "include_header": Settings.ExportIncludeHeaderTxt,
@@ -74,12 +79,13 @@ class ExportPanel(QWidget):
     }
 
     def __init__(self, settings: Settings, model: ResultTableModel, sort_model: ResultSortFilterProxyModel,
-                 get_data_name, parent: QWidget = None):
+                 get_data_name, get_visible_table_columns, parent: QWidget = None):
         super().__init__(parent)
         self._settings: Settings = settings
         self._model: ResultTableModel = model
         self._sort_model: ResultSortFilterProxyModel = sort_model
         self._get_data_name = get_data_name
+        self._get_visible_table_columns = get_visible_table_columns
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -97,15 +103,23 @@ class ExportPanel(QWidget):
         if saved_format_index is not None:
             self._format_combo.setCurrentIndex(saved_format_index)
 
+        self._include_header_checkbox = QCheckBox(self.tr("Include header row"))
+        self._include_header_checkbox.setChecked(self._settings.get(self._current_keys()["include_header"]))
+        self._include_header_checkbox.toggled.connect(self._on_include_header_toggled)
+        main_layout.addWidget(self._include_header_checkbox)
+
         self._follow_table_filters_checkbox = QCheckBox(self.tr("Follow table filters and sort order"))
         self._follow_table_filters_checkbox.setChecked(self._settings.get(self._current_keys()["follow_table_filters"]))
         self._follow_table_filters_checkbox.toggled.connect(self._on_follow_table_filters_toggled)
         main_layout.addWidget(self._follow_table_filters_checkbox)
 
-        self._include_header_checkbox = QCheckBox(self.tr("Include header row"))
-        self._include_header_checkbox.setChecked(self._settings.get(self._current_keys()["include_header"]))
-        self._include_header_checkbox.toggled.connect(self._on_include_header_toggled)
-        main_layout.addWidget(self._include_header_checkbox)
+        self._follow_table_columns_checkbox = QCheckBox(self.tr("Follow table columns"))
+        self._follow_table_columns_checkbox.setToolTip(self.tr(
+            "Export the columns currently visible in the table, in their current order, instead of the "
+            "list below. Video/channel links are not exported, since they are not separate table columns."))
+        self._follow_table_columns_checkbox.setChecked(self._settings.get(self._current_keys()["follow_table_columns"]))
+        self._follow_table_columns_checkbox.toggled.connect(self._on_follow_table_columns_toggled)
+        main_layout.addWidget(self._follow_table_columns_checkbox)
 
         main_layout.addWidget(QLabel(self.tr("Columns:")))
 
@@ -125,6 +139,7 @@ class ExportPanel(QWidget):
         self._column_list.itemChanged.connect(self._on_column_item_changed)
         self._column_list.model().rowsMoved.connect(self._on_columns_reordered)
         main_layout.addWidget(self._column_list)
+        self._update_column_controls_enabled()
 
         self._txt_delimiter_label = QLabel(self.tr("TXT delimiter:"))
         main_layout.addWidget(self._txt_delimiter_label)
@@ -176,6 +191,11 @@ class ExportPanel(QWidget):
         self._follow_table_filters_checkbox.setChecked(self._settings.get(keys["follow_table_filters"]))
         self._follow_table_filters_checkbox.blockSignals(False)
 
+        self._follow_table_columns_checkbox.blockSignals(True)
+        self._follow_table_columns_checkbox.setChecked(self._settings.get(keys["follow_table_columns"]))
+        self._follow_table_columns_checkbox.blockSignals(False)
+        self._update_column_controls_enabled()
+
         self._include_header_checkbox.blockSignals(True)
         self._include_header_checkbox.setChecked(self._settings.get(keys["include_header"]))
         self._include_header_checkbox.blockSignals(False)
@@ -187,6 +207,16 @@ class ExportPanel(QWidget):
 
     def _on_follow_table_filters_toggled(self, checked: bool):
         self._settings.set(self._current_keys()["follow_table_filters"], checked)
+
+    def _on_follow_table_columns_toggled(self, checked: bool):
+        self._settings.set(self._current_keys()["follow_table_columns"], checked)
+        self._update_column_controls_enabled()
+
+    def _update_column_controls_enabled(self):
+        enabled = not self._follow_table_columns_checkbox.isChecked()
+        self._column_list.setEnabled(enabled)
+        self._select_all_columns_button.setEnabled(enabled)
+        self._select_none_columns_button.setEnabled(enabled)
 
     def _on_include_header_toggled(self, checked: bool):
         self._settings.set(self._current_keys()["include_header"], checked)
@@ -282,15 +312,19 @@ class ExportPanel(QWidget):
         self._save_selected_columns()
 
     def _prepare_export_data(self):
-        """Returns (export_model, selected_columns) based on the current "follow table filters" and
-        column-selection settings, or None (after showing the relevant warning) if there is nothing to
-        export. Shared by file export and copy-to-clipboard, so both apply the same checks."""
+        """Returns (export_model, selected_columns) based on the current "follow table filters",
+        "follow table columns" and column-selection settings, or None (after showing the relevant
+        warning) if there is nothing to export. Shared by file export and copy-to-clipboard, so both
+        apply the same checks."""
         follow_table_filters = self._follow_table_filters_checkbox.isChecked()
         export_model = self._sort_model if follow_table_filters else self._model
         if follow_table_filters and self._sort_model.rowCount() == 0:
             warning_message(self, self.tr("No rows match the current table filters"))
             return None
-        selected_columns = self._selected_columns()
+        if self._follow_table_columns_checkbox.isChecked():
+            selected_columns = self._get_visible_table_columns()
+        else:
+            selected_columns = self._selected_columns()
         if not selected_columns:
             warning_message(self, self.tr("Select at least one column to export"))
             return None
