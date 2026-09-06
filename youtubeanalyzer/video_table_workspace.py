@@ -350,7 +350,8 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
         self._analytics_widget.set_current_chart_index(int(self._settings.get(Settings.LastActiveChartIndex)))
 
-        self._export_panel = ExportPanel(self._settings, self.model, self._sort_model, self.get_data_name, self)
+        self._export_panel = ExportPanel(
+            self._settings, self.model, self._sort_model, self.get_data_name, self.get_visible_table_columns, self)
         self._side_tab_widget.addTab(self._export_panel, self.tr("Export"))
         self._export_panel.setEnabled(self.model.rowCount() > 0)
         self.model.rowsInserted.connect(self._update_export_panel_enabled)
@@ -378,6 +379,17 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
     def get_data_name(self):
         raise "AbstractVideoTableWorkspace.get_data_name is not implemented"
+
+    def get_visible_table_columns(self) -> list[int]:
+        """Returns the ResultFields of the columns currently visible in the table, in their current
+        left-to-right visual order (reflecting any hiding/reordering done via the header context menu)."""
+        header = self._table_view.horizontalHeader()
+        columns = []
+        for visual_index in range(header.count()):
+            logical_index = header.logicalIndex(visual_index)
+            if not header.isSectionHidden(logical_index):
+                columns.append(self.model.get_field_for_column(logical_index))
+        return columns
 
     def load_state(self):
         request_limit = int(self._settings.get(Settings.RequestLimit))

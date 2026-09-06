@@ -186,6 +186,9 @@ class ResultTableModel(QAbstractTableModel):
                 return i
         return -1
 
+    def get_field_for_column(self, column: int) -> ResultFields:
+        return self._fields[column]
+
     def get_row_data(self, row: int):
         if row is None or row < 0 or row >= len(self._result):
             return None
