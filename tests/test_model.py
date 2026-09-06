@@ -6,6 +6,7 @@ if "QT_QPA_PLATFORM" not in os.environ:
 import unittest
 from datetime import timedelta
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QFontMetrics
 from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel,
@@ -30,6 +31,12 @@ def video_title_display(model: ResultTableModel) -> str:
     return model.data(index, Qt.ItemDataRole.DisplayRole)
 
 
+def video_title_role_data(model: ResultTableModel, role: int):
+    column = model.map_field_to_table_column(ResultFields.VideoTitle)
+    index = model.index(0, column)
+    return model.data(index, role)
+
+
 class TestResultTableModelGalleryDisplay(unittest.TestCase):
 
     def test_normal_mode_video_title_display_role_is_none(self):
@@ -42,6 +49,7 @@ class TestResultTableModelGalleryDisplay(unittest.TestCase):
                              channel_subscribers=234567, video_title="Video Title",
                              channel_title="Channel Title")
         model.set_mode(ResultTableModel.Mode.Image)
+        model.set_preview_scale(3.0)  # wide enough that no stats line needs eliding
 
         display_text = video_title_display(model)
         lines = display_text.split("\n")
@@ -55,6 +63,7 @@ class TestResultTableModelGalleryDisplay(unittest.TestCase):
     def test_image_mode_published_date_from_api_format_is_truncated_to_date(self):
         model = create_model(video_published_time="2021-01-02 03:04:05")
         model.set_mode(ResultTableModel.Mode.Image)
+        model.set_preview_scale(3.0)  # wide enough that no stats line needs eliding
 
         display_text = video_title_display(model)
 
@@ -64,10 +73,25 @@ class TestResultTableModelGalleryDisplay(unittest.TestCase):
     def test_image_mode_published_date_falls_back_to_raw_text_for_non_standard_format(self):
         model = create_model(video_published_time="8 hours ago")
         model.set_mode(ResultTableModel.Mode.Image)
+        model.set_preview_scale(3.0)  # wide enough that no stats line needs eliding
 
         display_text = video_title_display(model)
 
         self.assertEqual(display_text.split("\n")[3], "1 234 567 views · 8 hours ago")
+
+    def test_image_mode_stats_lines_are_elided_when_too_narrow_for_the_card(self):
+        # At the default preview scale the card is narrower than a typical stats line - each
+        # of channel/subscribers/views lines must stay on one physical line (never wrap), so
+        # they get elided instead, just like the title already is.
+        model = create_model(views=1234567, channel_subscribers=234567, channel_title="Channel Title")
+        model.set_mode(ResultTableModel.Mode.Image)
+
+        display_text = video_title_display(model)
+        lines = display_text.split("\n")
+
+        self.assertEqual(len(lines), 4)
+        self.assertIn("…", lines[2])
+        self.assertIn("…", lines[3])
 
     def test_format_published_date_directly(self):
         model = create_model()
@@ -75,6 +99,46 @@ class TestResultTableModelGalleryDisplay(unittest.TestCase):
         self.assertEqual(model._format_published_date(""), "")
         self.assertEqual(model._format_published_date("2020-05-18 10:20:30"), "2020-05-18")
         self.assertEqual(model._format_published_date("8 hours ago"), "8 hours ago")
+
+    def test_image_mode_video_link_role_returns_video_link(self):
+        model = create_model()
+        model.set_mode(ResultTableModel.Mode.Image)
+
+        self.assertEqual(video_title_role_data(model, ResultTableModel.VideoLinkRole), "https://video1")
+
+    def test_image_mode_channel_link_role_returns_channel_link(self):
+        model = create_model()
+        model.set_mode(ResultTableModel.Mode.Image)
+
+        self.assertEqual(video_title_role_data(model, ResultTableModel.ChannelLinkRole), "https://channel1")
+
+    def test_normal_mode_video_link_role_is_none(self):
+        model = create_model()
+        model.set_mode(ResultTableModel.Mode.Normal)
+
+        self.assertIsNone(video_title_role_data(model, ResultTableModel.VideoLinkRole))
+
+    def test_normal_mode_channel_link_role_is_none(self):
+        model = create_model()
+        model.set_mode(ResultTableModel.Mode.Normal)
+
+        self.assertIsNone(video_title_role_data(model, ResultTableModel.ChannelLinkRole))
+
+    def test_elide_two_lines_bold_flag_uses_bold_font_metrics(self):
+        model = create_model()
+        text = "A moderately long video title used to compare bold and regular width"
+        width = 200
+
+        # Force a distinctly different metrics object for the bold path, to verify that
+        # `bold=True` actually selects `_bold_font_metrics` instead of `_font_metrics`
+        # (real bold/regular glyph widths may be identical under some headless/offscreen
+        # font backends, which would make this test unreliable without the override).
+        model._bold_font_metrics = QFontMetrics(QFont("Sans Serif", 40))
+
+        regular = model._elide_two_lines(text, width, bold=False)
+        bold = model._elide_two_lines(text, width, bold=True)
+
+        self.assertNotEqual(regular, bold)
 
 
 if __name__ == "__main__":
