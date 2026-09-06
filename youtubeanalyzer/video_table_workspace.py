@@ -320,6 +320,8 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._list_vew.setModelColumn(1)
         self._list_vew.setItemDelegate(_LeftAlignedItemDelegate(self._list_vew))
         self._list_vew.setSelectionModel(self._table_view.selectionModel())
+        self._list_vew.setContextMenuPolicy(Qt.ContextMenuPolicy.ActionsContextMenu)
+        self._list_vew.addActions(self._table_view.actions())
         self.model.dataChanged.connect(
             lambda s_index, e_index, roles:
                 self._list_vew.viewport().update() if Qt.ItemDataRole.DecorationRole in roles else None)
