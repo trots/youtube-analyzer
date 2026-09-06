@@ -1,14 +1,24 @@
+import html
 from PySide6.QtCore import (
     QSize,
+    QPoint,
+    QRect,
+    QUrl,
     Qt,
     QModelIndex,
     QItemSelection
 )
 from PySide6.QtGui import (
     QAction,
-    QGuiApplication
+    QGuiApplication,
+    QDesktopServices,
+    QTextDocument,
+    QAbstractTextDocumentLayout,
+    QMouseEvent,
+    QPalette
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -67,11 +77,132 @@ from youtubeanalyzer.video_table_tools_panel import (
 
 
 class _LeftAlignedItemDelegate(QStyledItemDelegate):
-    """Left-aligns the text block of a QListView item instead of the default centered alignment."""
+    """Renders the gallery card text block left/top-aligned, with a bold clickable video title
+    and a clickable channel name, using a QTextDocument (standard Qt rich-text delegate pattern)."""
 
     def initStyleOption(self, option: QStyleOptionViewItem, index):
         super().initStyleOption(option, index)
         option.displayAlignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+
+    def paint(self, painter, option: QStyleOptionViewItem, index):
+        options = QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+
+        text_rect = self._text_rect(options)
+        document = self._build_document(index, options.font)
+        document.setTextWidth(max(text_rect.width(), 0))
+
+        style = options.widget.style() if options.widget else QApplication.style()
+        options.text = ""
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, options, painter, options.widget)
+
+        painter.save()
+        painter.translate(text_rect.topLeft())
+        local_rect = text_rect.translated(-text_rect.topLeft())
+        painter.setClipRect(local_rect)
+        context = QAbstractTextDocumentLayout.PaintContext()
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.fillRect(
+                local_rect, option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight))
+            context.palette.setColor(
+                QPalette.ColorRole.Text,
+                option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText))
+        document.documentLayout().draw(painter, context)
+        painter.restore()
+
+    def anchor_at(self, option: QStyleOptionViewItem, index, pos: QPoint) -> str:
+        """Returns the href of the link located at viewport position `pos` for the given item, or "" if none."""
+        options = QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+
+        text_rect = self._text_rect(options)
+        if not text_rect.contains(pos):
+            return ""
+
+        document = self._build_document(index, options.font)
+        document.setTextWidth(max(text_rect.width(), 0))
+        return document.documentLayout().anchorAt(pos - text_rect.topLeft())
+
+    def _text_rect(self, option: QStyleOptionViewItem) -> QRect:
+        """Returns the area available for the text block: below the decoration (preview image),
+        spanning the rest of the item's rect.
+        """
+        style = option.widget.style() if option.widget else QApplication.style()
+        decoration_rect = style.subElementRect(QStyle.SubElement.SE_ItemViewItemDecoration, option, option.widget)
+        spacing = style.pixelMetric(QStyle.PixelMetric.PM_FocusFrameVMargin, option, option.widget)
+        top = decoration_rect.bottom() + 1 + max(spacing, 0)
+        return QRect(option.rect.left(), top, option.rect.width(), max(option.rect.bottom() - top + 1, 0))
+
+    def _build_document(self, index, font) -> QTextDocument:
+        document = QTextDocument()
+        document.setDefaultFont(font)
+
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        if not text:
+            return document
+
+        lines: list[str] = text.split("\n")
+        if len(lines) < 4:
+            # Unexpected format - render as plain escaped text without markup.
+            document.setHtml("<br>".join(html.escape(line) for line in lines))
+            return document
+
+        video_link = index.data(ResultTableModel.VideoLinkRole)
+        channel_link = index.data(ResultTableModel.ChannelLinkRole)
+
+        title_lines: list[str] = lines[:-3]
+        channel_line, subscribers_line, views_line = lines[-3:]
+
+        html_parts: list[str] = []
+        for title_line in title_lines:
+            escaped_title = html.escape(title_line)
+            if video_link:
+                escaped_title = f'<a href="{html.escape(str(video_link))}">{escaped_title}</a>'
+            html_parts.append(f"<b>{escaped_title}</b>")
+
+        escaped_channel = html.escape(channel_line)
+        if channel_link:
+            escaped_channel = f'<a href="{html.escape(str(channel_link))}">{escaped_channel}</a>'
+        html_parts.append(escaped_channel)
+
+        html_parts.append(html.escape(subscribers_line))
+        html_parts.append(html.escape(views_line))
+
+        document.setHtml("<br>".join(html_parts))
+        return document
+
+
+class _GalleryListView(QListView):
+    """QListView that shows a pointing-hand cursor over the video/channel link text of a gallery card
+    and opens the link in the default browser when clicked."""
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        super().mouseMoveEvent(event)
+        if self._anchor_at(event.position().toPoint()):
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.unsetCursor()
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            anchor = self._anchor_at(event.position().toPoint())
+            if anchor:
+                QDesktopServices.openUrl(QUrl(anchor))
+
+    def _anchor_at(self, pos: QPoint) -> str:
+        index = self.indexAt(pos)
+        if not index.isValid():
+            return ""
+
+        delegate = self.itemDelegateForIndex(index)
+        if not isinstance(delegate, _LeftAlignedItemDelegate):
+            return ""
+
+        option = QStyleOptionViewItem()
+        self.initViewItemOption(option)
+        option.rect = self.visualRect(index)
+        return delegate.anchor_at(option, index, pos)
 
 
 class AbstractVideoTableWorkspace(WorkspaceWidget):
@@ -179,11 +310,12 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._preview_actions_menu = PreviewActionsMenu(self._settings, PreviewActionsMenu.Actions.Copy, self._table_view)
         self._table_view.addActions(self._preview_actions_menu.actions())
 
-        self._list_vew = QListView()
+        self._list_vew = _GalleryListView()
         self._list_vew.setViewMode(QListView.ViewMode.IconMode)
         self._list_vew.setResizeMode(QListView.ResizeMode.Adjust)
         self._list_vew.setIconSize(QSize(160, 90))
         self._list_vew.setUniformItemSizes(True)
+        self._list_vew.setMouseTracking(True)
         self._list_vew.setModel(self._sort_model)
         self._list_vew.setModelColumn(1)
         self._list_vew.setItemDelegate(_LeftAlignedItemDelegate(self._list_vew))
@@ -378,8 +510,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._stacked_layout.setCurrentIndex(1)
 
     def _on_preview_scale_changed(self, scale: float):
-        # Accommodates up to 2 title lines plus the 3 added stats lines (channel, subscribers, views/date).
-        TitleFieldHeightPx: int = 150
+        TitleFieldHeightPx: int = 120
         self.model.set_preview_scale(scale)
         item_height: int = self.model.get_preview_size().height() + TitleFieldHeightPx
         self._list_vew.setStyleSheet(f"QListView::item {{ height: {item_height}; }}")

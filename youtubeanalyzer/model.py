@@ -62,6 +62,8 @@ class ResultFields:
 
 class ResultTableModel(QAbstractTableModel):
     SortRole: int = Qt.ItemDataRole.UserRole + 1
+    VideoLinkRole: int = Qt.ItemDataRole.UserRole + 2
+    ChannelLinkRole: int = Qt.ItemDataRole.UserRole + 3
 
     DefaultPreviewSizePx: QSize = QSize(160, 90)
 
@@ -80,6 +82,9 @@ class ResultTableModel(QAbstractTableModel):
         self._pending_requests: dict[str, int] = {}  # {url: row}
         self._pending_replies: dict[str, int] = {}  # {url: row}
         self._font_metrics = QFontMetrics(QFont())
+        bold_font = QFont()
+        bold_font.setBold(True)
+        self._bold_font_metrics = QFontMetrics(bold_font)
 
         self.FieldNames = [
             self.tr("Title"),
@@ -227,16 +232,27 @@ class ResultTableModel(QAbstractTableModel):
                 if column == ResultFields.ViewRate:
                     return float(self._result[row][column][:-1])
                 return self._result[row][column]
+            case ResultTableModel.VideoLinkRole:
+                if column == ResultFields.VideoTitle and self._mode == ResultTableModel.Mode.Image:
+                    return self._result[row][ResultFields.VideoLink]
+                return None
+            case ResultTableModel.ChannelLinkRole:
+                if column == ResultFields.VideoTitle and self._mode == ResultTableModel.Mode.Image:
+                    return self._result[row][ResultFields.ChannelLink]
+                return None
             case Qt.ItemDataRole.DisplayRole:
                 if column == ResultFields.VideoTitle:
                     if self._mode == ResultTableModel.Mode.Image:
-                        title = self._elide_two_lines(self._result[row][column], preview_size.width())
+                        title = self._elide_two_lines(self._result[row][column], preview_size.width(), bold=True)
                         channel_title = self._result[row][ResultFields.ChannelTitle]
                         subscribers = '{0:,}'.format(self._result[row][ResultFields.ChannelSubscribers]).replace(',', ' ')
                         views = '{0:,}'.format(self._result[row][ResultFields.VideoViews]).replace(',', ' ')
                         published_date = self._format_published_date(self._result[row][ResultFields.VideoPublishedTime])
                         subscribers_line = f"{subscribers}{self.tr(' subscribers')}"
                         views_line = f"{views}{self.tr(' views')} · {published_date}"
+                        channel_title = self._elide_one_line(channel_title, preview_size.width())
+                        subscribers_line = self._elide_one_line(subscribers_line, preview_size.width())
+                        views_line = self._elide_one_line(views_line, preview_size.width())
                         return f"{title}\n{channel_title}\n{subscribers_line}\n{views_line}"
                     else:
                         return None
@@ -309,11 +325,18 @@ class ResultTableModel(QAbstractTableModel):
         except ValueError:
             return video_published_time
 
-    def _elide_two_lines(self, text: str, width: int) -> str:
+    def _elide_one_line(self, text: str, width: int) -> str:
+        if not text:
+            return ""
+        return self._font_metrics.elidedText(text, Qt.TextElideMode.ElideRight, width)
+
+    def _elide_two_lines(self, text: str, width: int, bold: bool = False) -> str:
         if not text:
             return ""
 
-        if self._font_metrics.horizontalAdvance(text) <= width:
+        font_metrics: QFontMetrics = self._bold_font_metrics if bold else self._font_metrics
+
+        if font_metrics.horizontalAdvance(text) <= width:
             return text
 
         words: list[str] = text.split()
@@ -325,11 +348,11 @@ class ResultTableModel(QAbstractTableModel):
             word: str = words[i]
             test_line: str = first_line + " " + word
 
-            if self._font_metrics.horizontalAdvance(test_line + "\n") <= width:
+            if font_metrics.horizontalAdvance(test_line + "\n") <= width:
                 first_line = test_line
             else:
                 remainder: str = " ".join(words[i:])
-                line2: str = self._font_metrics.elidedText(remainder, Qt.TextElideMode.ElideRight, width)
+                line2: str = font_metrics.elidedText(remainder, Qt.TextElideMode.ElideRight, width)
                 return f"{first_line}\n{line2}"
 
         return first_line

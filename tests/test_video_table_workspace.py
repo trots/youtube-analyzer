@@ -6,7 +6,8 @@ if "QT_QPA_PLATFORM" not in os.environ:
 import unittest
 from datetime import timedelta
 from unittest.mock import patch
-from PySide6.QtCore import Qt, QModelIndex
+from PySide6.QtCore import Qt, QModelIndex, QEvent, QPoint, QPointF, QRect
+from PySide6.QtGui import QFont, QMouseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -17,6 +18,8 @@ from youtubeanalyzer.settings import (
     Settings
 )
 from youtubeanalyzer.model import (
+    ResultFields,
+    ResultTableModel,
     make_result_row
 )
 from youtubeanalyzer.filters import (
@@ -28,7 +31,8 @@ from youtubeanalyzer.export import (
 )
 from youtubeanalyzer.video_table_workspace import (
     AbstractVideoTableWorkspace,
-    _LeftAlignedItemDelegate
+    _LeftAlignedItemDelegate,
+    _GalleryListView
 )
 
 
@@ -876,6 +880,196 @@ class TestGalleryView(unittest.TestCase):
         delegate.initStyleOption(option, QModelIndex())
 
         self.assertEqual(option.displayAlignment, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+
+    def test_gallery_list_view_is_gallery_list_view_subclass(self):
+        self.assertIsInstance(self._workspace._list_vew, _GalleryListView)
+
+    def test_gallery_list_view_has_mouse_tracking_enabled(self):
+        self.assertTrue(self._workspace._list_vew.hasMouseTracking())
+
+    def _prepare_gallery_with_row(self) -> QRect:
+        """Loads a single row in Image mode, lays out the list view and returns the card's item rect.
+
+        Offsets used by the tests below (title/channel/stats line positions relative to the item
+        rect's top) were determined empirically for the default icon size (160x90) and item height
+        set by AbstractVideoTableWorkspace._on_preview_scale_changed(1.0)."""
+        self._workspace.model.set_data(make_rows(1))
+        self._workspace.model.set_mode(ResultTableModel.Mode.Image)
+        self._workspace._list_vew.resize(400, 400)
+        self._workspace._list_vew.show()
+        QApplication.processEvents()
+        index = self._workspace._list_vew.model().index(0, self._workspace._list_vew.modelColumn())
+        return self._workspace._list_vew.visualRect(index)
+
+    def test_anchor_at_video_title_line_returns_video_link(self):
+        rect = self._prepare_gallery_with_row()
+
+        anchor = self._workspace._list_vew._anchor_at(QPoint(rect.left() + 5, rect.top() + 100))
+
+        self.assertEqual(anchor, "https://video0")
+
+    def test_anchor_at_channel_line_returns_channel_link(self):
+        rect = self._prepare_gallery_with_row()
+
+        anchor = self._workspace._list_vew._anchor_at(QPoint(rect.left() + 5, rect.top() + 115))
+
+        self.assertEqual(anchor, "https://channel0")
+
+    def test_anchor_at_stats_line_returns_empty(self):
+        rect = self._prepare_gallery_with_row()
+
+        anchor = self._workspace._list_vew._anchor_at(QPoint(rect.left() + 5, rect.top() + 160))
+
+        self.assertEqual(anchor, "")
+
+    def test_anchor_at_outside_any_item_returns_empty(self):
+        self._prepare_gallery_with_row()
+
+        self.assertEqual(self._workspace._list_vew._anchor_at(QPoint(-10, -10)), "")
+
+    def test_mouse_move_over_link_text_sets_pointing_hand_cursor(self):
+        rect = self._prepare_gallery_with_row()
+        pos = QPointF(rect.left() + 5, rect.top() + 100)
+        event = QMouseEvent(QEvent.Type.MouseMove, pos, pos, Qt.MouseButton.NoButton,
+                            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+
+        self._workspace._list_vew.mouseMoveEvent(event)
+
+        self.assertEqual(self._workspace._list_vew.cursor().shape(), Qt.CursorShape.PointingHandCursor)
+
+    def test_mouse_move_over_stats_line_keeps_regular_cursor(self):
+        rect = self._prepare_gallery_with_row()
+        pos = QPointF(rect.left() + 5, rect.top() + 160)
+        event = QMouseEvent(QEvent.Type.MouseMove, pos, pos, Qt.MouseButton.NoButton,
+                            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+
+        self._workspace._list_vew.mouseMoveEvent(event)
+
+        self.assertEqual(self._workspace._list_vew.cursor().shape(), Qt.CursorShape.ArrowCursor)
+
+    def test_click_on_video_title_opens_video_link(self):
+        rect = self._prepare_gallery_with_row()
+        pos = QPointF(rect.left() + 5, rect.top() + 100)
+        event = QMouseEvent(QEvent.Type.MouseButtonRelease, pos, pos, Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+
+        with patch("youtubeanalyzer.video_table_workspace.QDesktopServices.openUrl") as mock_open_url:
+            self._workspace._list_vew.mouseReleaseEvent(event)
+
+        mock_open_url.assert_called_once()
+        self.assertEqual(mock_open_url.call_args[0][0].toString(), "https://video0")
+
+    def test_click_on_channel_name_opens_channel_link(self):
+        rect = self._prepare_gallery_with_row()
+        pos = QPointF(rect.left() + 5, rect.top() + 115)
+        event = QMouseEvent(QEvent.Type.MouseButtonRelease, pos, pos, Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+
+        with patch("youtubeanalyzer.video_table_workspace.QDesktopServices.openUrl") as mock_open_url:
+            self._workspace._list_vew.mouseReleaseEvent(event)
+
+        mock_open_url.assert_called_once()
+        self.assertEqual(mock_open_url.call_args[0][0].toString(), "https://channel0")
+
+    def test_click_on_stats_line_does_not_open_any_link(self):
+        rect = self._prepare_gallery_with_row()
+        pos = QPointF(rect.left() + 5, rect.top() + 160)
+        event = QMouseEvent(QEvent.Type.MouseButtonRelease, pos, pos, Qt.MouseButton.LeftButton,
+                            Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+
+        with patch("youtubeanalyzer.video_table_workspace.QDesktopServices.openUrl") as mock_open_url:
+            self._workspace._list_vew.mouseReleaseEvent(event)
+
+        mock_open_url.assert_not_called()
+
+    def test_click_on_link_still_selects_the_item(self):
+        rect = self._prepare_gallery_with_row()
+        pos = QPointF(rect.left() + 5, rect.top() + 100)
+        press_event = QMouseEvent(QEvent.Type.MouseButtonPress, pos, pos, Qt.MouseButton.LeftButton,
+                                  Qt.MouseButton.LeftButton, Qt.KeyboardModifier.NoModifier)
+        release_event = QMouseEvent(QEvent.Type.MouseButtonRelease, pos, pos, Qt.MouseButton.LeftButton,
+                                    Qt.MouseButton.NoButton, Qt.KeyboardModifier.NoModifier)
+
+        with patch("youtubeanalyzer.video_table_workspace.QDesktopServices.openUrl"):
+            self._workspace._list_vew.mousePressEvent(press_event)
+            self._workspace._list_vew.mouseReleaseEvent(release_event)
+
+        index = self._workspace._list_vew.model().index(0, self._workspace._list_vew.modelColumn())
+        self.assertTrue(self._workspace._list_vew.selectionModel().isSelected(index))
+
+
+class TestLeftAlignedItemDelegateRichText(unittest.TestCase):
+    """Tests for the QTextDocument built by _LeftAlignedItemDelegate for a gallery card."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._app = QApplication.instance() or QApplication([])
+
+    def _make_index(self, video_title="Video Title", channel_title="Channel Title"):
+        rows = [make_result_row(
+            video_title, "2020-05-18 10:20:30", "00:34", 1234567, "https://video1", channel_title,
+            "https://channel1", 234567, 12345, "2020-05-18", "https://preview1.jpg", "https://logo1.jpg",
+            ["word1"], timedelta(seconds=34), 0, "shorts", [])]
+        # Kept alive on self - a QModelIndex is only valid as long as its source model is alive.
+        self._model = ResultTableModel(None)
+        self._model.set_data(rows)
+        self._model.set_mode(ResultTableModel.Mode.Image)
+        self._model.set_preview_scale(3.0)  # wide enough that no stats line needs eliding
+        column = self._model.map_field_to_table_column(ResultFields.VideoTitle)
+        return self._model.index(0, column)
+
+    def test_video_title_is_bold_and_linked_to_video_link(self):
+        index = self._make_index()
+        delegate = _LeftAlignedItemDelegate()
+
+        html_text = delegate._build_document(index, QFont()).toHtml()
+
+        self.assertIn('href="https://video1"', html_text)
+        self.assertIn("font-weight:700", html_text)
+
+    def test_channel_name_is_linked_to_channel_link(self):
+        index = self._make_index()
+        delegate = _LeftAlignedItemDelegate()
+
+        html_text = delegate._build_document(index, QFont()).toHtml()
+
+        self.assertIn('href="https://channel1"', html_text)
+
+    def test_stats_lines_are_plain_text(self):
+        index = self._make_index()
+        delegate = _LeftAlignedItemDelegate()
+
+        document = delegate._build_document(index, QFont())
+        plain_text = document.toPlainText()
+
+        self.assertIn("234 567 subscribers", plain_text)
+        self.assertIn("1 234 567 views", plain_text)
+
+    def test_title_html_is_escaped(self):
+        index = self._make_index(video_title="<b>Fake</b> & Title")
+        delegate = _LeftAlignedItemDelegate()
+
+        html_text = delegate._build_document(index, QFont()).toHtml()
+
+        self.assertNotIn("<b>Fake</b>", html_text)
+        self.assertIn("&amp;", html_text)
+
+    def test_two_line_wrapped_title_is_fully_bold_and_linked(self):
+        # A title long enough to wrap into two physical lines (see ResultTableModel._elide_two_lines);
+        # both physical lines belong to the title and must both be bold and linked, while the
+        # channel/subscribers/views lines that follow must not be affected by the extra line.
+        long_title = "Very very very long video title that should wrap into two lines for sure yes indeed"
+        index = self._make_index(video_title=long_title)
+        delegate = _LeftAlignedItemDelegate()
+
+        display_text = index.data(Qt.ItemDataRole.DisplayRole)
+        self.assertEqual(len(display_text.split("\n")), 5, "precondition: title must wrap to 2 lines")
+
+        html_text = delegate._build_document(index, QFont()).toHtml()
+
+        self.assertEqual(html_text.count('href="https://video1"'), 2)
+        self.assertEqual(html_text.count("font-weight:700"), 2)
+        self.assertIn('href="https://channel1"', html_text)
 
 
 if __name__ == "__main__":
