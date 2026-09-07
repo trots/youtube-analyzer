@@ -20,6 +20,7 @@ class EventBus(QObject, metaclass=QSingleton):
     create_new_tab = Signal(str, object)  # workspace_uid, workspace_data
     quit_requested = Signal()
     workspace_created = Signal(object)  # workspace
+    results_updated = Signal()  # emitted when a workspace's results data has changed
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

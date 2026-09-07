@@ -443,6 +443,10 @@
         <source>Export...</source>
         <translation>Экспорт...</translation>
     </message>
+    <message>
+        <source>Results fetched: </source>
+        <translation>Результаты получены: </translation>
+    </message>
 </context>
 <context>
     <name>PluginDetailsDialog</name>
