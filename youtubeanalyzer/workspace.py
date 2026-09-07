@@ -25,6 +25,9 @@ class WorkspaceWidget(StateSaveable, QWidget):
     def has_data_to_export(self):
         return False
 
+    def get_fetched_at(self):
+        return None
+
     def set_workspace_data(self, workspace_data: object):
         pass
 

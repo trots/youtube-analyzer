@@ -4,7 +4,7 @@ if "QT_QPA_PLATFORM" not in os.environ:
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QFontMetrics
 from youtubeanalyzer.model import (
@@ -165,6 +165,34 @@ class TestGetFieldForColumn(unittest.TestCase):
             ResultFields.ChannelSubscribers,
             ResultFields.ViewRate,
         ])
+
+
+class TestResultTableModelFetchedAt(unittest.TestCase):
+
+    def test_get_fetched_at_is_none_before_any_data(self):
+        model = ResultTableModel(None)
+        self.assertIsNone(model.get_fetched_at())
+
+    def test_set_data_without_fetched_at_uses_current_time(self):
+        model = ResultTableModel(None)
+        before = datetime.now()
+        model.set_data([])
+        after = datetime.now()
+        fetched_at = model.get_fetched_at()
+        self.assertIsNotNone(fetched_at)
+        self.assertTrue(before <= fetched_at <= after)
+
+    def test_set_data_with_explicit_fetched_at_uses_it(self):
+        model = ResultTableModel(None)
+        explicit_time = datetime(2020, 1, 2, 3, 4, 5)
+        model.set_data([], explicit_time)
+        self.assertEqual(model.get_fetched_at(), explicit_time)
+
+    def test_clear_resets_fetched_at_to_none(self):
+        model = create_model()
+        self.assertIsNotNone(model.get_fetched_at())
+        model.clear()
+        self.assertIsNone(model.get_fetched_at())
 
 
 if __name__ == "__main__":

@@ -44,6 +44,9 @@ from youtubeanalyzer.theme import (
 from youtubeanalyzer.settings import (
     Settings
 )
+from youtubeanalyzer.eventbus import (
+    EventBus
+)
 from youtubeanalyzer.model import (
     ResultFields,
     ResultTableModel
@@ -357,6 +360,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self.model.rowsInserted.connect(self._update_export_panel_enabled)
         self.model.rowsRemoved.connect(self._update_export_panel_enabled)
         self.model.modelReset.connect(self._update_export_panel_enabled)
+        self.model.modelReset.connect(self._on_model_reset)
 
         self._main_splitter = QSplitter(Qt.Orientation.Horizontal)
         self._main_splitter.addWidget(central_widget)
@@ -376,6 +380,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
     def has_data_to_export(self):
         return True
+
+    def get_fetched_at(self):
+        return self.model.get_fetched_at()
 
     def get_data_name(self):
         raise "AbstractVideoTableWorkspace.get_data_name is not implemented"
@@ -484,7 +491,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
     def _push_history(self):
         if self._history_index < len(self._history) - 1:
             self._history = self._history[:self._history_index + 1]
-        self._history.append((self.model.get_data(), self._get_history_context()))
+        self._history.append((self.model.get_data(), self._get_history_context(), self.model.get_fetched_at()))
 
         history_limit: int = int(self._settings.get(Settings.HistoryLimit))
         if history_limit > 0 and len(self._history) > history_limit:
@@ -506,8 +513,8 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._apply_history_entry()
 
     def _apply_history_entry(self):
-        row_data, context = self._history[self._history_index]
-        self.model.set_data(row_data)
+        row_data, context, fetched_at = self._history[self._history_index]
+        self.model.set_data(row_data, fetched_at)
         self._sort_model.sort(-1)
         self._details_widget.clear()
         self._on_insert_widgets()
@@ -550,6 +557,9 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
     def _update_export_panel_enabled(self, *_args):
         self._export_panel.setEnabled(self.model.rowCount() > 0)
+
+    def _on_model_reset(self):
+        EventBus().results_updated.emit()
 
     def _on_header_context_menu_requested(self, pos: QPoint):
         header = self._table_view.horizontalHeader()

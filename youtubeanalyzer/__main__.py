@@ -1,5 +1,6 @@
 import sys
 import traceback
+from datetime import datetime
 
 from PySide6.QtCore import (
     Qt,
@@ -213,9 +214,15 @@ class MainWindow(StateSaveable, QMainWindow):
         central_widget.setLayout(v_layout)
         self.setCentralWidget(central_widget)
 
+        self._results_fetched_label = QLabel()
+        self.statusBar().addPermanentWidget(self._results_fetched_label)
+
         self._create_new_tab()
         event_bus.create_new_tab.connect(self._create_new_tab)
         event_bus.workspace_created.connect(self._update_export_action_state)
+        event_bus.workspace_created.connect(self._update_results_fetched_label)
+        event_bus.results_updated.connect(self._update_results_fetched_label)
+        self._main_tab_widget.currentChanged.connect(self._update_results_fetched_label)
 
     def showEvent(self, _event: QShowEvent):
         if self._restore_geometry_on_show:
@@ -283,6 +290,16 @@ class MainWindow(StateSaveable, QMainWindow):
         tab_widget = self._main_tab_widget.currentWidget()
         current_workspace: WorkspaceWidget = tab_widget.current_workspace() if tab_widget else None
         self._export_action.setEnabled(current_workspace is not None and current_workspace.has_data_to_export())
+
+    def _update_results_fetched_label(self, *_args):
+        tab_widget = self._main_tab_widget.currentWidget()
+        current_workspace: WorkspaceWidget = tab_widget.current_workspace() if tab_widget else None
+        fetched_at: datetime = current_workspace.get_fetched_at() if current_workspace else None
+        if fetched_at is None:
+            self._results_fetched_label.setText("")
+        else:
+            self._results_fetched_label.setText(
+                self.tr("Results fetched: ") + fetched_at.strftime("%Y-%m-%d %H:%M:%S"))
 
     def _on_clear_selection(self):
         tab_widget = self._main_tab_widget.currentWidget()

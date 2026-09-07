@@ -76,6 +76,7 @@ class ResultTableModel(QAbstractTableModel):
         self._mode = ResultTableModel.Mode.Normal
         self._preview_scale: float = 1.0
         self._result = []
+        self._fetched_at: datetime | None = None
         self._network_manager = QNetworkAccessManager()
         self._network_manager.setTransferTimeout(30000)
         self._network_manager.finished.connect(self._on_preview_image_reply)
@@ -139,9 +140,10 @@ class ResultTableModel(QAbstractTableModel):
         ]
         self._sort_cast = {}
 
-    def set_data(self, result):
+    def set_data(self, result, fetched_at: datetime | None = None):
         self.beginResetModel()
         self._result = result
+        self._fetched_at = fetched_at if fetched_at is not None else datetime.now()
         self._sort_cast.clear()
         self._network_manager.clearConnectionCache()
         self._network_manager.clearAccessCache()
@@ -152,6 +154,7 @@ class ResultTableModel(QAbstractTableModel):
     def clear(self):
         self.beginResetModel()
         self._result = []
+        self._fetched_at = None
         self._network_manager.clearConnectionCache()
         self._network_manager.clearAccessCache()
         self._pending_requests.clear()
@@ -160,6 +163,9 @@ class ResultTableModel(QAbstractTableModel):
 
     def get_data(self) -> list:
         return self._result
+
+    def get_fetched_at(self) -> datetime | None:
+        return self._fetched_at
 
     def set_mode(self, mode: Mode):
         self.beginResetModel()

@@ -4,8 +4,8 @@ if "QT_QPA_PLATFORM" not in os.environ:
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 import unittest
-from datetime import timedelta
-from unittest.mock import patch
+from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 from PySide6.QtCore import Qt, QModelIndex, QEvent, QPoint, QPointF, QRect
 from PySide6.QtGui import QFont, QMouseEvent
 from PySide6.QtWidgets import (
@@ -17,6 +17,9 @@ from PySide6.QtWidgets import (
 )
 from youtubeanalyzer.settings import (
     Settings
+)
+from youtubeanalyzer.eventbus import (
+    EventBus
 )
 from youtubeanalyzer.model import (
     ResultFields,
@@ -991,6 +994,81 @@ class TestExportPanel(unittest.TestCase):
             self._copy_to_clipboard_button().click()
 
         mock_clipboard.return_value.setText.assert_called_once_with(expected_text)
+
+
+class TestResultsFetchedAt(unittest.TestCase):
+    """Tests for exposing the moment results were fetched (results-fetched-status-bar-spec.md)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._app = QApplication.instance() or QApplication([])
+
+    def setUp(self):
+        self._settings_file = "test_video_table_workspace_fetched_at_settings.ini"
+        if os.path.isfile(self._settings_file):
+            os.remove(self._settings_file)
+        self._settings = Settings("test", self._settings_file)
+        self._settings._impl.clear()
+        self._workspace = _StubVideoTableWorkspace(self._settings)
+
+    def tearDown(self):
+        self._workspace.deleteLater()
+        QApplication.processEvents()
+        if os.path.isfile(self._settings_file):
+            os.remove(self._settings_file)
+
+    def test_get_fetched_at_is_none_for_fresh_workspace(self):
+        self.assertIsNone(self._workspace.get_fetched_at())
+
+    def test_get_fetched_at_matches_model_after_set_data(self):
+        self._workspace.model.set_data(make_rows(1))
+        self.assertEqual(self._workspace.get_fetched_at(), self._workspace.model.get_fetched_at())
+        self.assertIsNotNone(self._workspace.get_fetched_at())
+
+    def test_get_fetched_at_is_none_after_clear(self):
+        self._workspace.model.set_data(make_rows(1))
+        self._workspace.model.clear()
+        self.assertIsNone(self._workspace.get_fetched_at())
+
+    def test_history_back_restores_fetched_at_of_that_entry(self):
+        first_fetched_at = datetime(2020, 1, 1, 10, 0, 0)
+        second_fetched_at = datetime(2021, 2, 2, 11, 0, 0)
+
+        self._workspace.model.set_data(make_rows(1), first_fetched_at)
+        self._workspace._push_history()
+        self._workspace.model.set_data(make_rows(2), second_fetched_at)
+        self._workspace._push_history()
+
+        self.assertEqual(self._workspace.get_fetched_at(), second_fetched_at)
+
+        self._workspace._on_history_back()
+
+        self.assertEqual(self._workspace.get_fetched_at(), first_fetched_at)
+
+        self._workspace._on_history_forward()
+
+        self.assertEqual(self._workspace.get_fetched_at(), second_fetched_at)
+
+    def test_set_data_emits_results_updated_event(self):
+        event_bus = EventBus()
+        callback = Mock()
+        event_bus.results_updated.connect(callback)
+        try:
+            self._workspace.model.set_data(make_rows(1))
+            callback.assert_called_once()
+        finally:
+            event_bus.results_updated.disconnect(callback)
+
+    def test_clear_emits_results_updated_event(self):
+        self._workspace.model.set_data(make_rows(1))
+        event_bus = EventBus()
+        callback = Mock()
+        event_bus.results_updated.connect(callback)
+        try:
+            self._workspace.model.clear()
+            callback.assert_called_once()
+        finally:
+            event_bus.results_updated.disconnect(callback)
 
 
 class TestColumnVisibilityMenu(unittest.TestCase):
