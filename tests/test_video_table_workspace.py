@@ -886,6 +886,7 @@ class TestExportPanel(unittest.TestCase):
         self.assertTrue(self._workspace._export_panel._follow_table_filters_checkbox.isChecked())
 
     def test_column_list_and_buttons_disabled_while_follow_table_columns_checked(self):
+        self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
         export_panel = self._workspace._export_panel
         self.assertTrue(export_panel._column_list.isEnabled())
         self.assertTrue(export_panel._select_all_columns_button.isEnabled())
@@ -902,6 +903,7 @@ class TestExportPanel(unittest.TestCase):
         self.assertTrue(export_panel._select_none_columns_button.isEnabled())
 
     def test_column_list_disabled_state_restored_when_switching_format(self):
+        self._workspace.model.set_data(make_rows(1))  # ExportPanel (and its buttons) is disabled at 0 rows
         export_panel = self._workspace._export_panel
         self._set_follow_table_columns(True)  # Affects XLSX (the default format) only.
 
@@ -1013,18 +1015,11 @@ class TestColumnVisibilityMenu(unittest.TestCase):
             os.remove(self._settings_file)
 
     def _open_header_context_menu(self, workspace=None) -> QMenu:
-        """Triggers the header context menu handler and returns the QMenu it built, without
-        actually showing it (QMenu.exec() would otherwise block waiting for a user click)."""
+        """Returns the QMenu built by the header context menu handler, without ever calling
+        QMenu.exec() (patching it to avoid its real, blocking modal event loop is unreliable with
+        PySide6/Shiboken and can hang instead of being intercepted - see _build_column_visibility_menu())."""
         workspace = workspace or self._workspace
-        captured_menus = []
-
-        def fake_exec(menu_self, *args, **kwargs):
-            captured_menus.append(menu_self)
-
-        with patch.object(QMenu, "exec", fake_exec):
-            workspace._on_header_context_menu_requested(QPoint(0, 0))
-
-        return captured_menus[0]
+        return workspace._build_column_visibility_menu()
 
     def test_menu_has_one_checkable_action_per_column(self):
         menu = self._open_header_context_menu()
@@ -1091,6 +1086,11 @@ class TestColumnVisibilityMenu(unittest.TestCase):
         menu.actions()[0].setChecked(False)
         menu.actions()[2].setChecked(False)
 
+        # save_state() falls back to FixedTabWidget.get_last_visible_index() when the workspace was
+        # never shown - it stays None until a hide/resize event has fired at least once, which
+        # load_state() can't handle (int(None)) - show() once here to avoid that unrelated pitfall.
+        self._workspace.show()
+        QApplication.processEvents()
         self._workspace.save_state()
 
         workspace = _StubVideoTableWorkspace(self._settings)

@@ -16,10 +16,10 @@
         <translation>Программа для анализа поисковой выдачи YouTube</translation>
     </message>
     <message>
-        <source>Based on: PySide6, youtube-search-python,
- google-api-python-client, XlsxWriter, isodate.</source>
-        <translation>Основан на: PySide6, youtube-search-python,
- google-api-python-client, XlsxWriter, isodate.</translation>
+        <source>Based on: PySide6, google-api-python-client,
+ XlsxWriter, isodate.</source>
+        <translation>Основан на: PySide6, google-api-python-client,
+ XlsxWriter, isodate.</translation>
     </message>
     <message>
         <source>Web site:</source>

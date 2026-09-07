@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import traceback
 import isodate
 from PySide6.QtCore import (
     QObject,
@@ -16,51 +15,14 @@ from PySide6.QtNetwork import (
     QNetworkRequest,
     QNetworkReply
 )
-from youtubesearchpython import (
-    VideosSearch,
-    Channel,
-    Video
-)
 import googleapiclient.discovery
 from youtubeanalyzer.model import (
     PublishedDateFormat,
     make_result_row,
-    ResultFields,
     ResultTableModel,
     DataCache,
     VideoCategory
 )
-
-
-def view_count_to_int(count_str: str):
-    if not count_str:
-        return 0
-    parts = count_str.split()
-    if len(parts) == 0:
-        return 0
-    processed_count = parts[0].replace(",", "")
-    return int(processed_count) if processed_count.isdigit() else 0
-
-
-def subcriber_count_to_int(count_str: str):
-    if not count_str:
-        return 0
-    parts = count_str.split()
-    if len(parts) == 0:
-        return 0
-    number_letter = parts[0]
-    match number_letter[-1]:
-        case "K":
-            multiplier = 1000
-        case "M":
-            multiplier = 1000000
-        case "B":
-            multiplier = 1000000000
-        case _:
-            multiplier = 1
-    if multiplier == 1:
-        return int(number_letter)
-    return int(float(number_letter[:-1]) * multiplier)
 
 
 def timedelta_to_str(td: timedelta):
@@ -204,114 +166,6 @@ class AbstractYoutubeEngine:
 
     def trends(self, category_id: int, region_code: str = "US"):
         raise "AbstractYoutubeEngine.trends is not implemented"
-
-
-class YoutubeGrepEngine(AbstractYoutubeEngine):
-    def __init__(self, model: ResultTableModel, request_limit: int):
-        super().__init__(model, request_limit)
-
-    def search(self, request_text: str):
-        self.errorDetails = None
-        self.errorReason = None
-        try:
-            videos_search = self._create_video_searcher(request_text)
-            result = []
-            has_next_page = True
-            counter = 0
-            while has_next_page:
-                result_array = videos_search.result()["result"]
-                for video in result_array:
-                    views = view_count_to_int(video["viewCount"]["text"])
-                    video_info = self._get_video_info(video["id"])
-                    channel_info = self._get_channel_info(video["channel"]["id"])
-                    channel_views = view_count_to_int(channel_info["views"])
-                    channel_subscribers = subcriber_count_to_int(channel_info["subscribers"]["simpleText"])
-                    preview_link = video["thumbnails"][0]["url"] if len(video["thumbnails"]) > 0 else ""
-                    channel_logo_link = channel_info["thumbnails"][0]["url"] if len(channel_info["thumbnails"]) > 0 else ""
-                    video_duration_d = YoutubeGrepEngine.duration_to_timedelta(video["duration"])
-                    video_duration = timedelta_to_str(video_duration_d)
-                    result.append(
-                        make_result_row(
-                            video["title"], video["publishedTime"], video_duration,
-                            views, video["link"], channel_info["title"], channel_info["url"],
-                            channel_subscribers, channel_views, channel_info["joinedDate"], preview_link, channel_logo_link,
-                            video_info["keywords"], video_duration_d, counter, video["type"], []))
-                    counter = counter + 1
-                    if counter == self._request_limit:
-                        break
-                if counter == self._request_limit:
-                    break
-                has_next_page = videos_search.next()
-            self._model.set_data(result)
-            self._model.set_sort_cast(ResultFields.VideoPublishedTime, YoutubeGrepEngine.published_time_sort_cast)
-            return True
-        except Exception as exc:
-            print(exc)
-            self.errorDetails = traceback.format_exc()
-            return False
-
-    def get_video_categories(self, region_code: str = "US", output_language="en_US"):
-        self.errorDetails = "YoutubeGrepEngine doesn't support video categories"
-        self.errorReason = "Not supported"
-        return []
-
-    def trends(self, category_id: int, region_code: str = "US"):
-        self.errorDetails = "YoutubeGrepEngine doesn't support trends"
-        self.errorReason = "Not supported"
-        return False
-
-    @staticmethod
-    def duration_to_timedelta(duration: str):
-        if not duration:
-            return timedelta(seconds=0)
-        parts = duration.split(":")
-        if len(parts) <= 1 or len(parts) > 3:
-            return timedelta(seconds=0)
-        parts.reverse()
-        if len(parts) >= 2:
-            seconds = int(parts[0])
-            seconds = seconds + int(parts[1]) * 60
-        if len(parts) >= 3:
-            seconds = seconds + int(parts[2]) * 3600
-        return timedelta(seconds=seconds)
-
-    @staticmethod
-    def published_time_to_timedelta(published_time: str):
-        if not published_time:
-            return None
-        published_time = published_time.replace("Streamed ", "")
-        number = int(published_time.split(" ")[0])
-        if "day" in published_time:
-            return timedelta(days=number)
-        elif "week" in published_time:
-            return timedelta(days=(number * 7))
-        elif "month" in published_time:
-            return timedelta(days=(number * 30))
-        elif "year" in published_time:
-            return timedelta(days=(number * 360))
-        elif "hour" in published_time:
-            return timedelta(hours=number)
-        elif "min" in published_time:
-            return timedelta(minutes=number)
-        elif "sec" in published_time:
-            return timedelta(seconds=number)
-        return None
-
-    @staticmethod
-    def published_time_sort_cast(published_time: str):
-        pb_timedelta = timedelta_to_str(YoutubeGrepEngine.published_time_to_timedelta(published_time))
-        if pb_timedelta == "":
-            return None
-        return float(pb_timedelta.replace(":", ""))
-
-    def _create_video_searcher(self, request_text: str):
-        return VideosSearch(request_text, limit=self._request_limit, timeout=self._request_timeout_sec)
-
-    def _get_video_info(self, video_id: str):
-        return Video.getInfo(video_id, timeout=self._request_timeout_sec)
-
-    def _get_channel_info(self, channel_id: str):
-        return Channel.get(channel_id)
 
 
 class YoutubeApiEngine(AbstractYoutubeEngine):
