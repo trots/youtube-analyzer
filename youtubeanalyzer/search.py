@@ -11,8 +11,7 @@ from youtubeanalyzer.settings import (
     Settings
 )
 from youtubeanalyzer.engine import (
-    YoutubeApiEngine,
-    YoutubeGrepEngine
+    YoutubeApiEngine
 )
 from youtubeanalyzer.widgets import (
     critical_message,
@@ -92,11 +91,8 @@ class SearchWorkspace(AbstractVideoTableWorkspace):
     def _create_engine(self):
         request_limit: int = self._get_request_limit()
         api_key: str = self._get_api_key()
-        if not api_key:
-            return YoutubeGrepEngine(self.model, request_limit)
-        else:
-            request_page_limit: int = self._get_request_page_limit()
-            return YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
+        request_page_limit: int = self._get_request_page_limit()
+        return YoutubeApiEngine(api_key, self.model, request_limit, request_page_limit)
 
 
 class SearchWorkspaceFactory(TabWorkspaceFactory):

@@ -4,7 +4,7 @@
 
 **Advanced software for analyzing YouTube search results, trends, and autocomplete suggestions.**
 
-Based on `PySide6`, `googleapiclient`, and `youtubesearchpython`.
+Based on `PySide6` and `googleapiclient`.
 
 ## Features
 
@@ -13,7 +13,6 @@ Based on `PySide6`, `googleapiclient`, and `youtubesearchpython`.
 - Display YouTube **search** and **trends** results in a detailed table with comprehensive video metrics.
 - Display **preview gallery** and video **tags**.
 - **Autocomplete insights**: analyze YouTube search suggestion lists.
-- **YouTube API support** (just set your API key in the settings).
 
 ### Analytics Tools
 
@@ -50,4 +49,4 @@ Based on `PySide6`, `googleapiclient`, and `youtubesearchpython`.
 
 ## Troubleshooting
 
-The default search engine for YouTube Analyzer is `youtubesearchpython`. But this component [is not supported anymore](https://github.com/alexmercerind/youtube-search-python/issues/189) by its maintainers and can have errors. Therefore, it is recommended to use YouTube Analyzer with YouTube API. Just set your YouTube API key in settings.
+YouTube Analyzer requires a YouTube API key to fetch search and trends results. Set your YouTube API key in the settings before using the app.

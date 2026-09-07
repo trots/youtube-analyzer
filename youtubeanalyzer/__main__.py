@@ -101,7 +101,7 @@ class AboutDialog(QDialog):
                          row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
         layout.addWidget(QLabel(
-            self.tr("Based on: PySide6, youtube-search-python,\n google-api-python-client, XlsxWriter, isodate.")),
+            self.tr("Based on: PySide6, google-api-python-client,\n XlsxWriter, isodate.")),
             row, 0, 1, 2, Qt.AlignmentFlag.AlignCenter)
         row += 1
         vertical_spacer = QSpacerItem(1, 20, QSizePolicy.Minimum, QSizePolicy.Expanding)

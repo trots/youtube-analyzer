@@ -553,6 +553,10 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
     def _on_header_context_menu_requested(self, pos: QPoint):
         header = self._table_view.horizontalHeader()
+        menu = self._build_column_visibility_menu()
+        menu.exec(header.mapToGlobal(pos))
+
+    def _build_column_visibility_menu(self) -> QMenu:
         column_count = self.model.columnCount()
         visible_column_count = sum(
             1 for column in range(column_count) if not self._table_view.isColumnHidden(column))
@@ -567,8 +571,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             action.setEnabled(is_hidden or visible_column_count > 1)
             action.setData(column)
             action.toggled.connect(self._on_column_visibility_toggled)
-
-        menu.exec(header.mapToGlobal(pos))
+        return menu
 
     def _on_column_visibility_toggled(self, checked: bool):
         column = self.sender().data()
