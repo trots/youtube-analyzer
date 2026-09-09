@@ -1,4 +1,5 @@
 import html
+from typing import Optional
 from PySide6.QtCore import (
     QSize,
     QPoint,
@@ -10,6 +11,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QAction,
+    QColor,
     QGuiApplication,
     QDesktopServices,
     QTextDocument,
@@ -28,6 +30,7 @@ from PySide6.QtWidgets import (
     QTableView,
     QSplitter,
     QFrame,
+    QLabel,
     QListView,
     QToolButton,
     QStyle,
@@ -57,6 +60,7 @@ from youtubeanalyzer.filters import (
 )
 from youtubeanalyzer.widgets import (
     create_link_label,
+    set_link_label_text,
     FixedTabWidget
 )
 from youtubeanalyzer.workspace import (
@@ -93,7 +97,11 @@ class _LeftAlignedItemDelegate(QStyledItemDelegate):
         self.initStyleOption(options, index)
 
         text_rect = self._text_rect(options)
-        document = self._build_document(index, options.font)
+        selected = bool(option.state & QStyle.StateFlag.State_Selected)
+        link_color = (
+            option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText)
+            if selected else None)
+        document = self._build_document(index, options.font, link_color)
         document.setTextWidth(max(text_rect.width(), 0))
 
         style = options.widget.style() if options.widget else QApplication.style()
@@ -105,7 +113,7 @@ class _LeftAlignedItemDelegate(QStyledItemDelegate):
         local_rect = text_rect.translated(-text_rect.topLeft())
         painter.setClipRect(local_rect)
         context = QAbstractTextDocumentLayout.PaintContext()
-        if option.state & QStyle.StateFlag.State_Selected:
+        if selected:
             painter.fillRect(
                 local_rect, option.palette.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight))
             context.palette.setColor(
@@ -137,7 +145,7 @@ class _LeftAlignedItemDelegate(QStyledItemDelegate):
         top = decoration_rect.bottom() + 1 + max(spacing, 0)
         return QRect(option.rect.left(), top, option.rect.width(), max(option.rect.bottom() - top + 1, 0))
 
-    def _build_document(self, index, font) -> QTextDocument:
+    def _build_document(self, index, font, link_color: Optional[QColor] = None) -> QTextDocument:
         document = QTextDocument()
         document.setDefaultFont(font)
 
@@ -153,6 +161,7 @@ class _LeftAlignedItemDelegate(QStyledItemDelegate):
 
         video_link = index.data(ResultTableModel.VideoLinkRole)
         channel_link = index.data(ResultTableModel.ChannelLinkRole)
+        link_style = f' style="color:{link_color.name()};"' if link_color is not None else ""
 
         title_lines: list[str] = lines[:-3]
         channel_line, subscribers_line, views_line = lines[-3:]
@@ -161,12 +170,12 @@ class _LeftAlignedItemDelegate(QStyledItemDelegate):
         for title_line in title_lines:
             escaped_title = html.escape(title_line)
             if video_link:
-                escaped_title = f'<a href="{html.escape(str(video_link))}">{escaped_title}</a>'
+                escaped_title = f'<a href="{html.escape(str(video_link))}"{link_style}>{escaped_title}</a>'
             html_parts.append(f"<b>{escaped_title}</b>")
 
         escaped_channel = html.escape(channel_line)
         if channel_link:
-            escaped_channel = f'<a href="{html.escape(str(channel_link))}">{escaped_channel}</a>'
+            escaped_channel = f'<a href="{html.escape(str(channel_link))}"{link_style}>{escaped_channel}</a>'
         html_parts.append(escaped_channel)
 
         html_parts.append(html.escape(subscribers_line))
@@ -283,6 +292,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._table_view.horizontalHeader().customContextMenuRequested.connect(
             self._on_header_context_menu_requested)
         self._table_view.selectionModel().selectionChanged.connect(self._on_table_row_changed)
+        self._table_view.selectionModel().selectionChanged.connect(self._on_link_selection_changed)
 
         self._stacked_layout.addWidget(self._table_view)
 
@@ -347,7 +357,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._analytics_widget = AnalyticsWidget(self._sort_model, self)
         self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
-        if int(self._settings.get(Settings.Theme)) == Theme.Dark:
+        if Theme.is_dark(int(self._settings.get(Settings.Theme))):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
         else:
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
@@ -447,7 +457,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         return self.model.get_row_data(source_index.row())
 
     def handle_preferences_change(self):
-        if int(self._settings.get(Settings.Theme)) == Theme.Dark:
+        if Theme.is_dark(int(self._settings.get(Settings.Theme))):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
         else:
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeLight)
@@ -455,6 +465,13 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if self._settings.get(Settings.AnalyticsFollowTableSelect):
             self._analytics_widget.set_current_index(self._table_view.currentIndex())
+
+        video_column = self.model.map_field_to_table_column(ResultFields.VideoTitle)
+        for row in range(self._sort_model.rowCount()):
+            if self._table_view.indexWidget(self._sort_model.index(row, video_column)):
+                self._create_row_link_widgets(row)
+
+        self._details_widget.refresh()
 
     def _create_toolbar(self, h_layout: QHBoxLayout):
         raise "AbstractVideoTableWorkspace._create_toolbar is not implemented"
@@ -598,13 +615,39 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
     def _on_insert_widgets(self):
         for row in range(self._sort_model.rowCount()):
             video_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.VideoTitle))
-            widget = self._table_view.indexWidget(video_idx)
-            if not widget:
-                source_row = self._sort_model.mapToSource(video_idx).row()
-                video_item = self.model.get_row_data(source_row)
-                video_label = create_link_label(video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle])
-                self._table_view.setIndexWidget(video_idx, video_label)
+            if not self._table_view.indexWidget(video_idx):
+                self._create_row_link_widgets(row)
 
-                channel_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.ChannelTitle))
-                channel_label = create_link_label(video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle])
-                self._table_view.setIndexWidget(channel_idx, channel_label)
+    def _create_row_link_widgets(self, row: int):
+        """Creates or, if already present (e.g. on selection/theme change), recolors in place the
+        link widgets for a row - updating an existing label's text is cheap and avoids discarding and
+        recreating a QLabel just to change its color."""
+        video_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.VideoTitle))
+        source_row = self._sort_model.mapToSource(video_idx).row()
+        video_item = self.model.get_row_data(source_row)
+        link_color = self._link_label_color(self._table_view.selectionModel().isRowSelected(row, QModelIndex()))
+
+        self._set_link_widget(video_idx, video_item[ResultFields.VideoLink], video_item[ResultFields.VideoTitle], link_color)
+
+        channel_idx = self._sort_model.index(row, self.model.map_field_to_table_column(ResultFields.ChannelTitle))
+        self._set_link_widget(
+            channel_idx, video_item[ResultFields.ChannelLink], video_item[ResultFields.ChannelTitle], link_color)
+
+    def _set_link_widget(self, index: QModelIndex, link: str, text: str, link_color: Optional[QColor]):
+        widget = self._table_view.indexWidget(index)
+        if isinstance(widget, QLabel):
+            set_link_label_text(widget, link, text, link_color)
+        else:
+            self._table_view.setIndexWidget(index, create_link_label(link, text, link_color))
+
+    def _link_label_color(self, selected: bool) -> QColor:
+        palette = QGuiApplication.palette()
+        role = QPalette.ColorRole.HighlightedText if selected else QPalette.ColorRole.Link
+        return palette.color(QPalette.ColorGroup.Active, role)
+
+    def _on_link_selection_changed(self, selected: QItemSelection, deselected: QItemSelection):
+        video_column = self.model.map_field_to_table_column(ResultFields.VideoTitle)
+        rows = {index.row() for index in selected.indexes()} | {index.row() for index in deselected.indexes()}
+        for row in rows:
+            if self._table_view.indexWidget(self._sort_model.index(row, video_column)):
+                self._create_row_link_widgets(row)

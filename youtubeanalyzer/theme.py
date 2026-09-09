@@ -1,6 +1,3 @@
-from PySide6.QtCore import (
-    Qt
-)
 from PySide6.QtGui import (
     QColor,
     QPalette
@@ -11,33 +8,53 @@ from PySide6.QtWidgets import (
 
 
 class Theme:
-    System: int = 0
+    Light: int = 0
     Dark: int = 1
 
     @staticmethod
+    def is_dark(theme_index: int) -> bool:
+        return theme_index == Theme.Dark
+
+    @staticmethod
     def apply(app: QApplication, theme_index: int):
-        if theme_index == Theme.Dark:
+        if Theme.is_dark(theme_index):
             palette = QPalette()
-            palette.setColor(QPalette.Window, QColor(53, 53, 53))
-            palette.setColor(QPalette.WindowText, Qt.white)
-            palette.setColor(QPalette.Base, QColor(25, 25, 25))
-            palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-            palette.setColor(QPalette.ToolTipBase, Qt.black)
-            palette.setColor(QPalette.ToolTipText, Qt.white)
-            palette.setColor(QPalette.Text, Qt.white)
-            palette.setColor(QPalette.Button, QColor(53, 53, 53))
-            palette.setColor(QPalette.ButtonText, Qt.white)
-            palette.setColor(QPalette.BrightText, Qt.red)
-            palette.setColor(QPalette.Link, QColor(148, 192, 236))
-            palette.setColor(QPalette.Highlight, QColor(19, 60, 110))
-            palette.setColor(QPalette.HighlightedText, Qt.white)
-            palette.setColor(QPalette.Active, QPalette.Button, QColor(53, 53, 53))
-            palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(53, 53, 53).lighter())
-            palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor(53, 53, 53).lighter())
-            palette.setColor(QPalette.Disabled, QPalette.Text, QColor(53, 53, 53).lighter())
-            palette.setColor(QPalette.Disabled, QPalette.Light, QColor(53, 53, 53))
+            palette.setColor(QPalette.Window, QColor("#2b2b2b"))
+            palette.setColor(QPalette.WindowText, QColor("#e0e0e0"))
+            palette.setColor(QPalette.Base, QColor("#1e1e1e"))
+            palette.setColor(QPalette.AlternateBase, QColor("#2b2b2b"))
+            palette.setColor(QPalette.ToolTipBase, QColor("#1e1e1e"))
+            palette.setColor(QPalette.ToolTipText, QColor("#e0e0e0"))
+            palette.setColor(QPalette.Text, QColor("#e0e0e0"))
+            palette.setColor(QPalette.Button, QColor("#2b2b2b"))
+            palette.setColor(QPalette.ButtonText, QColor("#e0e0e0"))
+            palette.setColor(QPalette.BrightText, QColor("#ff5c5c"))
+            palette.setColor(QPalette.Link, QColor("#8ab4f8"))
+            palette.setColor(QPalette.PlaceholderText, QColor("#9e9e9e"))
+            palette.setColor(QPalette.Highlight, QColor("#3d6fb4"))
+            palette.setColor(QPalette.HighlightedText, QColor("#ffffff"))
+            palette.setColor(QPalette.Active, QPalette.Button, QColor("#2b2b2b"))
+            palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#2b2b2b").lighter())
+            palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#2b2b2b").lighter())
+            palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#2b2b2b").lighter())
+            palette.setColor(QPalette.Disabled, QPalette.Light, QColor("#2b2b2b"))
             app.setPalette(palette)
         else:
             palette = QPalette()
-            palette.setColor(QPalette.Link, QColor(19, 60, 110))
+            palette.setColor(QPalette.Window, QColor("#f5f5f5"))
+            palette.setColor(QPalette.WindowText, QColor("#202020"))
+            palette.setColor(QPalette.Base, QColor("#ffffff"))
+            palette.setColor(QPalette.AlternateBase, QColor("#f5f5f5"))
+            palette.setColor(QPalette.ToolTipBase, QColor("#ffffff"))
+            palette.setColor(QPalette.ToolTipText, QColor("#202020"))
+            palette.setColor(QPalette.Text, QColor("#202020"))
+            palette.setColor(QPalette.Button, QColor("#f5f5f5"))
+            palette.setColor(QPalette.ButtonText, QColor("#202020"))
+            palette.setColor(QPalette.BrightText, QColor("#d32f2f"))
+            palette.setColor(QPalette.Link, QColor("#1a4a8f"))
+            palette.setColor(QPalette.Highlight, QColor("#3d6fb4"))
+            palette.setColor(QPalette.HighlightedText, QColor("#ffffff"))
+            palette.setColor(QPalette.Disabled, QPalette.ButtonText, QColor("#f5f5f5").darker())
+            palette.setColor(QPalette.Disabled, QPalette.WindowText, QColor("#f5f5f5").darker())
+            palette.setColor(QPalette.Disabled, QPalette.Text, QColor("#f5f5f5").darker())
             app.setPalette(palette)

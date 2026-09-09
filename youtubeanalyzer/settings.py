@@ -188,7 +188,7 @@ class GeneralTab(QWidget):
         layout.addWidget(theme_label)
         self._theme_combo = QComboBox()
         self._theme_combo.setToolTip(self.tr("Set the interface color theme"))
-        self._theme_combo.addItem(self.tr("System"))
+        self._theme_combo.addItem(self.tr("Light"))
         self._theme_combo.addItem(self.tr("Dark"))
         self._theme_combo.setCurrentIndex(int(self._settings.get(Settings.Theme)))
         layout.addWidget(self._theme_combo)

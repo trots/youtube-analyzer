@@ -377,12 +377,12 @@
         <translation>Установите цветовую тему интерфейса</translation>
     </message>
     <message>
-        <source>System</source>
-        <translation>Системная</translation>
-    </message>
-    <message>
         <source>Dark</source>
         <translation>Тёмная</translation>
+    </message>
+    <message>
+        <source>Light</source>
+        <translation>Светлая</translation>
     </message>
 </context>
 <context>

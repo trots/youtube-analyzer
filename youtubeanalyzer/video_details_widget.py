@@ -6,6 +6,8 @@ from PySide6.QtCore import (
     QUrl
 )
 from PySide6.QtGui import (
+    QGuiApplication,
+    QPalette,
     QPixmap
 )
 from PySide6.QtWidgets import (
@@ -154,11 +156,12 @@ class VideoDetailsWidget(QWidget):
             self.clear()
             return
 
-        self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\">" +
-                                  row_data[ResultFields.VideoTitle] + "</a>")
+        link_color = QGuiApplication.palette().color(QPalette.ColorRole.Link).name()
+        self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\" style=\"color:" +
+                                  link_color + ";\">" + row_data[ResultFields.VideoTitle] + "</a>")
         self._duration_label.setText(row_data[ResultFields.VideoDuration])
-        self._channel_title_label.setText("<a href=\"" + row_data[ResultFields.ChannelLink] + "\">" +
-                                          row_data[ResultFields.ChannelTitle] + "</a>")
+        self._channel_title_label.setText("<a href=\"" + row_data[ResultFields.ChannelLink] + "\" style=\"color:" +
+                                          link_color + ";\">" + row_data[ResultFields.ChannelTitle] + "</a>")
         update_subscribers = '{0:,}'.format(row_data[ResultFields.ChannelSubscribers]).replace(',', ' ')
         self._subscribers_label.setText(update_subscribers + self.tr(" subscribers"))
         update_views = '{0:,}'.format(row_data[ResultFields.VideoViews]).replace(',', ' ')
@@ -188,6 +191,13 @@ class VideoDetailsWidget(QWidget):
             self._tags_edit.clear()
 
         self._stacked_layout.setCurrentIndex(1)
+
+    def refresh(self):
+        """Rebuilds the currently shown content (e.g. after a theme change, so the link color used in
+        the video/channel title HTML is recomputed from the current palette). Does nothing if no video
+        is currently shown."""
+        if self._current_index is not None:
+            self.set_current_index(self._current_index)
 
     def clear(self):
         self._current_index = None

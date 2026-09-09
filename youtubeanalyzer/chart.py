@@ -69,14 +69,13 @@ class ChannelsPieChart(QChart):
             slice = self._series.append(channel_titles[channel_link], counter[channel_link])
             self._slices_by_channel_link[channel_link] = slice
 
-        link_color = QGuiApplication.palette().color(QPalette.ColorRole.Link)
         for marker in self.legend().markers(self._series):
             marker.clicked.connect(self._on_legend_marker_clicked)
             marker.hovered.connect(self._on_legend_marker_hovered)
-            marker.setLabelBrush(link_color)
             font = marker.font()
             font.setUnderline(True)
             marker.setFont(font)
+        self.refresh_legend_color()
 
         current_index = self._current_index
         self._current_index = None
@@ -136,6 +135,13 @@ class ChannelsPieChart(QChart):
         elif not state and self._legend_hover_active:
             self._legend_hover_active = False
             QGuiApplication.restoreOverrideCursor()
+
+    def refresh_legend_color(self):
+        """Re-applies the current palette's link color to the already-existing legend markers
+        (e.g. after a theme change, when the markers were built with a now-stale palette)."""
+        link_color = QGuiApplication.palette().color(QPalette.ColorRole.Link)
+        for marker in self.legend().markers(self._series):
+            marker.setLabelBrush(link_color)
 
 
 class VideoDurationChart(QChart):
