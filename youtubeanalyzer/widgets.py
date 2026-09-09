@@ -7,6 +7,7 @@ from PySide6.QtCore import (
     QStringListModel
 )
 from PySide6.QtGui import (
+    QColor,
     QImage,
     QPixmap,
     QResizeEvent
@@ -33,14 +34,20 @@ from youtubeanalyzer.settings import (
 )
 
 
-def create_link_label(link: str, text: str):
-    label = QLabel("<a href=\"" + link + "\">" + text + "</a>")
+def create_link_label(link: str, text: str, link_color: Optional[QColor] = None):
+    label = QLabel()
     label_size_policy = label.sizePolicy()
     label_size_policy.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
     label.setSizePolicy(label_size_policy)
     label.setTextFormat(Qt.TextFormat.RichText)
     label.setOpenExternalLinks(True)
+    set_link_label_text(label, link, text, link_color)
     return label
+
+
+def set_link_label_text(label: QLabel, link: str, text: str, link_color: Optional[QColor] = None):
+    style_attr = " style=\"color:" + link_color.name() + ";\"" if link_color is not None else ""
+    label.setText("<a href=\"" + link + "\"" + style_attr + ">" + text + "</a>")
 
 
 def critical_message(parent, text):

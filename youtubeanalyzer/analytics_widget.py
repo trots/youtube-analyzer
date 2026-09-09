@@ -74,6 +74,8 @@ class AnalyticsWidget(QWidget):
         for chart in self._charts:
             chart.setTheme(theme)
             chart.rebuild()
+            if isinstance(chart, ChannelsPieChart):
+                chart.refresh_legend_color()
 
     def _on_current_chart_changed(self, chart_index: int):
         self._chart_view.setChart(self._charts[chart_index])
