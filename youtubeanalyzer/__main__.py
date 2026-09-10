@@ -7,7 +7,8 @@ from PySide6.QtCore import (
     QTranslator,
     QLibraryInfo,
     QKeyCombination,
-    QObject
+    QObject,
+    QSize
 )
 from PySide6.QtGui import (
     QIcon,
@@ -35,7 +36,8 @@ from youtubeanalyzer.defines import (
     version
 )
 from youtubeanalyzer.theme import (
-    Theme
+    Theme,
+    themed_icon
 )
 from youtubeanalyzer.eventbus import (
     EventBus
@@ -62,6 +64,7 @@ from youtubeanalyzer.plugins import (
 from youtubeanalyzer.widgets import (
     warning_detailed_message
 )
+import youtubeanalyzer.icons_rc
 
 
 app_need_restart = False
@@ -163,7 +166,7 @@ class MainWindow(StateSaveable, QMainWindow):
         self.setWindowTitle(app_name + " " + version)
 
         file_menu = self.menuBar().addMenu(self.tr("File"))
-        self._export_action = file_menu.addAction(self.tr("Export..."))
+        self._export_action = file_menu.addAction(themed_icon(":/icons/export.svg"), self.tr("Export..."))
         self._export_action.setEnabled(False)
         self._export_action.triggered.connect(self._on_export)
 
@@ -180,9 +183,9 @@ class MainWindow(StateSaveable, QMainWindow):
         preferences_action.triggered.connect(self._on_preferences)
 
         window_menu = self.menuBar().addMenu(self.tr("Window"))
-        add_new_tab_action = window_menu.addAction(self.tr("Create a new tab"))
-        add_new_tab_action.setShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_N))
-        add_new_tab_action.triggered.connect(lambda: event_bus.create_new_tab.emit())
+        self._add_new_tab_action = window_menu.addAction(themed_icon(":/icons/add.svg"), self.tr("Create a new tab"))
+        self._add_new_tab_action.setShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_N))
+        self._add_new_tab_action.triggered.connect(lambda: event_bus.create_new_tab.emit())
 
         help_menu = self.menuBar().addMenu(self.tr("Help"))
         authors_action = help_menu.addAction(self.tr("Authors..."))
@@ -203,12 +206,12 @@ class MainWindow(StateSaveable, QMainWindow):
         v_layout.addWidget(self._main_tab_widget)
         self._close_tab_shortcut = QShortcut(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_W), self, self._on_close_tab_action)
 
-        add_new_tab_button = QToolButton()
-        add_new_tab_button.setFixedHeight(20)
-        add_new_tab_button.setText("+")
-        add_new_tab_button.setToolTip(self.tr("Create a new tab"))
-        add_new_tab_button.clicked.connect(lambda: event_bus.create_new_tab.emit(None, None))
-        self._main_tab_widget.setCornerWidget(add_new_tab_button, Qt.Corner.TopRightCorner)
+        self._add_new_tab_button = QToolButton()
+        self._add_new_tab_button.setIcon(themed_icon(":/icons/add.svg"))
+        self._add_new_tab_button.setIconSize(QSize(16, 16))
+        self._add_new_tab_button.setToolTip(self.tr("Create a new tab"))
+        self._add_new_tab_button.clicked.connect(lambda: event_bus.create_new_tab.emit(None, None))
+        self._main_tab_widget.setCornerWidget(self._add_new_tab_button, Qt.Corner.TopRightCorner)
 
         central_widget = QWidget()
         central_widget.setLayout(v_layout)
@@ -267,6 +270,7 @@ class MainWindow(StateSaveable, QMainWindow):
     def _create_new_tab(self, workspace_uid: str = None, workspace_data: object = None) -> WorkspaceTab:
         tab_widget: WorkspaceTab = WorkspaceTab(self._settings, self._main_tab_widget)
         tab_index: int = self._main_tab_widget.addTab(tab_widget, self.tr("New tab"))
+        self._main_tab_widget.setTabIcon(tab_index, themed_icon(":/icons/blank_page.svg"))
         self._main_tab_widget.setCurrentIndex(tab_index)
         if workspace_uid is not None:
             tab_widget.create_workspace(workspace_uid, workspace_data)
@@ -315,6 +319,9 @@ class MainWindow(StateSaveable, QMainWindow):
             return
 
         Theme.apply(QApplication.instance(), int(self._settings.get(Settings.Theme)))
+        self._add_new_tab_button.setIcon(themed_icon(":/icons/add.svg"))
+        self._add_new_tab_action.setIcon(themed_icon(":/icons/add.svg"))
+        self._export_action.setIcon(themed_icon(":/icons/export.svg"))
 
         for tab_index in range(self._main_tab_widget.count()):
             tab_widget = self._main_tab_widget.widget(tab_index)

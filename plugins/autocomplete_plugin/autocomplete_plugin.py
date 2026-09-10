@@ -1,3 +1,4 @@
+import os
 from PySide6.QtCore import (
     Qt,
     QObject
@@ -111,6 +112,9 @@ class AutocompleteWorkspace(WorkspaceWidget):
 
 
 class AutocompleteWorkspaceFactory(TabWorkspaceFactory):
+    # The plugin's own icon lives right next to it - a real filesystem path
+    _ICON_PATH = os.path.join(os.path.dirname(__file__), "autocomplete.svg")
+
     def __init__(self, parent: QWidget = None):
         super().__init__(parent)
 
@@ -120,8 +124,12 @@ class AutocompleteWorkspaceFactory(TabWorkspaceFactory):
     def get_workspace_name(self) -> str:
         return self.tr("Search autocomplete")
 
+    def get_workspace_icon_path(self) -> str | None:
+        return AutocompleteWorkspaceFactory._ICON_PATH
+
     def create_workspace_button(self) -> QPushButton:
         button = QPushButton(self.tr("Search autocomplete..."))
+        self._set_button_icon(button)
         return button
 
     def create_workspace_widget(self, settings: Settings, parent: QWidget) -> QWidget:

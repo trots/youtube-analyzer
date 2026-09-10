@@ -180,8 +180,12 @@ class TrendsWorkspaceFactory(TabWorkspaceFactory):
     def get_workspace_name(self) -> str:
         return self.tr("Trends")
 
+    def get_workspace_icon_path(self) -> str | None:
+        return ":/icons/fire.svg"
+
     def create_workspace_button(self) -> QPushButton:
         button = QPushButton(self.tr("Search trends..."))
+        self._set_button_icon(button)
         return button
 
     def create_workspace_widget(self, settings: Settings, parent: QWidget):

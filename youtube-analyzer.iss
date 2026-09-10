@@ -78,7 +78,7 @@ Source: "{#MyAppDistDir}\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversi
 Source: "{#MyAppDistDir}\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#MyAppDistDir}\LICENSE_RU"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyAppDistDir}\plugins\*.pyd"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyAppDistDir}\plugins\*"; DestDir: "{app}\plugins"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.pyi,*.build,*.build\*"
 Source: "{#MyAppDistDir}\certifi\*"; DestDir: "{app}\certifi"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\charset_normalizer\*"; DestDir: "{app}\charset_normalizer"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#MyAppDistDir}\googleapiclient\*"; DestDir: "{app}\googleapiclient"; Flags: ignoreversion recursesubdirs createallsubdirs
