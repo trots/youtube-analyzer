@@ -1,10 +1,42 @@
+from PySide6.QtCore import (
+    Qt
+)
 from PySide6.QtGui import (
     QColor,
-    QPalette
+    QGuiApplication,
+    QIcon,
+    QPainter,
+    QPalette,
+    QPixmap
 )
+import PySide6.QtSvg  # to enable svg rendering
 from PySide6.QtWidgets import (
     QApplication
 )
+
+
+THEMED_ICON_SIZE: int = 24
+
+
+def themed_icon(resource_path: str) -> QIcon:
+    icon = QIcon()
+    icon.addPixmap(_tinted_pixmap(resource_path, QGuiApplication.palette().color(QPalette.ColorRole.ButtonText)),
+                   QIcon.Mode.Normal)
+    icon.addPixmap(_tinted_pixmap(resource_path, QGuiApplication.palette().color(
+        QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText)), QIcon.Mode.Disabled)
+    return icon
+
+
+def _tinted_pixmap(resource_path: str, color: QColor) -> QPixmap:
+    source_pixmap = QIcon(resource_path).pixmap(THEMED_ICON_SIZE, THEMED_ICON_SIZE)
+    tinted_pixmap = QPixmap(source_pixmap.size())
+    tinted_pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(tinted_pixmap)
+    painter.drawPixmap(0, 0, source_pixmap)
+    painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+    painter.fillRect(tinted_pixmap.rect(), color)
+    painter.end()
+    return tinted_pixmap
 
 
 class Theme:

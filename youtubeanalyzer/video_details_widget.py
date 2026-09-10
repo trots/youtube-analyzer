@@ -7,6 +7,7 @@ from PySide6.QtCore import (
 )
 from PySide6.QtGui import (
     QGuiApplication,
+    QIcon,
     QPalette,
     QPixmap
 )
@@ -19,8 +20,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QTextEdit,
     QStackedLayout,
-    QToolButton,
-    QStyle
+    QToolButton
 )
 from youtubeanalyzer.settings import (
     Settings
@@ -65,7 +65,10 @@ class VideoDetailsWidget(QWidget):
         main_layout.addWidget(self._preview_label)
 
         self._preview_actions_button = QToolButton(self._preview_label)
-        self._preview_actions_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
+        self._preview_actions_button.setIcon(QIcon(":/icons/more_vert.svg"))
+        self._preview_actions_button.setStyleSheet(
+            "QToolButton { background-color: rgba(0, 0, 0, 0.45); border: none; border-radius: 4px; }"
+            "QToolButton:hover { background-color: rgba(0, 0, 0, 0.62); }")
         self._preview_actions_button.setToolTip(self.tr("Download or copy preview image"))
         self._preview_actions_button.setAutoRaise(True)
         self._preview_actions_button.clicked.connect(self._show_preview_actions_menu_at_button)

@@ -14,6 +14,7 @@
     --output-dir=__main__.dist/plugins
 
 copy plugins\__init__.py __main__.dist\plugins\__init__.py
+copy plugins\autocomplete_plugin\autocomplete.svg __main__.dist\plugins\autocomplete.svg
 
 copy logo.png __main__.dist\logo.png
 copy LICENSE __main__.dist\LICENSE

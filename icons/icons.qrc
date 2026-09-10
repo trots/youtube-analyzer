@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>filter.svg</file>
+    <file>view.svg</file>
+    <file>info.svg</file>
+    <file>chart.svg</file>
+    <file>export.svg</file>
+    <file>add.svg</file>
+    <file>search.svg</file>
+    <file>fire.svg</file>
+    <file>blank_page.svg</file>
+    <file>arrow_back.svg</file>
+    <file>arrow_forward.svg</file>
+    <file>more_vert.svg</file>
+  </qresource>
+</RCC>

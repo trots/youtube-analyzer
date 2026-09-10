@@ -7,7 +7,8 @@ from PySide6.QtCore import (
     QUrl,
     Qt,
     QModelIndex,
-    QItemSelection
+    QItemSelection,
+    Signal
 )
 from PySide6.QtGui import (
     QAction,
@@ -17,7 +18,8 @@ from PySide6.QtGui import (
     QTextDocument,
     QAbstractTextDocumentLayout,
     QMouseEvent,
-    QPalette
+    QPalette,
+    QIcon
 )
 from PySide6.QtWidgets import (
     QApplication,
@@ -42,7 +44,8 @@ from PySide6.QtCharts import (
     QChart
 )
 from youtubeanalyzer.theme import (
-    Theme
+    Theme,
+    themed_icon
 )
 from youtubeanalyzer.settings import (
     Settings
@@ -219,6 +222,8 @@ class _GalleryListView(QListView):
 
 
 class AbstractVideoTableWorkspace(WorkspaceWidget):
+    preferences_changed = Signal()
+
     def __init__(self, settings: Settings, parent: QWidget = None):
         WorkspaceWidget.__init__(self, settings, parent)
 
@@ -228,14 +233,14 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         h_layout: QHBoxLayout = QHBoxLayout()
 
         self._history_back_button = QToolButton()
-        self._history_back_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowBack))
+        self._history_back_button.setIcon(themed_icon(":/icons/arrow_back.svg"))
         self._history_back_button.setToolTip(self.tr("Go to the previous results"))
         self._history_back_button.setEnabled(False)
         self._history_back_button.clicked.connect(self._on_history_back)
         h_layout.addWidget(self._history_back_button)
 
         self._history_forward_button = QToolButton()
-        self._history_forward_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
+        self._history_forward_button.setIcon(themed_icon(":/icons/arrow_forward.svg"))
         self._history_forward_button.setToolTip(self.tr("Go to the next results"))
         self._history_forward_button.setEnabled(False)
         self._history_forward_button.clicked.connect(self._on_history_forward)
@@ -269,13 +274,13 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
         self._filters_panel = FiltersPanel(self._settings, self._sort_model)
         self._tools_panel.add_tool_panel(self.tr("Filters"), self.tr("Hide filters panel"), self.tr("Show filters panel"),
-                                         self._filters_panel)
+                                         self._filters_panel, ":/icons/filter.svg")
 
         view_panel = ViewPanel(settings, self)
         view_panel.mode_changed.connect(self._on_view_mode_changed)
         view_panel.scale_changed.connect(self._on_preview_scale_changed)
         self._tools_panel.add_tool_panel(self.tr("View"), self.tr("Hide view panel"), self.tr("Show view panel"),
-                                         view_panel)
+                                         view_panel, ":/icons/view.svg")
 
         central_layout.addWidget(self._tools_panel)
 
@@ -352,10 +357,10 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
         self._side_tab_widget = FixedTabWidget()
 
         self._details_widget = VideoDetailsWidget(self._settings, self.model, self)
-        self._side_tab_widget.addTab(self._details_widget, self.tr("Details"))
+        self._side_tab_widget.addTab(self._details_widget, themed_icon(":/icons/info.svg"), self.tr("Details"))
 
         self._analytics_widget = AnalyticsWidget(self._sort_model, self)
-        self._side_tab_widget.addTab(self._analytics_widget, self.tr("Analytics"))
+        self._side_tab_widget.addTab(self._analytics_widget, themed_icon(":/icons/chart.svg"), self.tr("Analytics"))
         self._analytics_widget.set_current_index_following(self._settings.get(Settings.AnalyticsFollowTableSelect))
         if Theme.is_dark(int(self._settings.get(Settings.Theme))):
             self._analytics_widget.set_charts_theme(QChart.ChartTheme.ChartThemeDark)
@@ -365,7 +370,7 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
 
         self._export_panel = ExportPanel(
             self._settings, self.model, self._sort_model, self.get_data_name, self.get_visible_table_columns, self)
-        self._side_tab_widget.addTab(self._export_panel, self.tr("Export"))
+        self._side_tab_widget.addTab(self._export_panel, themed_icon(":/icons/export.svg"), self.tr("Export"))
         self._export_panel.setEnabled(self.model.rowCount() > 0)
         self.model.rowsInserted.connect(self._update_export_panel_enabled)
         self.model.rowsRemoved.connect(self._update_export_panel_enabled)
@@ -439,8 +444,17 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
             self._settings.set(Settings.LastActiveDetailsTab, self._side_tab_widget.get_last_visible_index())
         self._tools_panel.save_state()
 
-    def add_context_menu_action(self, action_text: str) -> QAction:
-        return self._table_view.addAction(action_text)
+    def add_context_menu_action(self, action_text: str, icon: QIcon | None = None) -> QAction:
+        action: QAction = self._table_view.addAction(action_text)
+        if icon is not None:
+            action.setIcon(icon)
+        return action
+
+    def add_context_menu_separator(self) -> QAction:
+        separator: QAction = QAction(self._table_view)
+        separator.setSeparator(True)
+        self._table_view.addAction(separator)
+        return separator
 
     def clear_selection(self):
         self._table_view.clearSelection()
@@ -472,6 +486,16 @@ class AbstractVideoTableWorkspace(WorkspaceWidget):
                 self._create_row_link_widgets(row)
 
         self._details_widget.refresh()
+        self._tools_panel.refresh_icons()
+
+        self._side_tab_widget.setTabIcon(0, themed_icon(":/icons/info.svg"))
+        self._side_tab_widget.setTabIcon(1, themed_icon(":/icons/chart.svg"))
+        self._side_tab_widget.setTabIcon(2, themed_icon(":/icons/export.svg"))
+
+        self._history_back_button.setIcon(themed_icon(":/icons/arrow_back.svg"))
+        self._history_forward_button.setIcon(themed_icon(":/icons/arrow_forward.svg"))
+
+        self.preferences_changed.emit()
 
     def _create_toolbar(self, h_layout: QHBoxLayout):
         raise "AbstractVideoTableWorkspace._create_toolbar is not implemented"

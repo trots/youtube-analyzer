@@ -24,12 +24,17 @@ from youtubeanalyzer.model import (
 from youtubeanalyzer.filters import (
     ResultSortFilterProxyModel
 )
+from youtubeanalyzer.theme import (
+    themed_icon
+)
 
 
 class VideoTableToolsPanel(StateSaveable, QWidget):
     def __init__(self, settings: Settings, parent: QWidget = None):
         StateSaveable.__init__(self, settings)
         QWidget.__init__(self, parent)
+
+        self._button_icon_paths: dict[QPushButton, str] = {}
 
         main_layout = QVBoxLayout()
         self.setLayout(main_layout)
@@ -51,7 +56,8 @@ class VideoTableToolsPanel(StateSaveable, QWidget):
         self._header_button_group.buttonClicked.connect(self._on_header_button_clicked)
         self._checked_button: QPushButton = None
 
-    def add_tool_panel(self, name: str, on_tool_tip: str, off_tooltip: str, panel: QWidget):
+    def add_tool_panel(self, name: str, on_tool_tip: str, off_tooltip: str, panel: QWidget,
+                        icon_resource_path: str | None = None):
         panel_layout: QStackedLayout = self._panel_widget.layout()
         new_tab_index: int = panel_layout.count()
 
@@ -60,10 +66,17 @@ class VideoTableToolsPanel(StateSaveable, QWidget):
         button.setChecked(False)
         button.toggled.connect(lambda checked:
                                button.setToolTip(on_tool_tip) if checked else button.setToolTip(off_tooltip))
+        if icon_resource_path is not None:
+            self._button_icon_paths[button] = icon_resource_path
+            button.setIcon(themed_icon(icon_resource_path))
         self._header_button_group.addButton(button, new_tab_index)
         self._header_layout.insertWidget(self._header_layout.count() - 1, button)
 
         panel_layout.addWidget(panel)
+
+    def refresh_icons(self):
+        for button, icon_resource_path in self._button_icon_paths.items():
+            button.setIcon(themed_icon(icon_resource_path))
 
     def load_state(self):
         active_panel_index: int = int(self._settings.get(Settings.ActiveToolPanelIndex))

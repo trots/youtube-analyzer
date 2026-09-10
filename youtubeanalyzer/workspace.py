@@ -15,6 +15,9 @@ from youtubeanalyzer.settings import (
     Settings,
     StateSaveable
 )
+from youtubeanalyzer.theme import (
+    themed_icon
+)
 
 
 class WorkspaceWidget(StateSaveable, QWidget):
@@ -51,6 +54,14 @@ class TabWorkspaceFactory(QObject):
     def create_workspace_widget(self, settings, parent) -> WorkspaceWidget:
         raise "Not implemented"
 
+    def get_workspace_icon_path(self) -> str | None:
+        return None
+
+    def _set_button_icon(self, button: QPushButton):
+        icon_path = self.get_workspace_icon_path()
+        if icon_path is not None:
+            button.setIcon(themed_icon(icon_path))
+
 
 class WorkspaceTab(StateSaveable, QWidget):
     workspace_factories: dict[str, TabWorkspaceFactory] = {}
@@ -65,6 +76,7 @@ class WorkspaceTab(StateSaveable, QWidget):
 
         self._parent_tab_widget = parent_tab_widget
         self._current_workspace_uid = None
+        self._workspace_button_icon_paths: list[tuple[QPushButton, str]] = []
 
         self._main_stacked_layout = QStackedLayout()
 
@@ -80,6 +92,9 @@ class WorkspaceTab(StateSaveable, QWidget):
         for uid, factory in WorkspaceTab.workspace_factories.items():
             workspace_button = factory.create_workspace_button()
             workspace_button.clicked.connect(lambda state=None, uid=uid: self.create_workspace(uid))
+            icon_path = factory.get_workspace_icon_path()
+            if icon_path is not None:
+                self._workspace_button_icon_paths.append((workspace_button, icon_path))
             self._main_layout.addWidget(workspace_button, row, 1)
             row = row + 1
 
@@ -108,6 +123,15 @@ class WorkspaceTab(StateSaveable, QWidget):
         workspace = self.current_workspace()
         if workspace:
             workspace.handle_preferences_change()
+        if self._current_workspace_uid:
+            factory: TabWorkspaceFactory = WorkspaceTab.workspace_factories[self._current_workspace_uid]
+            icon_path = factory.get_workspace_icon_path()
+            if icon_path is not None:
+                self._parent_tab_widget.setTabIcon(self._parent_tab_widget.indexOf(self), themed_icon(icon_path))
+        else:
+            self._parent_tab_widget.setTabIcon(self._parent_tab_widget.indexOf(self), themed_icon(":/icons/blank_page.svg"))
+            for button, icon_path in self._workspace_button_icon_paths:
+                button.setIcon(themed_icon(icon_path))
 
     def create_workspace(self, workspace_uid: str, workspace_data: object = None):
         if workspace_uid not in WorkspaceTab.workspace_factories:
@@ -120,6 +144,9 @@ class WorkspaceTab(StateSaveable, QWidget):
             self._main_stacked_layout.setCurrentIndex(1)
             tab_index: int = self._parent_tab_widget.indexOf(self)
             self._parent_tab_widget.setTabText(tab_index, factory.get_workspace_name())
+            icon_path = factory.get_workspace_icon_path()
+            if icon_path is not None:
+                self._parent_tab_widget.setTabIcon(tab_index, themed_icon(icon_path))
             self._current_workspace_uid = workspace_uid
             event_bus = EventBus()
             event_bus.workspace_created.emit(workspace_widget)

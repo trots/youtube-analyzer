@@ -105,8 +105,12 @@ class SearchWorkspaceFactory(TabWorkspaceFactory):
     def get_workspace_name(self) -> str:
         return self.tr("Search")
 
+    def get_workspace_icon_path(self) -> str | None:
+        return ":/icons/search.svg"
+
     def create_workspace_button(self) -> QPushButton:
         button = QPushButton(self.tr("Search video..."))
+        self._set_button_icon(button)
         return button
 
     def create_workspace_widget(self, settings: Settings, parent: QWidget) -> QWidget:
