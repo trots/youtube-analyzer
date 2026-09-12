@@ -48,20 +48,32 @@ class ImageDownloader(QObject):
         self._manager = QNetworkAccessManager()
         self._manager.finished.connect(self._handle_finished)
         self._data_cache = DataCache()
+        self._current_reply: QNetworkReply | None = None
 
     def start_download(self, url: QUrl):
         image = self._data_cache.get_image(url.toString())
         if image is not None:
             self.finished.emit(image)
         else:
-            self._manager.clearConnectionCache()
-            self._manager.get(QNetworkRequest(url))
+            if self._current_reply is None:
+                self._manager.clearConnectionCache()
+            self._current_reply = self._manager.get(QNetworkRequest(url))
 
     def clear_cache(self):
         self._manager.clearAccessCache()
         self._data_cache.clear()
 
     def _handle_finished(self, reply: QNetworkReply):
+        is_current = reply is self._current_reply
+        if is_current:
+            self._current_reply = None
+        if not is_current:
+            # A newer request has already superseded this one while it was in flight - the result is
+            # stale, drop it silently. Never call anything but deleteLater() on a QNetworkReply reached
+            # through a stored reference like self._current_reply - only the reply Qt just handed us as
+            # this callback's own argument is guaranteed to still be alive.
+            reply.deleteLater()
+            return
         if reply.error() != QNetworkReply.NoError:
             self.error.emit(reply.errorString())
             reply.deleteLater()
@@ -70,8 +82,10 @@ class ImageDownloader(QObject):
         image.loadFromData(reply.readAll())
         url = reply.url()
         if image.isNull() and self._try_again:
-            self._manager.get(QNetworkRequest(url))
             self._try_again = False
+            self._current_reply = self._manager.get(QNetworkRequest(url))
+            reply.deleteLater()
+            return
         self._try_again = True
         self._data_cache.cache_image(url.toString(), image)
         self.finished.emit(image)
