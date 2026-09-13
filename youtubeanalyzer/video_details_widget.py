@@ -20,7 +20,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QTextEdit,
     QStackedLayout,
-    QToolButton
+    QToolButton,
+    QFrame
 )
 from youtubeanalyzer.settings import (
     Settings
@@ -83,11 +84,32 @@ class VideoDetailsWidget(QWidget):
         self._title_label.setWordWrap(True)
         main_layout.addWidget(self._title_label)
 
+        self._views_label = QLabel(main_widget)
+        self._views_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._views_label.setToolTip(self._model.FieldNames[ResultFields.VideoViews])
+        main_layout.addWidget(self._views_label)
+        main_layout.addSpacing(spacing)
+
+        self._published_time_label = QLabel(main_widget)
+        self._published_time_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._published_time_label.setToolTip(self._model.FieldNames[ResultFields.VideoPublishedTime])
+        main_layout.addWidget(self._published_time_label)
+
         self._duration_label = QLabel(main_widget)
         self._duration_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self._duration_label.setToolTip(self._model.FieldNames[ResultFields.VideoDuration])
         main_layout.addWidget(self._duration_label)
+
+        self._views_rate_label = QLabel(main_widget)
+        self._views_rate_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self._views_rate_label.setToolTip(self._model.FieldNames[ResultFields.ViewRate])
+        main_layout.addWidget(self._views_rate_label)
+
         main_layout.addSpacing(spacing)
+        h_line = QFrame()
+        h_line.setFrameShape(QFrame.Shape.HLine)
+        h_line.setFrameShadow(QFrame.Shadow.Sunken)
+        main_layout.addWidget(h_line)
 
         channel_layout = QGridLayout()
         self._channel_logo_label = PixmapLabel(main_widget)
@@ -106,25 +128,12 @@ class VideoDetailsWidget(QWidget):
         self._subscribers_label.setToolTip(self._model.FieldNames[ResultFields.ChannelSubscribers])
         channel_layout.addWidget(self._subscribers_label, 1, 1)
         main_layout.addLayout(channel_layout)
+
+        h_line = QFrame()
+        h_line.setFrameShape(QFrame.Shape.HLine)
+        h_line.setFrameShadow(QFrame.Shadow.Sunken)
+        main_layout.addWidget(h_line)
         main_layout.addSpacing(spacing)
-
-        views_layout = QHBoxLayout()
-        self._views_label = QLabel(main_widget)
-        self._views_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self._views_label.setToolTip(self._model.FieldNames[ResultFields.VideoViews])
-        views_layout.addWidget(self._views_label)
-
-        self._published_time_label = QLabel(main_widget)
-        self._published_time_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self._published_time_label.setToolTip(self._model.FieldNames[ResultFields.VideoPublishedTime])
-        views_layout.addWidget(self._published_time_label)
-        main_layout.addLayout(views_layout)
-        main_layout.addSpacing(spacing)
-
-        self._views_rate_label = QLabel(main_widget)
-        self._views_rate_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self._views_rate_label.setToolTip(self._model.FieldNames[ResultFields.ViewRate])
-        main_layout.addWidget(self._views_rate_label)
 
         main_layout.addWidget(QLabel(self.tr("Tags:")))
         self._tags_edit = QTextEdit(main_widget)
@@ -162,14 +171,14 @@ class VideoDetailsWidget(QWidget):
         link_color = QGuiApplication.palette().color(QPalette.ColorRole.Link).name()
         self._title_label.setText("<a href=\"" + row_data[ResultFields.VideoLink] + "\" style=\"color:" +
                                   link_color + ";\">" + row_data[ResultFields.VideoTitle] + "</a>")
-        self._duration_label.setText(row_data[ResultFields.VideoDuration])
+        self._duration_label.setText(self._model.FieldNames[ResultFields.VideoDuration] + ": " + row_data[ResultFields.VideoDuration])
         self._channel_title_label.setText("<a href=\"" + row_data[ResultFields.ChannelLink] + "\" style=\"color:" +
                                           link_color + ";\">" + row_data[ResultFields.ChannelTitle] + "</a>")
         update_subscribers = '{0:,}'.format(row_data[ResultFields.ChannelSubscribers]).replace(',', ' ')
         self._subscribers_label.setText(update_subscribers + self.tr(" subscribers"))
         update_views = '{0:,}'.format(row_data[ResultFields.VideoViews]).replace(',', ' ')
         self._views_label.setText(update_views + self.tr(" views"))
-        self._published_time_label.setText(row_data[ResultFields.VideoPublishedTime])
+        self._published_time_label.setText(self._model.FieldNames[ResultFields.VideoPublishedTime] + ": " + row_data[ResultFields.VideoPublishedTime])
         self._views_rate_label.setText(self._model.FieldNames[ResultFields.ViewRate] + ": " + row_data[ResultFields.ViewRate])
         self._preview_label.clear()
         self._channel_logo_label.clear()
