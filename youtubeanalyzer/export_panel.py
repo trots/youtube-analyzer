@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
+    QGroupBox,
     QLabel,
     QLineEdit,
     QComboBox,
@@ -119,9 +120,12 @@ class ExportPanel(QWidget):
             "list below. Video/channel links are not exported, since they are not separate table columns."))
         self._follow_table_columns_checkbox.setChecked(self._settings.get(self._current_keys()["follow_table_columns"]))
         self._follow_table_columns_checkbox.toggled.connect(self._on_follow_table_columns_toggled)
-        main_layout.addWidget(self._follow_table_columns_checkbox)
 
-        main_layout.addWidget(QLabel(self.tr("Columns:")))
+        columns_group_box = QGroupBox(self.tr("Columns"))
+        columns_group_layout = QVBoxLayout()
+        columns_group_box.setLayout(columns_group_layout)
+
+        columns_group_layout.addWidget(self._follow_table_columns_checkbox)
 
         columns_buttons_layout = QHBoxLayout()
         self._select_all_columns_button = QPushButton(self.tr("Select All"))
@@ -130,7 +134,7 @@ class ExportPanel(QWidget):
         self._select_none_columns_button = QPushButton(self.tr("Select None"))
         self._select_none_columns_button.clicked.connect(self._on_select_none_columns_clicked)
         columns_buttons_layout.addWidget(self._select_none_columns_button)
-        main_layout.addLayout(columns_buttons_layout)
+        columns_group_layout.addLayout(columns_buttons_layout)
 
         self._exportable_columns: list[int] = get_exportable_columns()
         self._column_list = QListWidget()
@@ -138,7 +142,9 @@ class ExportPanel(QWidget):
         self._populate_column_list()
         self._column_list.itemChanged.connect(self._on_column_item_changed)
         self._column_list.model().rowsMoved.connect(self._on_columns_reordered)
-        main_layout.addWidget(self._column_list)
+        columns_group_layout.addWidget(self._column_list)
+
+        main_layout.addWidget(columns_group_box)
         self._update_column_controls_enabled()
 
         self._txt_delimiter_label = QLabel(self.tr("TXT delimiter:"))

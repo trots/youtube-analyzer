@@ -306,10 +306,6 @@
         <translation>Ни одна строка не проходит текущие фильтры таблицы</translation>
     </message>
     <message>
-        <source>Columns:</source>
-        <translation>Столбцы:</translation>
-    </message>
-    <message>
         <source>Select All</source>
         <translation>Выбрать все</translation>
     </message>
@@ -343,11 +339,15 @@
     </message>
     <message>
         <source>Follow table columns</source>
-        <translation>Учитывать столбцы таблицы</translation>
+        <translation>Столбцы как в таблице</translation>
     </message>
     <message>
         <source>Export the columns currently visible in the table, in their current order, instead of the list below. Video/channel links are not exported, since they are not separate table columns.</source>
         <translation>Экспортировать столбцы, которые сейчас видны в таблице, в их текущем порядке, вместо списка ниже. Ссылки на видео и канал не экспортируются, так как не являются отдельными столбцами таблицы.</translation>
+    </message>
+    <message>
+        <source>Columns</source>
+        <translation>Столбцы</translation>
     </message>
 </context>
 <context>
