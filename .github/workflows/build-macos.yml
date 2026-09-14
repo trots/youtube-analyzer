@@ -48,6 +48,7 @@ jobs:
           python -m nuitka \
             --module plugins/autocomplete_plugin/autocomplete_plugin.py \
             --output-dir=__main__.dist/plugins
+          rm -rf __main__.dist/plugins/autocomplete_plugin.build
 
       - name: Debug - list build output
         # NOTE: the exact location of the produced .app bundle under Nuitka's
@@ -81,6 +82,10 @@ jobs:
           cp translations/autocomplete_plugin_ru.qm "$MACOS_DIR/translations/autocomplete_plugin_ru.qm"
 
           echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+
+      - name: Ad-hoc codesign app bundle
+        run: |
+          codesign --force --deep --sign - "$APP_BUNDLE"
 
       - name: Archive app bundle
         run: |
