@@ -95,3 +95,21 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+Type: files; Name: "{app}\installer_language.txt"
+
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  AppLanguage: String;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    if ActiveLanguage() = 'russian' then
+      AppLanguage := 'Ru'
+    else
+      AppLanguage := 'En';
+    SaveStringToFile(ExpandConstant('{app}\installer_language.txt'), AppLanguage, False);
+  end;
+end;
