@@ -364,6 +364,16 @@ window = None
 app.setWindowIcon(QIcon("logo.png"))
 app.setStyle("Fusion")
 settings = Settings(app_name)
+
+if settings.get(Settings.Language) == "":
+    try:
+        with open("installer_language.txt", "r", encoding="utf-8") as installer_language_file:
+            installer_language = installer_language_file.read().strip()
+        if installer_language in ("Ru", "En"):
+            settings.set(Settings.Language, installer_language)
+    except OSError:
+        pass
+
 Theme.apply(app, int(settings.get(Settings.Theme)))
 
 WorkspaceTab.add_workspace_factory(SearchWorkspaceFactory())
