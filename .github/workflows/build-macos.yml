@@ -38,6 +38,7 @@ jobs:
             --enable-plugin=pyside6 \
             --include-module=PySide6.support.deprecated \
             --macos-app-icon=logo.png \
+            --macos-app-macos-min-version=11.0 \
             --output-filename=youtube-analyzer \
             --include-package=youtubeanalyzer \
             --include-package=plugins \
@@ -84,8 +85,16 @@ jobs:
           echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
 
       - name: Ad-hoc codesign app bundle
+        # Ad-hoc (no paid Developer ID yet); signed file-by-file instead of
+        # --deep, with entitlements required for Nuitka/Qt at runtime.
         run: |
-          codesign --force --deep --sign - "$APP_BUNDLE"
+          find "$APP_BUNDLE" -type f | while read -r f; do
+            if file -b "$f" | grep -q "Mach-O"; then
+              codesign --force --sign - --entitlements entitlements.plist "$f"
+            fi
+          done
+          codesign --force --sign - --entitlements entitlements.plist "$APP_BUNDLE"
+          codesign --verify --deep --strict "$APP_BUNDLE"
 
       - name: Archive app bundle
         run: |
