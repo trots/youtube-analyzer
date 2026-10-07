@@ -70,17 +70,23 @@ jobs:
           fi
           echo "Found app bundle: $APP_BUNDLE"
           MACOS_DIR="$APP_BUNDLE/Contents/MacOS"
+          RESOURCES_DIR="$APP_BUNDLE/Contents/Resources"
 
-          # Files are placed next to the executable (Contents/MacOS), because
-          # the app resolves plugins/license paths via Path(sys.executable).parent
-          # (see youtubeanalyzer/plugins.py).
-          mkdir -p "$MACOS_DIR/plugins" "$MACOS_DIR/translations"
-          cp -R __main__.dist/plugins/. "$MACOS_DIR/plugins/"
-          cp logo.png "$MACOS_DIR/logo.png"
-          cp LICENSE "$MACOS_DIR/LICENSE"
-          cp LICENSE_RU "$MACOS_DIR/LICENSE_RU"
-          cp translations/ru.qm "$MACOS_DIR/translations/ru.qm"
-          cp translations/autocomplete_plugin_ru.qm "$MACOS_DIR/translations/autocomplete_plugin_ru.qm"
+          # Files live in Contents/Resources; Contents/MacOS gets symlinks to
+          # them, since Path(sys.executable).parent lookups expect them there.
+          mkdir -p "$RESOURCES_DIR/plugins" "$RESOURCES_DIR/translations"
+          cp -R __main__.dist/plugins/. "$RESOURCES_DIR/plugins/"
+          cp logo.png "$RESOURCES_DIR/logo.png"
+          cp LICENSE "$RESOURCES_DIR/LICENSE"
+          cp LICENSE_RU "$RESOURCES_DIR/LICENSE_RU"
+          cp translations/ru.qm "$RESOURCES_DIR/translations/ru.qm"
+          cp translations/autocomplete_plugin_ru.qm "$RESOURCES_DIR/translations/autocomplete_plugin_ru.qm"
+
+          ln -s ../Resources/plugins "$MACOS_DIR/plugins"
+          ln -s ../Resources/logo.png "$MACOS_DIR/logo.png"
+          ln -s ../Resources/LICENSE "$MACOS_DIR/LICENSE"
+          ln -s ../Resources/LICENSE_RU "$MACOS_DIR/LICENSE_RU"
+          ln -s ../Resources/translations "$MACOS_DIR/translations"
 
           echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
 
@@ -94,7 +100,7 @@ jobs:
             fi
           done
           codesign --force --sign - --entitlements entitlements.plist "$APP_BUNDLE"
-          codesign --verify --deep --strict "$APP_BUNDLE"
+          codesign --verify --strict "$APP_BUNDLE"
 
       - name: Archive app bundle
         run: |
